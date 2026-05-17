@@ -8,7 +8,7 @@ services:
     container_name: bibliotheca_app
     restart: unless-stopped
     ports:
-      - "${SERVER_PORT:-5000}:5000"
+      - "${SERVER_PORT:-5082}:5082"
     env_file:
       - .env
     environment:
