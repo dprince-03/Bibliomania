@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -10,10 +9,11 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jmoiron/sqlx"
 )
 
-func RunMigration(db *sql.DB, migrationsPath string) error {
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+func RunMigration(db *sqlx.DB, migrationsPath string) error {
+	driver, err := mysql.WithInstance(db.DB, &mysql.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to create migration driver: %w", err)
 	}
