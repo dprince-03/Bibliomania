@@ -1,43 +1,47 @@
 package main
 
 import (
+	"bibliotheca/internal/auth"
 	"bibliotheca/internal/cache"
 	"bibliotheca/internal/config"
 	"bibliotheca/internal/database"
+	"bibliotheca/internal/repository"
+	"bibliotheca/internal/router"
+	"bibliotheca/pkg/jwt"
 	"bibliotheca/pkg/mysqlclient"
 	"bibliotheca/pkg/redisclient"
-	"fmt"
+
+	"context"
+	"github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
-	// "github.com/go-playground/validator/v10"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
-	r := gin.Default()
-	// validate := validator.New()
-	// jwtSecret := cfg.JWTSecret
-	
-	// Config
+	// ~~ Config ~~
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+	log.Printf("Bibliotheca starting on port %s [%s mode]\n", cfg.ServerPort, cfg.AppEnv)
 
-	// Sql
+	// ~~ MySql Database ~~
 	db, err := mysqlclient.ConnectMySqlClient(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to MySql client: %v", err)
 	}
 	defer db.Close()
 
-	// Migration
+	// ~~ Migration ~~
 	if err := database.RunMigration(db, "./migrations"); err != nil {
 		log.Fatalf("Migration error: %v", err)
 	}
 
-	// Redis
+	// ~~ Redis ~~
 	redisClient, err := redisclient.Connect(cfg)
 	if err != nil {
 		log.Fatalf("Redis error: %v", err)
@@ -48,26 +52,59 @@ func main() {
 	appCache := cache.NewRedisCache(redisClient, "bibliotheca")
 	_ = appCache
 
+	// ~~ Shared dependencies ~~
+	validate := validator.New()
+	jwtManager := jwt.NewManger(cfg.JWTSecret, cfg.AccessTokenTTL)
 
-	// URL
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	// ~~ Repositories ~~
+	userRepo := repository.NewUserRepository(db)
+	profileRepo := repository.NewUserProfileRepository(db)
+	tokenRepo := repository.NewTokenRepository(db)
 
-	// Routes
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "root url is healthy",
-		})
-	})
+	// ~~ Auth ~~
+	authService := auth.NewService(
+		userRepo,
+		profileRepo,
+		tokenRepo,
+		jwtManager,
+		cfg.RefreshTokenTTL,
+	)
+	authHandler := auth.NewHandler(authService, validate)
 
-	r.GET("/health-check", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "url is working",
-		})
-	})
+	// ~~ Routes ~~
+	r := router.Routes(authHandler)
 
-	// Server
-	log.Printf("Bibliotheca starting on port %s [%s mode]\n", cfg.ServerPort, cfg.AppEnv)
-	server := fmt.Sprintf("0.0.0.0:%s", cfg.ServerPort)
-	r.Run(server)
+	// ~~ Server ~~
+	server := &http.Server{
+		Addr:         ":" + cfg.ServerPort,
+		Handler:      r,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// ~~ Graceful Shutdown ~~
+	go func() {
+		log.Printf("Server is listening on port : %s\n", cfg.ServerPort)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server Error: %v", err)
+		}
+	}()
+
+	// Block until we receive SIGINT or SIGTERM
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down gracefully...")
+
+	// Give in-flight requests 10 seconds to complete
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Forced shutdown: %v", err)
+	}
+
+	log.Println("Server stopped cleanly")
 }
