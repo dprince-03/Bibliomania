@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     command: air
-    container_name: bibliotheca_app
+    container_name: bibliotheca
     restart: unless-stopped
     ports:
       - "${SERVER_PORT:-5082}:5082"

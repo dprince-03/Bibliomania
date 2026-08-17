@@ -92,3 +92,5 @@ books
 authors
   └── book_authors          (many:many junction)
 ```
+
+migrate -path ./migrations -database "mysql://user:pass@tcp(localhost:3306)/bibliotheca" up

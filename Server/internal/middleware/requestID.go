@@ -48,3 +48,11 @@ func GetUserID(ctx context.Context) uint64 {
 	}
 	return 0
 }
+
+// GetUserRole pulls the authenticated user role from context.
+func GetUserRole(ctx context.Context) string {
+	if role, ok := ctx.Value(UserRoleKey).(string); ok {
+		return role
+	}
+	return ""
+}
