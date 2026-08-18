@@ -73,3 +73,10 @@ func Internal(err error) *AppError {
 		Err:     err,
 	}
 }
+
+func TooManyRequests(msg string) *AppError {
+	return &AppError{
+		Code: http.StatusTooManyRequests,
+		Message: msg,
+	}
+}
