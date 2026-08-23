@@ -29,6 +29,9 @@ go.work.sum
 
 # Editor/IDE
 # .idea/
-# .vscode/
+.vscode/
 
 tmp/
+
+# Claude Code personal/local overrides (not shared)
+.claude/settings.local.json

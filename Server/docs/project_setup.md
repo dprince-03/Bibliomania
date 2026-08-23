@@ -38,39 +38,48 @@ RATE_LIMIT_BURST=200
 - migrate create -ext sql -dir migrations -seq your_change_description
 ```
 migrate create -ext sql -dir migrations -seq create_users_table
+migrate create -ext sql -dir migrations -seq create_authors_table
 migrate create -ext sql -dir migrations -seq create_books_table
-migrate create -ext sql -dir migrations -seq create_borrows_table
 migrate create -ext sql -dir migrations -seq create_refresh_tokens_table
+migrate create -ext sql -dir migrations -seq create_users_profile_table
+migrate create -ext sql -dir migrations -seq create_borrows_records_table
 migrate create -ext sql -dir migrations -seq create_book_authors_table
 migrate create -ext sql -dir migrations -seq create_reading_sessions_table
 migrate create -ext sql -dir migrations -seq create_user_library_table
 migrate create -ext sql -dir migrations -seq create_bookmarks_table
 ```
 
-## structure :
+## structure (actual, as of 2026-08-23) :
 migrations/
-├── 000001_create_users_table.up.sql
-├── 000001_create_users_table.down.sql
-├── 000002_create_books_table.up.sql
-├── 000002_create_books_table.down.sql
-├── 000003_create_borrows_table.up.sql
-├── 000003_create_borrows_table.down.sql
-├── 000004_create_refresh_tokens_table.up.sql
-└── 000004_create_refresh_tokens_table.down.sql
+├── 000001_create_users_table.{up,down}.sql
+├── 000002_create_authors_table.{up,down}.sql
+├── 000003_create_books_table.{up,down}.sql
+├── 000004_create_refresh_tokens_table.{up,down}.sql
+├── 000005_create_users_profile_table.{up,down}.sql
+├── 000006_create_borrows_records_table.{up,down}.sql
+├── 000007_create_book_authors_table.{up,down}.sql
+├── 000008_create_reading_sessions_table.{up,down}.sql
+├── 000009_create_user_library_table.{up,down}.sql
+└── 000010_create_bookmarks_table.{up,down}.sql
 
-### Updated Migration File Order
+### Migration File Order
 ```
 000001_create_users_table
 000002_create_authors_table
-000003_create_users_profile_table     ← updated
-000004_create_books_table             ← updated (removed author_id/author)
-000005_create_borrows_records_table
-000006_create_refresh_tokens_table    ← fix expires_at & updated_at
-000007_create_book_authors_table      ← NEW (junction table)
-000008_create_reading_sessions_table  ← NEW
-000009_create_user_library_table      ← NEW
-000010_create_bookmarks_table         ← NEW
+000003_create_books_table             ← runs before profile/borrows, unlike the original plan below
+000004_create_refresh_tokens_table
+000005_create_users_profile_table
+000006_create_borrows_records_table
+000007_create_book_authors_table      (junction table)
+000008_create_reading_sessions_table
+000009_create_user_library_table
+000010_create_bookmarks_table
 ```
+
+> Note: an earlier draft of this doc numbered these 003=profile, 004=books,
+> 005=borrows, 006=refresh_tokens. The files actually on disk use the order
+> above — trust the filenames in `Server/migrations/`, not the numbers in
+> old notes.
 
 ## Complete Database Schema (10 tables)
 ```

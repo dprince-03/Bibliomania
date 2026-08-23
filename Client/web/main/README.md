@@ -1,4 +1,10 @@
-# React + Vite
+# Bibliotheca Client
+
+The React + Vite frontend for [Bibliotheca](../README.md), a Library Management & E-Library System.
+
+**Status:** unmodified `create-vite` scaffold — still the default counter demo in `src/App.jsx`. No routing, API client, or app UI has been built yet; that work is expected to start once the [Server](../Server) API builds and its Auth/Books/Authors endpoints are stable.
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

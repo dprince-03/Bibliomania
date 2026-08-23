@@ -1,0 +1,68 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(go test:*)",
+      "Bash(go fmt:*)",
+      "Bash(gofmt:*)",
+      "Bash(go mod tidy)",
+      "Bash(go mod tidy:*)",
+      "Bash(go mod download)",
+      "Bash(go mod verify)",
+      "Bash(go run ./cmd/api)",
+      "Bash(go run ./cmd/api:*)",
+      "Bash(go run ./cmd/key)",
+      "Bash(go run ./cmd/key:*)",
+      "Bash(go list:*)",
+      "Bash(air)",
+      "Bash(air:*)",
+
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git diff)",
+      "Bash(git diff:*)",
+      "Bash(git log)",
+      "Bash(git log:*)",
+      "Bash(git show)",
+      "Bash(git show:*)",
+      "Bash(git branch)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git fetch)",
+      "Bash(git fetch:*)",
+      "Bash(git remote -v)",
+
+      "Bash(migrate -version)",
+      "Bash(migrate -path:* up)",
+      "Bash(migrate -path:* up:*)",
+      "Bash(migrate -path:* version)",
+      "Bash(migrate create:*)",
+
+      "Bash(npm run dev)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run preview)",
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(vite:*)"
+    ],
+    "deny": [
+      "Bash(git add *)",
+      "Bash(git commit -m *)",
+      "Bash(git push --force:*)",
+      "Bash(git push --force-with-lease:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git branch -D:*)",
+      "Bash(migrate -path:* down:*)",
+      "Bash(migrate -path:* drop:*)",
+      "Bash(rm -rf:*)"
+    ]
+  }
+}
