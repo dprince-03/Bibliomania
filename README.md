@@ -2,16 +2,28 @@
 
 📚 Bibliotheca
 - A Library Management & E-Library System
-- Built with Go, MySQL, Redis, and React (Vite)
+- Built with Go, MySQL, Redis, Next.js, NestJS, Flutter, and JavaFX
 
 ## Monorepo layout
 
 ```
 Bibliotheca/
-├── Server/            # Go REST API (net/http, MySQL, Redis)
-├── Client/            # React + Vite frontend — early scaffold, not yet built out
-└── infra/docker/      # Dockerfiles + docker-compose for the stack
+├── Server/                 # Go REST API (net/http, MySQL, Redis)
+├── Client/
+│   ├── web/
+│   │   ├── app/            # Next.js — the product app end-users use
+│   │   └── main/           # Next.js (static export) — marketing/advertising site
+│   ├── admin/
+│   │   ├── web/            # Next.js — admin dashboard frontend
+│   │   └── api/            # NestJS — admin dashboard backend
+│   ├── mobile/             # Flutter — mobile app
+│   └── desktop/            # JavaFX — native desktop app
+└── infra/
+    ├── docker/             # Dockerfiles + docker-compose (base + dev/prod overrides)
+    └── nginx/              # Reverse-proxy config
 ```
+
+Every JS/TS app uses plain JavaScript (no TypeScript) and its own `package.json` (npm, no shared workspace). See [infra/README.md](infra/README.md) for how to bring the whole stack up.
 
 ## Server (Go API)
 
@@ -60,7 +72,7 @@ Server/
 - Borrowing system, reading sessions/bookmarks, and user/member management have **models, DTOs, and repository interfaces only** — no handlers or services yet
 - File upload/download for the e-library (PDF/EPUB) is not wired up
 - Swagger/OpenAPI docs, Makefile, and full Docker polish are pending
-- `Client/` is still the unmodified Vite + React template — no app code written yet
+- All five `Client/` apps (`web/app`, `web/main`, `admin/web`, `admin/api`, `mobile`) are bare framework scaffolds — no product code written yet. `Client/desktop` (JavaFX) is hand-written scaffolding, not generated, since Maven isn't installed in the environment it was created in — see [Client/desktop/README.md](Client/desktop/README.md).
 
 ### Known issues (current branch does not build)
 `go build ./...` currently fails. The codebase is mid-refactor and has two families of inconsistencies to resolve before it compiles:
@@ -71,16 +83,24 @@ Server/
 
 None of this affects understanding the design — it reads as an in-progress refactor (repository method names and import paths were changed in one place but not propagated everywhere) rather than a design problem.
 
-## Client (React + Vite)
+## Client
 
-Default `create-vite` React template — routing, API client, and UI have not been started yet. See [Client/README.md](Client/README.md).
+Five apps, all bare scaffolds — no product code yet:
+- **`web/app`** and **`admin/web`** — Next.js, `output: "standalone"` (SSR-capable)
+- **`web/main`** — Next.js, `output: "export"` (static marketing site)
+- **`admin/api`** — NestJS in plain-JavaScript mode (no compiled build step; runs via `babel-node`)
+- **`mobile`** — Flutter (Android + iOS targets)
+- **`desktop`** — JavaFX (Maven), hand-written scaffold — see its own README for build requirements
 
 ## Infra
 
-`infra/docker/` holds `Dockerfile.dev`, `Dockerfile.prod`, and `docker-compose.yml` for running the API alongside MySQL and Redis.
+`infra/docker/` + `infra/nginx/` hold the full Docker Compose setup — every app above, nginx, MySQL, Redis, Umami analytics (+ its own Postgres), and (dev-only) Adminer + Mailpit, split into a shared base compose file plus `dev`/`prod` overrides. See **[infra/README.md](infra/README.md)** for setup and the exact run commands — don't guess at `docker compose` flags here, the project-directory/env-file interaction is non-obvious and documented there.
 
 ## Getting started
 
+**Whole stack (recommended):** see [infra/README.md](infra/README.md).
+
+**Go API only, without Docker:**
 ```bash
 cd Server
 cp .env.example .env      # fill in DB/Redis/JWT values
@@ -89,3 +109,10 @@ go run ./cmd/api           # once the build issues above are fixed
 ```
 
 See [Server/docs/project_setup.md](Server/docs/project_setup.md) for env vars and the migration/schema layout, and [Server/docs/Steps.md](Server/docs/Steps.md) for the build roadmap.
+
+## Docs
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system-wide overview: every app, data stores, request flow
+- [docs/plan.md](docs/plan.md) — the infra branch's plan, as agreed and as actually implemented
+- [docs/TODO.md](docs/TODO.md) — living task list, kept current
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — branching, commit, and docs conventions

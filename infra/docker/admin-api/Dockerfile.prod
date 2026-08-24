@@ -1,0 +1,26 @@
+FROM node:20-alpine
+
+# This Nest project was scaffolded in plain-JavaScript mode, which has no
+# compiled "build" step — its "start" script runs `babel-node index.js`,
+# transpiling decorators on the fly. That means @babel/core and @babel/node
+# (declared as devDependencies by `nest new`) are required at runtime, so
+# unlike the other Node services here this image keeps dev dependencies
+# instead of `npm ci --omit=dev`. Revisit once this API has real code: adding
+# a `babel index.js src --out-dir dist` build script would allow a proper
+# multi-stage build running plain `node dist/main.js` instead.
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+RUN chown -R appuser:appgroup /app
+USER appuser
+
+ENV PORT=4000
+EXPOSE 4000
+
+CMD ["npm", "run", "start"]

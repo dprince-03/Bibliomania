@@ -1,0 +1,50 @@
+services:
+  server:
+    build:
+      dockerfile: server/Dockerfile.prod
+    restart: always
+    environment:
+      - APP_ENV=production
+
+  web-app:
+    build:
+      dockerfile: web-app/Dockerfile.prod
+    restart: always
+
+  web-main:
+    build:
+      dockerfile: web-main/Dockerfile.prod
+    restart: always
+
+  admin-web:
+    build:
+      dockerfile: admin-web/Dockerfile.prod
+    restart: always
+
+  admin-api:
+    build:
+      dockerfile: admin-api/Dockerfile.prod
+    restart: always
+
+  mysql:
+    restart: always
+    # No host port publishing in prod — reachable only inside bibliotheca_network.
+
+  redis:
+    restart: always
+    # No host port publishing in prod — reachable only inside bibliotheca_network.
+
+  umami:
+    restart: always
+
+  umami-postgres:
+    restart: always
+
+  nginx:
+    build:
+      dockerfile: Dockerfile.prod
+    restart: always
+    ports:
+      - "80:80"
+      # 443/TLS deliberately not set up yet — follow-up work (certbot or a
+      # managed cert), noted in infra/README.md rather than built here.

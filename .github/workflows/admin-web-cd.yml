@@ -1,0 +1,33 @@
+name: admin/web CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Client/admin/web/**"
+      - "infra/docker/admin-web/**"
+      - ".github/workflows/admin-web-cd.yml"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: Client/admin/web
+          file: infra/docker/admin-web/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/dprince-03/bibliotheca-admin-web:latest
+            ghcr.io/dprince-03/bibliotheca-admin-web:${{ github.sha }}

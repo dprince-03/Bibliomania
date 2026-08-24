@@ -1,0 +1,52 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /Server
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /Client/web/app
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /Client/web/main
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /Client/admin/web
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /Client/admin/api
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pub
+    directory: /Client/mobile
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: maven
+    directory: /Client/desktop
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directories:
+      - /infra/docker/server
+      - /infra/docker/web-app
+      - /infra/docker/web-main
+      - /infra/docker/admin-web
+      - /infra/docker/admin-api
+      - /infra/nginx
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

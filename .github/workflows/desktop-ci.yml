@@ -1,0 +1,35 @@
+name: desktop CI
+
+# This is the first real build verification for Client/desktop: it was
+# hand-written (pom.xml + sources) rather than generated via
+# `mvn archetype:generate`, because Maven wasn't installed in the
+# environment it was scaffolded in. GitHub's runners ship Maven, so this
+# workflow is where the pom.xml actually gets exercised for the first time.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Client/desktop/**"
+      - ".github/workflows/desktop-ci.yml"
+  pull_request:
+    paths:
+      - "Client/desktop/**"
+      - ".github/workflows/desktop-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Client/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - run: mvn -B package

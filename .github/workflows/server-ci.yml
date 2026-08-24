@@ -1,0 +1,32 @@
+name: Server CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Server/**"
+      - "infra/docker/server/**"
+      - ".github/workflows/server-ci.yml"
+  pull_request:
+    paths:
+      - "Server/**"
+      - "infra/docker/server/**"
+      - ".github/workflows/server-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: Server/go.mod
+          cache-dependency-path: Server/go.sum
+
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test ./...
