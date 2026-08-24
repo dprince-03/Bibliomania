@@ -34,17 +34,17 @@ Server/
 │   └── key/            # JWT secret generator CLI (keyGen.go)
 │
 ├── internal/
-│   ├── auth/           # Register/Login/Logout/Refresh — service.go + handler.go
+│   ├── modules/         # feature packages — one dir per business domain
+│   │   ├── auth/        # Register/Login/Logout/Refresh — model, dto, repository, service, handler
+│   │   ├── user/        # User/UserProfile — model, dto, repository (no service/handler yet — Step 17)
+│   │   ├── catalog/     # Author + Book merged (real many-to-many via book_authors — see CLAUDE.md)
+│   │   ├── borrow/      # BorrowRecord — model, dto, repository (no service/handler yet — Step 16)
+│   │   └── reading/     # ReadingSession/UserLibrary/Bookmark — model, dto, repository (no service/handler yet — Step 15)
 │   ├── cache/          # Cache interface, Redis implementation, key/TTL helpers
 │   ├── config/         # Env loading & validation
 │   ├── database/       # golang-migrate runner
-│   ├── dto/            # Request/response structs (auth, book, author, borrow, reading, user)
 │   ├── errors/         # AppError, typed HTTP errors
-│   ├── handlers/       # HTTP handlers — currently: author.go, book.go
 │   ├── middleware/     # auth, rbac, ownership, cors, logger, recovery, requestID, rate_limiter, security, chain
-│   ├── models/         # DB structs (user, author, book, borrow, reading, token)
-│   ├── repository/     # Raw DB queries, one file per domain
-│   ├── services/       # Business logic + caching — currently: author.go, book.go, mapper.go
 │   └── utils/          # response helpers, pagination, file validation, hashing
 │
 ├── pkg/
@@ -74,14 +74,7 @@ Server/
 - Swagger/OpenAPI docs, Makefile, and full Docker polish are pending
 - All five `Client/` apps (`web/app`, `web/main`, `admin/web`, `admin/api`, `mobile`) are bare framework scaffolds — no product code written yet. `Client/desktop` (JavaFX) is hand-written scaffolding, not generated, since Maven isn't installed in the environment it was created in — see [Client/desktop/README.md](Client/desktop/README.md).
 
-### Known issues (current branch does not build)
-`go build ./...` currently fails. The codebase is mid-refactor and has two families of inconsistencies to resolve before it compiles:
-- **Import path split**: `go.mod` declares the module as `bibliotheca`, but `cmd/api/main.go`, `internal/router/router.go`, `internal/services/*.go`, `internal/handlers/*.go`, and `internal/middleware/{rbac,ownership,rate_limiter}.go` still import via the old path `github.com/yourusername/bibliotheca/...`, while the rest of the codebase (`internal/auth`, `internal/repository`, `internal/utils`, `internal/middleware/auth.go`) uses the correct `bibliotheca/...` path.
-- **Repository/service method-name mismatch**: `internal/repository/repository.go` defines interfaces with methods like `GetAuthorByID`, `GetAllAuthors`, `CreateAuthor`, `GetBookByID`, `GetAllBooks`, `CreateBook`, `UpdateBook`, `DeleteBook` (and the concrete `authorRepository`/`bookRepository` implement exactly those), but `internal/services/author.go` and `internal/services/book.go` call the shorter `GetByID`, `GetAll`, `Create`, `Update`, `Delete` — those methods don't exist on the interfaces.
-- `internal/router/router.go`'s `New(...)` signature only accepts `(jwtManager, authHandler)`, but `cmd/api/main.go` calls it with 5 arguments (`cfg, jwtManager, authHandler, authorHandler, bookHandler`); the router body also references `cfg`, `authorHandler`, and `bookHandler` that aren't in scope, and has a duplicated/dead "health" route block.
-- `cmd/api/main.go` calls `database.RunMigrations(...)` (plural); the actual exported function is `database.RunMigration(...)` (singular).
-
-None of this affects understanding the design — it reads as an in-progress refactor (repository method names and import paths were changed in one place but not propagated everywhere) rather than a design problem.
+`go build ./...` and `go vet ./...` both succeed, and the server boots and serves real requests — see `Server/docs/Steps.md` → "Build history" if you want the story of what used to be broken here and how the feature-based restructure fixed it as a side effect.
 
 ## Client
 
@@ -105,7 +98,7 @@ Five apps, all bare scaffolds — no product code yet:
 cd Server
 cp .env.example .env      # fill in DB/Redis/JWT values
 go run ./cmd/key           # optional: generate a JWT secret
-go run ./cmd/api           # once the build issues above are fixed
+go run ./cmd/api           # needs MySQL + Redis reachable per your .env
 ```
 
 See [Server/docs/project_setup.md](Server/docs/project_setup.md) for env vars and the migration/schema layout, and [Server/docs/Steps.md](Server/docs/Steps.md) for the build roadmap.
@@ -113,6 +106,9 @@ See [Server/docs/project_setup.md](Server/docs/project_setup.md) for env vars an
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system-wide overview: every app, data stores, request flow
+- [docs/API.md](docs/API.md) — where to find API docs (points at the two below)
+- [Server/docs/API.md](Server/docs/API.md) — the actual endpoint reference
+- [Client/docs/API.md](Client/docs/API.md) — which client app calls what, base URLs per environment
 - [docs/plan.md](docs/plan.md) — the infra branch's plan, as agreed and as actually implemented
 - [docs/TODO.md](docs/TODO.md) — living task list, kept current
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — branching, commit, and docs conventions

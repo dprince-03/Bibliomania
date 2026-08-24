@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"slices"
 
-	apperrors "github.com/yourusername/bibliotheca/internal/errors"
-	"github.com/yourusername/bibliotheca/internal/utils"
+	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
+	"github.com/dprince-03/Bibliotheca/internal/utils"
 )
 
 // Role constants — single source of truth for all roles in the app.

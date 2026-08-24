@@ -1,4 +1,4 @@
-module bibliotheca
+module github.com/dprince-03/Bibliotheca
 
 go 1.25.5
 
@@ -12,6 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.19.0
 	golang.org/x/crypto v0.49.0
+	golang.org/x/time v0.15.0
 )
 
 require (

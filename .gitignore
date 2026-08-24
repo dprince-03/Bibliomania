@@ -35,3 +35,13 @@ tmp/
 
 # Claude Code personal/local overrides (not shared)
 .claude/settings.local.json
+
+# Node dependency directories (any depth, any app in the monorepo —
+# a narrower pattern here previously missed Client/admin/api/node_modules,
+# which is 3 levels deep)
+node_modules/
+
+# Build/compiled output for the JS/TS apps
+dist/
+.next/
+coverage/

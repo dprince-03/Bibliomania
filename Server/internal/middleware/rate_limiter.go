@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	apperrors "github.com/yourusername/bibliotheca/internal/errors"
-	"github.com/yourusername/bibliotheca/internal/utils"
+	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
+	"github.com/dprince-03/Bibliotheca/internal/utils"
 	"golang.org/x/time/rate"
 )
 
@@ -22,8 +22,8 @@ type ipLimiter struct {
 type RateLimiterStore struct {
 	mu       sync.Mutex
 	limiters map[string]*ipLimiter
-	rps      rate.Limit // requests per second
-	burst    int        // max burst size
+	rps      rate.Limit    // requests per second
+	burst    int           // max burst size
 	ttl      time.Duration // how long before an idle IP is evicted
 }
 

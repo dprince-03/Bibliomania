@@ -1,8 +1,8 @@
 package utils
 
 import (
-	apperrors "bibliotheca/internal/errors"
 	"encoding/json"
+	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
 	"net/http"
 )
 
@@ -24,7 +24,7 @@ func WriteJSON(w http.ResponseWriter, statusCode int, data any) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func SuccessResponse(w http.ResponseWriter, statusCode int, message string, data any) {
+func Success(w http.ResponseWriter, statusCode int, message string, data any) {
 	WriteJSON(w, statusCode, APIResponse{
 		Success: true,
 		Message: message,
@@ -32,7 +32,7 @@ func SuccessResponse(w http.ResponseWriter, statusCode int, message string, data
 	})
 }
 
-func ErrorResponse(w http.ResponseWriter, err *apperrors.AppError) {
+func Error(w http.ResponseWriter, err *apperrors.AppError) {
 	WriteJSON(w, err.Code, APIError{
 		Success: false,
 		Error:   err.Message,

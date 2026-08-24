@@ -1,9 +1,9 @@
 package redisclient
 
 import (
-	"bibliotheca/internal/config"
 	"context"
 	"fmt"
+	"github.com/dprince-03/Bibliotheca/internal/config"
 	"log"
 
 	"github.com/redis/go-redis/v9"
