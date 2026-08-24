@@ -18,7 +18,7 @@ jobs:
         variant: [dev, prod]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build
         run: docker build -f infra/nginx/Dockerfile.${{ matrix.variant }} -t nginx-test-${{ matrix.variant }} infra/nginx
