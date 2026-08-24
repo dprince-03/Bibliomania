@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Minimal runtime — only the traced files next build copied into .next/standalone
-FROM node:20-alpine AS final
+FROM node:26-alpine AS final
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
