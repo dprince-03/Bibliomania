@@ -23,7 +23,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 
 # Stage 2: Runner — plain alpine, not golang, since the binary is static (CGO_ENABLED=0)
-FROM --platform=linux/amd64 alpine:3.20 AS final
+FROM --platform=linux/amd64 alpine:3.24 AS final
 
 # Install CA certs (needed for HTTPS calls), timezone data, and wget (for HEALTHCHECK)
 RUN apk add --no-cache ca-certificates tzdata wget
