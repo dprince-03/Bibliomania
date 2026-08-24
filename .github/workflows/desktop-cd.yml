@@ -1,0 +1,33 @@
+name: desktop CD
+
+# "CD" here means uploading the packaged jar as a downloadable build
+# artifact, not a signed/notarized installer for distribution — no
+# code-signing certs are set up for any platform yet.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Client/desktop/**"
+      - ".github/workflows/desktop-cd.yml"
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Client/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - run: mvn -B package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bibliotheca-desktop-${{ github.sha }}
+          path: Client/desktop/target/*.jar

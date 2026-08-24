@@ -1,0 +1,33 @@
+name: web/app CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Client/web/app/**"
+      - "infra/docker/web-app/**"
+      - ".github/workflows/web-app-cd.yml"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: Client/web/app
+          file: infra/docker/web-app/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/dprince-03/bibliotheca-web-app:latest
+            ghcr.io/dprince-03/bibliotheca-web-app:${{ github.sha }}

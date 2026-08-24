@@ -1,0 +1,36 @@
+name: Server CD
+
+# Builds the prod image and pushes to GHCR — only on push to main, never PRs.
+# Currently expected to fail at `go build` inside the image, same known issue
+# as Server CI (see Server/docs/Steps.md, "Known build issues").
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Server/**"
+      - "infra/docker/server/**"
+      - ".github/workflows/server-cd.yml"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: Server
+          file: infra/docker/server/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/dprince-03/bibliotheca-server:latest
+            ghcr.io/dprince-03/bibliotheca-server:${{ github.sha }}

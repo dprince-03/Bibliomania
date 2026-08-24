@@ -1,25 +1,27 @@
+name: bibliotheca
+
 services:
-# App
-  app:
+  # ── Go API ──────────────────────────────────────────────
+  server:
+    image: bibliotheca-server
+    container_name: bibliotheca-server
     build:
-      context: .
-      dockerfile: Dockerfile.dev
-    command: air
-    container_name: bibliotheca
+      context: ../../Server
     restart: unless-stopped
-    ports:
-      - "${SERVER_PORT:-5082}:5082"
     env_file:
-      - .env
+      - ../../Server/.env
     environment:
+      # These override whatever Server/.env sets for the same keys, so the
+      # `server` container always agrees with `mysql`'s init credentials
+      # below — both come from the root .env, not two files that have to be
+      # kept in sync by hand.
       - APP_ENV=development
-      - DB_HOST=mysql # use service name, not localhost
-      - REDIS_HOST=redis # use service name, not localhost
-    volumes:
-      - .:app
-      - ./cmd/api:/app/cmd/api
-      - go_modules:/root/go/pkg/mod # cache Go modules
-      - ./storage:/app/storage # persist uploaded files
+      - DB_HOST=mysql
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     depends_on:
       mysql:
         condition: service_healthy
@@ -28,21 +30,74 @@ services:
     networks:
       - bibliotheca_network
 
-# Database
-  mysql:
-    image: mysql:latest
-    container_name: bibliotheca_mysql
+  # ── Web: product app ────────────────────────────────────
+  web-app:
+    image: bibliotheca-web-app
+    container_name: bibliotheca-web-app
+    build:
+      context: ../../Client/web/app
     restart: unless-stopped
-    ports:
-      - "${DB_PORT:-3306}:3306"
     environment:
-      name=valueMYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      - NEXT_PUBLIC_API_URL=${WEB_APP_API_URL:-http://api.bibliotheca.local}
+    depends_on:
+      - server
+    networks:
+      - bibliotheca_network
+
+  # ── Web: marketing/main site ────────────────────────────
+  web-main:
+    image: bibliotheca-web-main
+    container_name: bibliotheca-web-main
+    build:
+      context: ../../Client/web/main
+    restart: unless-stopped
+    networks:
+      - bibliotheca_network
+
+  # ── Admin: dashboard frontend ────────────────────────────
+  admin-web:
+    image: bibliotheca-admin-web
+    container_name: bibliotheca-admin-web
+    build:
+      context: ../../Client/admin/web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${ADMIN_WEB_API_URL:-http://admin.bibliotheca.local/api}
+    depends_on:
+      - admin-api
+    networks:
+      - bibliotheca_network
+
+  # ── Admin: backend API ───────────────────────────────────
+  admin-api:
+    image: bibliotheca-admin-api
+    container_name: bibliotheca-admin-api
+    build:
+      context: ../../Client/admin/api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bibliotheca_network
+
+  # ── MySQL (app database) ─────────────────────────────────
+  mysql:
+    image: mysql:8.4
+    container_name: bibliotheca-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql        # persist database data
-      - ./migrations:/docker-entrypoint-initdb.d  # auto-run migrations on first start
+      - mysql_data:/var/lib/mysql
+      # No migrations mount here: cmd/api/main.go already runs golang-migrate
+      # on boot (database.RunMigration). Mounting migrations/ into
+      # /docker-entrypoint-initdb.d would also run every *.sql file
+      # alphabetically once, which for paired up/down files immediately
+      # undoes each "up" with the following "down".
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
       interval: 10s
@@ -52,13 +107,11 @@ services:
     networks:
       - bibliotheca_network
 
-# Redis
+  # ── Redis (app cache) ─────────────────────────────────────
   redis:
-    image: redis:latest
-    container_name: bibliotheca_redis
+    image: redis:7-alpine
+    container_name: bibliotheca-redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"       # expose for local Redis clients (RedisInsight)
     command: >
       redis-server
       --requirepass ${REDIS_PASSWORD:-}
@@ -66,7 +119,7 @@ services:
       --maxmemory 500mb
       --maxmemory-policy allkeys-lru
     volumes:
-      - redis_data:/data                 # persist Redis data
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -76,7 +129,59 @@ services:
     networks:
       - bibliotheca_network
 
-# Volumes
+  # ── Umami analytics ───────────────────────────────────────
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: bibliotheca-umami
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${UMAMI_POSTGRES_USER}:${UMAMI_POSTGRES_PASSWORD}@umami-postgres:5432/${UMAMI_POSTGRES_DB}
+      APP_SECRET: ${UMAMI_APP_SECRET}
+    depends_on:
+      umami-postgres:
+        condition: service_healthy
+    networks:
+      - bibliotheca_network
+
+  # Umami's own Postgres — deliberately separate from `mysql` above, which is
+  # the application's database. Different engine, different creds, different
+  # volume: never point umami at the app's MySQL instance.
+  umami-postgres:
+    image: postgres:16-alpine
+    container_name: bibliotheca-umami-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${UMAMI_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${UMAMI_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${UMAMI_POSTGRES_DB}
+    volumes:
+      - umami_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${UMAMI_POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - bibliotheca_network
+
+  # ── Reverse proxy ─────────────────────────────────────────
+  nginx:
+    image: bibliotheca-nginx
+    container_name: bibliotheca-nginx
+    build:
+      context: ../nginx
+    restart: unless-stopped
+    depends_on:
+      - server
+      - web-app
+      - web-main
+      - admin-web
+      - admin-api
+      - umami
+    networks:
+      - bibliotheca_network
+
 volumes:
   mysql_data:
     driver: local
@@ -84,9 +189,17 @@ volumes:
     driver: local
   go_modules:
     driver: local
- 
-# Networks
+  umami_postgres_data:
+    driver: local
+  web_app_node_modules:
+    driver: local
+  web_main_node_modules:
+    driver: local
+  admin_web_node_modules:
+    driver: local
+  admin_api_node_modules:
+    driver: local
+
 networks:
   bibliotheca_network:
     driver: bridge
- 

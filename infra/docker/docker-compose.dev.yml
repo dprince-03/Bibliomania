@@ -1,0 +1,89 @@
+services:
+  server:
+    build:
+      dockerfile: server/Dockerfile.dev
+    command: air
+    ports:
+      # Host side is deliberately its own var (SERVER_HOST_PORT), separate
+      # from SERVER_PORT (the container's internal listen port, also used
+      # by nginx's proxy_pass) — this machine already runs several other
+      # projects' stacks with their own port claims, so the host side needs
+      # to be freely reassignable without touching internal config. Checked
+      # against `docker ps` at the time these were picked; if you're back
+      # here after a conflict, just override in your local .env.
+      - "${SERVER_HOST_PORT:-9081}:${SERVER_PORT:-8080}"
+    volumes:
+      - ../../Server:/app
+      - go_modules:/root/go/pkg/mod
+
+  web-app:
+    build:
+      dockerfile: web-app/Dockerfile.dev
+    ports:
+      - "${WEB_APP_HOST_PORT:-9083}:3000"
+    volumes:
+      - ../../Client/web/app:/app
+      - web_app_node_modules:/app/node_modules
+
+  web-main:
+    build:
+      dockerfile: web-main/Dockerfile.dev
+    ports:
+      - "${WEB_MAIN_HOST_PORT:-9082}:3000"
+    volumes:
+      - ../../Client/web/main:/app
+      - web_main_node_modules:/app/node_modules
+
+  admin-web:
+    build:
+      dockerfile: admin-web/Dockerfile.dev
+    ports:
+      - "${ADMIN_WEB_HOST_PORT:-9084}:3000"
+    volumes:
+      - ../../Client/admin/web:/app
+      - admin_web_node_modules:/app/node_modules
+
+  admin-api:
+    build:
+      dockerfile: admin-api/Dockerfile.dev
+    ports:
+      - "${ADMIN_API_HOST_PORT:-9085}:4000"
+    volumes:
+      - ../../Client/admin/api:/app
+      - admin_api_node_modules:/app/node_modules
+
+  mysql:
+    ports:
+      - "${DB_PORT:-9086}:3306"
+
+  redis:
+    ports:
+      - "${REDIS_PORT:-9087}:6379"
+
+  nginx:
+    build:
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${NGINX_HOST_PORT:-9080}:80"
+
+  # ── Dev-only tooling ──────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: bibliotheca-adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    ports:
+      - "${ADMINER_HOST_PORT:-9088}:8080"
+    networks:
+      - bibliotheca_network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: bibliotheca-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_WEB_PORT:-9089}:8025" # web UI
+      - "${MAILPIT_SMTP_PORT:-9090}:1025" # SMTP
+    networks:
+      - bibliotheca_network

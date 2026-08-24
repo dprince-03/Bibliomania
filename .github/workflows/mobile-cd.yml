@@ -1,0 +1,34 @@
+name: mobile CD
+
+# "CD" here means producing a release APK as a downloadable build artifact,
+# not publishing to the Play Store — there's no app-store signing/listing
+# set up yet. The APK is debug-signed (Flutter's default signing config),
+# not suitable for a real Play Store release as-is.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Client/mobile/**"
+      - ".github/workflows/mobile-cd.yml"
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Client/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bibliotheca-mobile-${{ github.sha }}
+          path: Client/mobile/build/app/outputs/flutter-apk/app-release.apk

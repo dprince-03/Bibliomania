@@ -1,0 +1,27 @@
+name: nginx CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/nginx/**"
+      - ".github/workflows/nginx-ci.yml"
+  pull_request:
+    paths:
+      - "infra/nginx/**"
+      - ".github/workflows/nginx-ci.yml"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        variant: [dev, prod]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: docker build -f infra/nginx/Dockerfile.${{ matrix.variant }} -t nginx-test-${{ matrix.variant }} infra/nginx
+
+      - name: Validate config (nginx -t)
+        run: docker run --rm nginx-test-${{ matrix.variant }} nginx -t
