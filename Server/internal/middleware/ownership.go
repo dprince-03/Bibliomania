@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	apperrors "github.com/yourusername/bibliotheca/internal/errors"
-	"github.com/yourusername/bibliotheca/internal/utils"
+	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
+	"github.com/dprince-03/Bibliotheca/internal/utils"
 )
 
 // OwnershipChecker is a function that checks whether the requesting user

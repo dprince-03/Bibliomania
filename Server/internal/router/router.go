@@ -2,15 +2,21 @@ package router
 
 import (
 	"net/http"
+	"time"
 
-	"github.com/yourusername/bibliotheca/internal/auth"
-	"github.com/yourusername/bibliotheca/internal/middleware"
-	"github.com/yourusername/bibliotheca/pkg/jwt"
+	"github.com/dprince-03/Bibliotheca/internal/config"
+	"github.com/dprince-03/Bibliotheca/internal/middleware"
+	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
+	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
+	"github.com/dprince-03/Bibliotheca/pkg/jwt"
 )
 
 func New(
+	cfg *config.Config,
 	jwtManager *jwt.Manager,
 	authHandler *auth.Handler,
+	authorHandler *catalog.AuthorHandler,
+	bookHandler *catalog.BookHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -56,7 +62,7 @@ func New(
 		)
 	}
 
-	_, _, _ = requireAdmin, requireLibrarian, requireMember
+	_, _ = requireAdmin, requireMember
 
 	// ── Health (public, no rate limit) ────────
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -65,17 +71,6 @@ func New(
 		w.Write([]byte(`{"status":"ok","service":"bibliotheca"}`))
 	})
 
-	// Suppress unused warnings until steps 11-17
-	_, _, _ = requireAdmin, requireLibrarian, requireMember
-
-	// ── Health (public) ───────────────────────
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok","service":"bibliotheca"}`))
-	})
-
-	
 	// ── Auth (public, STRICT rate limit) ──────
 	// Each auth route gets the strict limiter applied individually
 	authRateLimit := middleware.RateLimit(authStore)
@@ -86,31 +81,30 @@ func New(
 	mux.Handle("POST /api/v1/auth/refresh", authRateLimit(http.HandlerFunc(authHandler.RefreshToken)))
 
 	// ── Authors ───────────────────────────────
-	mux.HandleFunc("GET /api/v1/authors", authorHandler.GetAll)                                      
-	mux.HandleFunc("GET /api/v1/authors/{id}", authorHandler.GetByID)                                     
-	mux.HandleFunc("GET /api/v1/authors/{id}/books", authorHandler.GetBooksByAuthor)                            
-	mux.Handle("POST /api/v1/authors", requireLibrarian(authorHandler.Create))                    
-	mux.Handle("PUT /api/v1/authors/{id}", requireLibrarian(authorHandler.Update))                    
-	mux.Handle("DELETE /api/v1/authors/{id}", requireAdmin(authorHandler.Delete))                        
-	
-	
+	mux.HandleFunc("GET /api/v1/authors", authorHandler.GetAll)
+	mux.HandleFunc("GET /api/v1/authors/{id}", authorHandler.GetByID)
+	mux.HandleFunc("GET /api/v1/authors/{id}/books", authorHandler.GetBooksByAuthor)
+	mux.Handle("POST /api/v1/authors", requireLibrarian(authorHandler.Create))
+	mux.Handle("PUT /api/v1/authors/{id}", requireLibrarian(authorHandler.Update))
+	mux.Handle("DELETE /api/v1/authors/{id}", requireAdmin(authorHandler.Delete))
+
 	// ── Books ─────────────────────────────────
 	mux.HandleFunc("GET /api/v1/books",
-		bookHandler.GetAll)                                        // public
+		bookHandler.GetAll) // public
 	mux.HandleFunc("GET /api/v1/books/{id}",
-		bookHandler.GetByID)                                       // public
+		bookHandler.GetByID) // public
 	mux.HandleFunc("GET /api/v1/search",
-		bookHandler.Search)                                        // public
+		bookHandler.Search) // public
 	mux.Handle("POST /api/v1/books",
-		requireLibrarian(bookHandler.Create))                      // librarian+
+		requireLibrarian(bookHandler.Create)) // librarian+
 	mux.Handle("PUT /api/v1/books/{id}",
-		requireLibrarian(bookHandler.Update))                      // librarian+
+		requireLibrarian(bookHandler.Update)) // librarian+
 	mux.Handle("DELETE /api/v1/books/{id}",
-		requireAdmin(bookHandler.Delete))                          // admin only
+		requireAdmin(bookHandler.Delete)) // admin only
 	mux.Handle("POST /api/v1/books/{id}/authors",
-		requireLibrarian(bookHandler.AssignAuthor))                // librarian+
+		requireLibrarian(bookHandler.AssignAuthor)) // librarian+
 	mux.Handle("DELETE /api/v1/books/{id}/authors/{authorId}",
-		requireLibrarian(bookHandler.RemoveAuthor))                
+		requireLibrarian(bookHandler.RemoveAuthor))
 
 	// ── Future route groups (added each step) ──
 	//

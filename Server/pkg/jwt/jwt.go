@@ -19,7 +19,7 @@ type Manager struct {
 	accessTokenTTL time.Duration
 }
 
-func NewManger(secret string, accessTokenTTL time.Duration) *Manager {
+func NewManager(secret string, accessTokenTTL time.Duration) *Manager {
 	return &Manager{
 		secret:         []byte(secret),
 		accessTokenTTL: accessTokenTTL,
@@ -30,12 +30,12 @@ func NewManger(secret string, accessTokenTTL time.Duration) *Manager {
 func (m *Manager) GenerateAccessToken(userID uint64, email, role string) (string, error) {
 	claims := Claims{
 		UserID: userID,
-		Email: email,
-		Role: role,
+		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenTTL)),
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			Issuer: "Bibliotheca",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "Bibliotheca",
 		},
 	}
 

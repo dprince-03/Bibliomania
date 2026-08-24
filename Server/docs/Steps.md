@@ -1,6 +1,9 @@
-> Status as of 2026-08-23: Steps 1-12 have code written for them, but the
-> project does not currently build — see "Known build issues" at the bottom
-> of this file. Steps 13-20 have no code yet beyond what's noted below.
+> Status as of 2026-08-24: Steps 1-12 have code written for them, and
+> `go build ./...` / `go vet ./...` succeed — see "Build history" at the
+> bottom of this file for how it got there. `internal/modules/` is now
+> organized **by feature** (`auth/`, `user/`, `catalog/`, `borrow/`,
+> `reading/`), not by layer — see `docs/ARCHITECTURE.md` for the package
+> map. Steps 13-20 have no code yet beyond what's noted below.
 
 ```
 ✅ Step 1  — Scaffold: folder structure, go.mod, git init
@@ -15,45 +18,38 @@
 ✅ Step 4  — Redis: connection, cache interface, key helpers
 
 ✅ Step 5  — Models, DTOs, Errors, Utils
-             models/
-               user.go         → User, UserProfile structs
-               author.go       → Author struct
-               book.go         → Book, BookAuthor structs
-               borrow.go       → BorrowRecord struct
-               reading.go      → ReadingSession, UserLibrary, Bookmark structs
-               token.go        → RefreshToken struct
-             dto/
-               auth.go         → RegisterRequest, LoginRequest, TokenResponse
-               book.go         → CreateBookRequest, UpdateBookRequest, BookResponse
-               author.go       → CreateAuthorRequest, AuthorResponse
-               borrow.go       → BorrowRequest, BorrowResponse
-               user.go         → UpdateProfileRequest, UserResponse
-               reading.go      → UpdateProgressRequest, BookmarkRequest
-             errors/
+             Now grouped by feature (see "Build history" → restructure), not
+             in their own top-level folders:
+               internal/modules/auth/model.go, dto.go       → RefreshToken; Register/Login/Refresh/Token/AuthResponse
+               internal/modules/user/model.go, dto.go       → User, UserProfile; UserResponse, UpdateProfileRequest, ...
+               internal/modules/catalog/author_model.go, author_dto.go, book_model.go, book_dto.go, book_author_model.go
+               internal/modules/borrow/model.go, dto.go     → BorrowRecord; BorrowRequest, BorrowResponse
+               internal/modules/reading/model.go, dto.go    → ReadingSession, UserLibrary, Bookmark; their DTOs
+             errors/ and utils/ stay shared/top-level (not feature-specific):
                errors.go       → AppError, typed HTTP errors (404, 401, 403, 422)
-             utils/
-               response.go     → JSON success/error response formatters
-               pagination.go   → Page, limit, offset helpers
-               file.go         → File type/size validation helpers
-               hash.go         → bcrypt password hash/compare
+               response.utils.go → Success/Error JSON response formatters
+               pagination.utils.go → Page, limit, offset helpers
+               file.utils.go   → File type/size validation helpers
+               hash.utils.go   → bcrypt password hash/compare
 
-✅ Step 6  — Repository Layer (⚠️ method names drifted from callers — see below)
-             One file per domain, pure DB queries, zero business logic
-             user.go         → GetByID, GetByEmail, CreateUser, UpdateUser, UpdateStatus
-             user_profile.go → GetByUserID, CreateUserProfile, UpdateUserProfile, ...
-             author.go       → GetAuthorByID, GetAllAuthors, CreateAuthor, UpdateAuthor, DeleteAuthor
-             book.go         → GetBookByID, GetAllBooks, CreateBook, UpdateBook, DeleteBook, Search, ...
-             book_author.go  → AssignAuthor, RemoveAuthor, GetAuthorsByBookID, GetBooksByAuthorID
-             borrow.go       → GetByID, GetAllByUserID, GetAll, Create, MarkReturned, UpdateOverdue, HasActiveBorrow
-             reading.go      → session/library/bookmark repos (interfaces only, no implementation file yet)
-             token.go        → Create, GetByToken, Revoke, RevokeAllByUserID, DeleteExpired
+✅ Step 6  — Repository Layer
+             One file per domain, pure DB queries, zero business logic.
+             Now lives inside each feature package (see Step 5) with
+             consistent GetByID/GetAll/Create/Update/Delete-style names —
+             the earlier method-name mismatch between interface and caller
+             is resolved as part of the restructure:
+             internal/modules/user/repository.go     → Repository, ProfileRepository
+             internal/modules/catalog/author_repository.go, book_repository.go, book_author_repository.go
+             internal/modules/borrow/repository.go   → Repository
+             internal/modules/reading/repository.go  → SessionRepository, LibraryRepository, BookmarkRepository
+             internal/modules/auth/repository.go     → TokenRepository
 
 ✅ Step 7  — Authentication
              pkg/jwt/
-               jwt.go          → GenerateAccessToken, ParseAccessToken
+               jwt.go          → GenerateAccessToken, ParseAccessToken, NewManager (was misnamed NewManger)
              pkg/refreshToken/
                refreshToken.go → Generate, HashToken
-             internal/auth/
+             internal/modules/auth/
                service.go      → Register, Login, Logout, RefreshToken
                handler.go      → HTTP handlers for the routes below
              Routes:
@@ -81,8 +77,8 @@
              Configurable RPS + burst from config; a stricter store is used for auth routes
 
 ✅ Step 11 — Authors Module
-             handlers/author.go   → GetAll, GetByID, GetBooksByAuthor, Create, Update, Delete
-             services/author.go   → business logic + Redis cache
+             internal/modules/catalog/author_handler.go → GetAll, GetByID, GetBooksByAuthor, Create, Update, Delete
+             internal/modules/catalog/author_service.go → business logic + Redis cache
              Routes:
                GET    /api/v1/authors
                GET    /api/v1/authors/:id
@@ -92,8 +88,8 @@
                DELETE /api/v1/authors/:id      [admin]
 
 ✅ Step 12 — Books Module (Search folded in early, see Step 13)
-             handlers/book.go     → CRUD + assign/remove authors + search
-             services/book.go     → business logic + Redis cache
+             internal/modules/catalog/book_handler.go → CRUD + assign/remove authors + search
+             internal/modules/catalog/book_service.go → business logic + Redis cache
              Routes:
                GET    /api/v1/books
                GET    /api/v1/books/:id
@@ -110,8 +106,8 @@
              ✅ Redis caching of search results (TTL 2 min)
 
 ⏳ Step 14 — E-Library: Upload / Download / Offline Sync
-             handlers/book.go (extended)
-             services/book.go  (extended)
+             internal/modules/catalog/book_handler.go (extended)
+             internal/modules/catalog/book_service.go  (extended)
              Upload PDF/EPUB → save to storage/books/{bookID}/
              Download with auth + role check + streaming
              Offline sync endpoint:
@@ -124,8 +120,8 @@
                PATCH /api/v1/reading/:bookId/sync
 
 ⏳ Step 15 — Reading Sessions + Progress + Bookmarks
-             handlers/reading.go
-             services/reading.go
+             internal/modules/reading/handler.go   (new)
+             internal/modules/reading/service.go   (new)
              Routes:
                GET   /api/v1/reading/:bookId/session
                PATCH /api/v1/reading/:bookId/progress
@@ -134,8 +130,8 @@
                DELETE /api/v1/reading/:bookId/bookmarks/:id
 
 ⏳ Step 16 — Borrowing System
-             handlers/borrow.go
-             services/borrow.go
+             internal/modules/borrow/handler.go   (new)
+             internal/modules/borrow/service.go   (new)
              Auto-detect overdue on fetch
              Decrements/increments available_copies atomically
              Routes:
@@ -145,8 +141,8 @@
                PATCH /api/v1/borrows/:id/return  [member, librarian, admin]
 
 ⏳ Step 17 — Member Management + User Library
-             handlers/user.go
-             services/user.go
+             internal/modules/user/handler.go   (new)
+             internal/modules/user/service.go   (new)
              Routes:
                GET   /api/v1/users/me
                PATCH /api/v1/users/me
@@ -181,26 +177,46 @@
              /health endpoint (checks DB + Redis liveness)       ← endpoint exists, no Redis/DB check yet
 ```
 
-## Known build issues (as of 2026-08-23)
+## Build history
 
-`go build ./...` currently fails. Two things need reconciling — this reads as
-an in-progress refactor, not a design problem:
+As of **2026-08-24**, `go build ./...` and `go vet ./...` both succeed, and
+`go run ./cmd/api` boots and serves real requests (verified: `/health`,
+`GET /api/v1/books`, `GET /api/v1/authors`, `POST /api/v1/auth/register`,
+RBAC-gated `POST /api/v1/authors` correctly 401s unauthenticated, and
+`GET /api/v1/authors/:id/books` — the one path that most exercises the
+`catalog` package's internal author↔book cross-references). This was fixed
+as a side effect of the `refactor/server-feature-structure` branch (see
+`docs/ARCHITECTURE.md` for the resulting package layout), not as separate
+targeted bug-fixing — the bugs below all lived in files that branch rewrote
+anyway. For posterity, everything that was actually wrong:
 
-1. **Import path split** — `go.mod` module is `bibliotheca`, but
-   `cmd/api/main.go`, `internal/router/router.go`, `internal/services/*.go`,
-   `internal/handlers/*.go`, and `internal/middleware/{rbac,ownership,rate_limiter}.go`
-   still import via the old `github.com/yourusername/bibliotheca/...` path.
-   Everything else (`internal/auth`, `internal/repository`, `internal/utils`,
-   `internal/middleware/auth.go`) already uses the correct `bibliotheca/...` path.
-2. **Repository/service method-name mismatch** — `internal/repository/repository.go`
-   defines (and the concrete repos implement) `GetAuthorByID`, `GetAllAuthors`,
-   `CreateAuthor`, `GetBookByID`, `GetAllBooks`, `CreateBook`, `UpdateBook`,
-   `DeleteBook`, but `internal/services/author.go` / `book.go` call the shorter
-   `GetByID`, `GetAll`, `Create`, `Update`, `Delete` — those don't exist on the
-   interfaces.
-3. `internal/router/router.go`'s `New(...)` only takes `(jwtManager, authHandler)`,
-   but `main.go` calls it with 5 args; the router body also references `cfg`,
-   `authorHandler`, `bookHandler` that aren't parameters, and has a duplicated
-   dead `/health` block.
-4. `cmd/api/main.go` calls `database.RunMigrations` (plural); the exported
-   function is `database.RunMigration` (singular).
+1. **Import path split** — `go.mod` module was the bare `bibliotheca`, but
+   several files imported via the old `github.com/yourusername/bibliotheca/...`
+   path. Fixed at the time: every file used the bare `bibliotheca/...`.
+   **Since updated again**: the module path is now
+   `github.com/dprince-03/Bibliotheca` (matching the actual GitHub repo,
+   case included), so `go get`/module-proxy resolution works correctly if
+   this module is ever imported from elsewhere — every internal import uses
+   that full path now, not the bare `bibliotheca/...` shown above.
+2. **Repository/service method-name mismatch** — the old
+   `internal/repository/repository.go` defined `GetAuthorByID`,
+   `GetAllAuthors`, `CreateAuthor`, `GetBookByID`, etc., but the services
+   calling them expected the shorter `GetByID`, `GetAll`, `Create`. Fixed:
+   every feature package's repository interface now uses the short,
+   non-stuttering names its own service actually calls.
+3. `internal/router/router.go`'s `New(...)` signature didn't match how
+   `main.go` called it, and the body referenced out-of-scope variables plus
+   a duplicated dead `/health` block. Fixed: signature corrected, dead code
+   removed.
+4. `cmd/api/main.go` called `database.RunMigrations` (plural); the exported
+   function is `database.RunMigration` (singular). Fixed.
+5. **Found during the restructure, not previously documented**:
+   `pkg/jwt.NewManger` was a typo for `NewManager` (fixed at the source, one
+   caller); `main.go` called `mysqlclient.Connect`, but the actual exported
+   function is `mysqlclient.ConnectMySqlClient` (fixed the call site);
+   `internal/utils` had two competing response-helper names in use across
+   the codebase (`SuccessResponse`/`ErrorResponse` vs `Success`/`Error`) —
+   standardized on the shorter `Success`/`Error` (the majority convention)
+   and updated the 3 call sites using the old names; `golang.org/x/time/rate`
+   was imported but missing from `go.sum` (`go get` + `go mod tidy` fixed
+   it).

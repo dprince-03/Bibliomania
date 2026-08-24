@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 Bibliotheca is a Library Management & E-Library System, now a multi-app monorepo:
-- **`Server/`** — Go REST API. Module name `bibliotheca`, Go 1.25, MySQL via `sqlx`, Redis for caching, JWT for auth, `net/http` (stdlib router, no framework).
+- **`Server/`** — Go REST API. Module path `github.com/dprince-03/Bibliotheca` (matches the GitHub repo exactly, case included — that's what makes `go get`/module-proxy resolution work if this module is ever imported elsewhere), Go 1.25, MySQL via `sqlx`, Redis for caching, JWT for auth, `net/http` (stdlib router, no framework).
 - **`Client/web/app`** — Next.js, the product app end-users browse (`output: "standalone"`).
 - **`Client/web/main`** — Next.js, the marketing/advertising site (`output: "export"`, static).
 - **`Client/admin/web`** — Next.js, admin dashboard frontend (`output: "standalone"`).
@@ -20,7 +20,7 @@ Bibliotheca is a Library Management & E-Library System, now a multi-app monorepo
 ## Commands (all run from `Server/`)
 
 ```bash
-go build ./...              # currently fails — see "Current build issues" below
+go build ./...
 go vet ./...
 go run ./cmd/api             # start the API (loads Server/.env via godotenv)
 go run ./cmd/key              # generate a JWT secret
@@ -45,11 +45,14 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docke
 
 ## Architecture
 
-Layered, one direction of dependency: `router` → `middleware chain` → `handlers` → `services` → `repository` → `models`, wired together explicitly in `cmd/api/main.go` (no DI framework). `dto` structs shape request/response bodies; `internal/errors.AppError` is the one error type handlers translate to HTTP status codes.
+`Server/internal/modules/` is organized **by feature**, not by layer: each business domain owns a package holding its own model/dto/repository/service/handler, wired together explicitly in `cmd/api/main.go` (no DI framework). Cross-cutting infra (`cache`, `config`, `database`, `errors`, `middleware`, `router`, `utils`) stays directly under `internal/`, not inside `modules/`. `internal/errors.AppError` is the one error type handlers translate to HTTP status codes; `internal/utils.Success`/`utils.Error` write the JSON envelope.
 
-- **`internal/auth`** is a self-contained vertical slice (service.go + handler.go) rather than living split across `handlers/`/`services/` like the other domains — Register/Login/Logout/RefreshToken. Refresh tokens are randomly generated, hashed before storage, and rotated (one-time use) on every refresh.
-- **`internal/services/*`** hold business logic and own Redis caching: read-through on GET (check cache key → miss → query repo → populate cache), explicit invalidation on writes (`invalidate*Cache` helpers called after Create/Update/Delete). Cache keys/TTLs are centralized in `internal/cache/keys.go` — always add new cache keys there rather than inlining `fmt.Sprintf` elsewhere (existing list-cache invalidation does this inconsistently; don't copy that pattern for new code).
-- **`internal/repository/repository.go`** is the single file declaring every repository interface (`UserRepository`, `AuthorRepository`, `BookRepository`, `BorrowRepository`, `ReadingSessionRepository`, `UserLibraryRepository`, `BookmarkRepository`, `TokenRepository`, ...); each domain then gets its own implementation file (`author.go`, `book.go`, `book_author.go`, etc.) with a `sqlx`-backed struct. When adding a repository method, declare it on the interface here first.
+- **`internal/modules/auth`** — Register/Login/Logout/RefreshToken. Owns its own `RefreshToken` model, its DTOs, and `TokenRepository`. Refresh tokens are randomly generated, hashed before storage, and rotated (one-time use) on every refresh. Depends on `internal/modules/user` for the `User` type and its repositories.
+- **`internal/modules/user`** — `User`/`UserProfile` models, their DTOs, `Repository` + `ProfileRepository`. No service/handler yet (Step 17 not built) — repository-only.
+- **`internal/modules/catalog`** — merges **author + book** into one package (`author_*.go` / `book_*.go` files within it), deliberately not split further: `BookResponse` embeds authors and `AuthorService.GetBooksByAuthor` returns books, a genuine many-to-many via the `book_authors` junction that would otherwise force either an import cycle or duplicated response DTOs between separate `author`/`book` packages. Owns Redis caching for both: read-through on GET (check cache key → miss → query repo → populate cache), explicit invalidation on writes (`invalidate*Cache` helpers called after Create/Update/Delete). Cache keys/TTLs are centralized in `internal/cache/keys.go` — always add new cache keys there rather than inlining `fmt.Sprintf` elsewhere (existing list-cache invalidation does this inconsistently; don't copy that pattern for new code).
+- **`internal/modules/borrow`** and **`internal/modules/reading`** — repository-only so far (Steps 16 and 15 respectively not built). `reading`'s `UserLibrary.Book` is a `*catalog.Book`, so `reading` depends on `catalog`.
+- Naming convention across all of the above: no redundant prefixes once the package name carries the meaning — `catalog.AuthorService`/`BookService` (two services, need disambiguating), but `user.Repository`/`borrow.Repository` (one repo per package, no prefix needed). Entity/DTO struct names (`Author`, `Book`, `BorrowRecord`, `AuthorResponse`, ...) are unchanged from before the restructure.
+- When adding a repository method, declare it on that domain's own `Repository` interface first — there's no longer a single central file listing every interface.
 - **Middleware** (`internal/middleware/`) is composed once in `router.New` via `middleware.Chain(...)`, applied outermost-to-innermost in the order passed to `Chain`. Route-specific middleware (auth guard, RBAC, per-route rate limits) is applied by wrapping individual handlers when routes are registered, not through the global chain. Roles (`admin`, `librarian`, `member`) are defined once in `middleware/rbac.go` — never compare against raw role strings elsewhere. `AuthGuard` must run before `RoleRequired`/`OwnershipRequired`/`SelfOrAdmin`, since they read user ID/role/email out of request context that only `AuthGuard` populates.
 - **Rate limiting** is per-IP token-bucket (`golang.org/x/time/rate`) with two separate `RateLimiterStore` instances: a loose global one and a strict one applied individually to each `/api/v1/auth/*` route to blunt brute-force attempts.
 - **Pagination** goes through `utils.GetPagination(r)` → `utils.Pagination{Page, Limit, Offset}` → `utils.NewPaginatedResponse(items, total, page, limit)`; keep new list endpoints consistent with this rather than inventing ad hoc paging.
@@ -58,18 +61,8 @@ Layered, one direction of dependency: `router` → `middleware chain` → `handl
 
 ### Roadmap and current state
 
-`Server/docs/Steps.md` is the authoritative step-by-step build roadmap (Steps 1-20) and tracks what's actually implemented vs. planned — check it before assuming a module exists. `Server/docs/project_setup.md` documents `.env` vars and the migration/schema layout. As of the last audit: Steps 1-12 have code, Steps 13-20 do not (borrow, reading-session, and user/member modules currently have only models/DTOs/repository interfaces — no handlers or services).
-
-### Current build issues
-
-`go build ./...` fails right now from an in-progress refactor, not a design problem — details are in `Server/docs/Steps.md` under "Known build issues":
-1. Import path split: some files still import `github.com/yourusername/bibliotheca/...`, others correctly use `bibliotheca/...` (the real module path). Every new/edited file should use `bibliotheca/...`.
-2. `internal/services/author.go` and `book.go` call repository methods (`GetByID`, `GetAll`, `Create`, `Update`, `Delete`) that don't match the interface method names actually declared in `internal/repository/repository.go` and implemented in `author.go`/`book.go` (`GetAuthorByID`, `GetAllAuthors`, `CreateAuthor`, ... / `GetBookByID`, `GetAllBooks`, `CreateBook`, `UpdateBook`, `DeleteBook`).
-3. `router.New(...)`'s signature and `main.go`'s call site disagree, and the router body references out-of-scope variables plus a duplicated dead `/health` block.
-4. `main.go` calls `database.RunMigrations` (plural); the exported function is `database.RunMigration` (singular).
+`Server/docs/Steps.md` is the authoritative step-by-step build roadmap (Steps 1-20) and tracks what's actually implemented vs. planned — check it before assuming a module exists. `Server/docs/project_setup.md` documents `.env` vars and the migration/schema layout. As of the last audit: Steps 1-12 have code and `go build ./...`/`go vet ./...` succeed; Steps 13-20 do not (borrow, reading-session, and user/member modules currently have only model/dto/repository — no service or handler).
 
 ## Git workflow for this repo
 
-Each roadmap step (currently Steps 13-20) is implemented on its own branch — one step per branch, not bundled. Branch naming: `feat/step-<N>-<short-slug>` (e.g. `feat/step-13-search-filtering`). After a step lands, update the corresponding entry in `Server/docs/Steps.md` (status marker + notes) as part of that same branch/PR. Non-roadmap work (infra, refactors) gets its own descriptively-named branch outside this numbering, e.g. `feat/infra-docker-stack`.
-
-**Planned follow-up, not yet started**: restructuring `Server/internal/{handlers,services,repository,models,dto}/<domain>.go` (grouped by layer) into `Server/internal/<domain>/{handler.go,service.go,repository.go,model.go,dto.go}` (grouped by feature) — deliberately kept out of the infra branch and out of the Steps 13-20 work to avoid tangling an architecture change with unrelated diffs. If you're picking this up, do it as its own branch (e.g. `refactor/server-feature-structure`), probably after the existing build-break fix lands (restructuring code that doesn't compile yet is harder to verify).
+Each roadmap step (currently Steps 13-20) is implemented on its own branch — one step per branch, not bundled. Branch naming: `feat/step-<N>-<short-slug>` (e.g. `feat/step-13-search-filtering`). After a step lands, update the corresponding entry in `Server/docs/Steps.md` (status marker + notes) as part of that same branch/PR. Non-roadmap work (infra, refactors) gets its own descriptively-named branch outside this numbering, e.g. `feat/infra-docker-stack`, `refactor/server-feature-structure`.

@@ -1,8 +1,8 @@
 package mysqlclient
 
 import (
-	"bibliotheca/internal/config"
 	"fmt"
+	"github.com/dprince-03/Bibliotheca/internal/config"
 	"log"
 	"time"
 
