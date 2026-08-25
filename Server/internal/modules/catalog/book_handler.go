@@ -155,22 +155,41 @@ func (h *BookHandler) RemoveAuthor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BookHandler) Search(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("q")
-	genre := r.URL.Query().Get("genre")
-	yearStr := r.URL.Query().Get("year")
+	q := r.URL.Query()
 	pg := utils.GetPagination(r)
 
-	var year int
-	if yearStr != "" {
-		y, err := strconv.Atoi(yearStr)
+	params := BookSearchParams{
+		Query: q.Get("q"),
+		Genre: q.Get("genre"),
+	}
+
+	if format := q.Get("format"); format != "" {
+		if format != "digital" && format != "physical" {
+			utils.Error(w, apperrors.BadRequest("invalid format parameter, must be 'digital' or 'physical'", nil))
+			return
+		}
+		params.Format = format
+	}
+
+	if authorStr := q.Get("author"); authorStr != "" {
+		authorID, err := strconv.ParseUint(authorStr, 10, 64)
+		if err != nil {
+			utils.Error(w, apperrors.BadRequest("invalid author parameter", err))
+			return
+		}
+		params.AuthorID = authorID
+	}
+
+	if yearStr := q.Get("year"); yearStr != "" {
+		year, err := strconv.Atoi(yearStr)
 		if err != nil {
 			utils.Error(w, apperrors.BadRequest("invalid year parameter", err))
 			return
 		}
-		year = y
+		params.Year = year
 	}
 
-	resp, err := h.service.Search(r.Context(), query, genre, year, pg)
+	resp, err := h.service.Search(r.Context(), params, pg)
 	if err != nil {
 		h.handleError(w, err)
 		return

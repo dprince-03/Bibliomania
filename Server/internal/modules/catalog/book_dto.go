@@ -42,3 +42,15 @@ type AssignAuthorRequest struct {
 	AuthorID uint64 `json:"author_id" validate:"required"`
 	Role     string `json:"role"      validate:"required,oneof=primary co-author editor illustrator"`
 }
+
+// BookSearchParams is parsed from GET /search query params, not a JSON body
+// — see BookHandler.Search. Query matches book title/description (full-text)
+// OR author name (partial); Genre/Format/AuthorID/Year are exact-match
+// filters. Zero values mean "no filter" for every field.
+type BookSearchParams struct {
+	Query    string
+	Genre    string
+	Format   string // "", "digital", or "physical"
+	AuthorID uint64
+	Year     int
+}

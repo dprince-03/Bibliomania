@@ -299,12 +299,10 @@ func (s *BookService) RemoveAuthor(ctx context.Context, bookID, authorID uint64)
 
 func (s *BookService) Search(
 	ctx context.Context,
-	query, genre string,
-	year int,
+	params BookSearchParams,
 	pg utils.Pagination,
 ) (*utils.PaginatedResponse, error) {
-	cacheKey := fmt.Sprintf("search:books:%s:%s:%d:%d:%d",
-		query, genre, year, pg.Page, pg.Limit)
+	cacheKey := cache.KeySearchBooks(params.Query, params.Genre, params.Format, params.AuthorID, params.Year, pg.Page, pg.Limit)
 
 	// Try cache
 	if cached, err := s.cache.Get(ctx, cacheKey); err == nil {
@@ -314,7 +312,7 @@ func (s *BookService) Search(
 		}
 	}
 
-	books, total, err := s.bookRepo.Search(ctx, query, genre, year, pg.Limit, pg.Offset)
+	books, total, err := s.bookRepo.Search(ctx, params, pg.Limit, pg.Offset)
 	if err != nil {
 		return nil, err
 	}

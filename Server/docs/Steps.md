@@ -100,10 +100,19 @@
                POST   /api/v1/books/:id/authors [librarian, admin]
                DELETE /api/v1/books/:id/authors/:authorId [librarian, admin]
 
-⏳ Step 13 — Search + Filtering + Pagination (partially done — see Step 12)
-             ✅ Basic search by query/genre/year exists in BookService.Search
-             ⏳ Full-text MySQL search, author filter, and format filter not yet added
-             ✅ Redis caching of search results (TTL 2 min)
+✅ Step 13 — Search + Filtering + Pagination
+             internal/modules/catalog/book_repository.go → Search(ctx, BookSearchParams, limit, offset)
+             internal/modules/catalog/book_dto.go        → BookSearchParams (Query, Genre, Format, AuthorID, Year)
+             `q` matches book title/description (MySQL FULLTEXT, idx_books_search)
+             OR author first/last name (LEFT JOIN book_authors + authors) —
+             e.g. q=Rowling finds her books even with no title/description match.
+             genre/format(digital|physical)/author(id)/year are exact-match filters,
+             independent of `q` and of each other.
+             Redis caching of search results (TTL 2 min, key includes every filter —
+             cache.KeySearchBooks in internal/cache/keys.go)
+             Verified end-to-end: created 2 authors + 2 books, exercised every filter
+             and both invalid-input cases (bad format, non-numeric author), all correct.
+             Route (unchanged from Step 12): GET /api/v1/search?q=&genre=&format=&author=&year=&page=&limit=
 
 ⏳ Step 14 — E-Library: Upload / Download / Offline Sync
              internal/modules/catalog/book_handler.go (extended)

@@ -27,6 +27,6 @@ func KeyUserSingle(id uint64) string {
 	return fmt.Sprintf("users:single:%d", id)
 }
 
-func KeySearchBooks(query string, page, limit int) string {
-	return fmt.Sprintf("search:books:%s:%d:%d", query, page, limit)
+func KeySearchBooks(query, genre, format string, authorID uint64, year, page, limit int) string {
+	return fmt.Sprintf("search:books:%s:%s:%s:%d:%d:%d:%d", query, genre, format, authorID, year, page, limit)
 }
