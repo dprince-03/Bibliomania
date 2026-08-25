@@ -12,6 +12,16 @@ type UpdateProgressRequest struct {
 	ClientUpdatedAt *time.Time `json:"client_updated_at" validate:"required"`
 }
 
+// ProgressUpdateRequest is for PATCH /reading/{bookId}/progress — the
+// plain, always-online progress update. Unlike UpdateProgressRequest
+// (used by Sync), there's no client_updated_at: the server just stamps
+// "now" and always wins, since there's no offline conflict to resolve here.
+type ProgressUpdateRequest struct {
+	CurrentPage    uint32  `json:"current_page"    validate:"min=0"`
+	TotalPages     uint32  `json:"total_pages"     validate:"required,min=1"`
+	CurrentChapter *string `json:"current_chapter" validate:"omitempty,max=255"`
+}
+
 type ReadingSessionResponse struct {
 	BookID         uint64    `json:"book_id"`
 	CurrentPage    uint32    `json:"current_page"`

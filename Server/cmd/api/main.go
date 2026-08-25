@@ -64,12 +64,13 @@ func main() {
 	bookRepo := catalog.NewBookRepository(db)
 	bookAuthorRepo := catalog.NewBookAuthorRepository(db)
 	readingSessionRepo := reading.NewSessionRepository(db)
+	bookmarkRepo := reading.NewBookmarkRepository(db)
 
 	// ── Services ──────────────────────────────
 	authService := auth.NewService(userRepo, profileRepo, tokenRepo, jwtManager, cfg.RefreshTokenTTL)
 	authorService := catalog.NewAuthorService(authorRepo, bookAuthorRepo, appCache)
 	bookService := catalog.NewBookService(bookRepo, authorRepo, bookAuthorRepo, appCache, cfg.StoragePath, cfg.MaxUploadSizeMB)
-	readingService := reading.NewService(readingSessionRepo, bookRepo)
+	readingService := reading.NewService(readingSessionRepo, bookmarkRepo, bookRepo)
 
 	// ── Handlers ──────────────────────────────
 	authHandler := auth.NewHandler(authService, validate)

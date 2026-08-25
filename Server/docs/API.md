@@ -193,6 +193,40 @@ input.
 { "book_id": 1, "current_page": 42, "total_pages": 300, "progress_pct": 14.0, "current_chapter": "Ch. 5", "is_completed": false, "last_read_at": "2026-08-25T02:49:00Z" }
 ```
 
+### `GET /reading/{bookId}/session` — any authenticated user
+Returns the caller's own `ReadingSessionResponse` for the book (same shape as
+`sync`'s response). `404` if they haven't started reading it yet.
+
+### `PATCH /reading/{bookId}/progress` — any authenticated user
+The plain, always-online counterpart to `sync` — no `client_updated_at` in
+the request (the server stamps "now" itself, which always beats whatever an
+offline client might `sync` in later with an older timestamp):
+```json
+{ "current_page": 42, "total_pages": 300, "current_chapter": "Ch. 5" }
+```
+Same response shape as `sync`. `current_page: 0` is valid (starting a book).
+
+### `GET /reading/{bookId}/bookmarks` — any authenticated user
+Returns the caller's own bookmarks for the book as a plain array (not
+paginated — bookmark counts per book are expected to be small). Bookmarks
+are private to each user; this never returns another user's bookmarks for
+the same book.
+```json
+[{ "id": 1, "book_id": 1, "page": 42, "note": "interesting part", "highlight": null, "color": "yellow" }]
+```
+
+### `POST /reading/{bookId}/bookmarks` — any authenticated user
+```json
+{ "page": 42, "note": "interesting part", "color": "yellow" }
+```
+`page` is required. `color` is one of `yellow`, `green`, `blue`, `pink`,
+`purple` (or omitted).
+
+### `DELETE /reading/{bookId}/bookmarks/{id}` — owner only
+`403` if the bookmark belongs to someone else, or doesn't belong to the
+`bookId` in the URL — no admin override (a bookmark is a personal note, not
+shared library data).
+
 ## `GET /health` — public, no auth, no rate limit
 ```json
 { "status": "ok", "service": "bibliotheca" }
@@ -201,7 +235,7 @@ Does not currently check DB/Redis liveness (see `Server/docs/Steps.md` → Step 
 
 ## Not implemented yet
 
-Borrowing, user/member management, and the rest of reading (session lookup,
-progress-only updates without the sync semantics, library status, bookmarks)
-have no routes yet — see `Server/docs/Steps.md` (Steps 15-17) for the
-planned shape of each.
+Borrowing and user/member management (including the user library — a
+book's status like "wishlist"/"reading"/"completed" for a given user) have
+no routes yet — see `Server/docs/Steps.md` (Steps 16-17) for the planned
+shape of each.
