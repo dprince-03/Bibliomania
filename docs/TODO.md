@@ -71,10 +71,10 @@ feature roadmap (Steps 13-20).
 
 ## Product code
 
-- [x] `Server`: Steps 1-18 (config/DB/Redis, auth, authors, books, search,
+- [x] `Server`: Steps 1-19 (config/DB/Redis, auth, authors, books, search,
       e-library upload/download, reading sessions/sync/bookmarks, borrowing,
-      user/member management, Swagger docs) — every feature step is done.
-      Remaining: Step 19 (Makefile + Docker polish) and Step 20 (final
+      user/member management, Swagger docs, Makefile + `make seed`) —
+      every feature step plus tooling is done. Remaining: Step 20 (final
       hardening — global error handler, real `/health` DB/Redis check,
       graceful shutdown is already done). See `Server/docs/Steps.md`.
 - [ ] `Client/web/app` — the actual library product app (currently the bare

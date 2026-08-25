@@ -12,12 +12,13 @@ Every route, request/response shape, and auth requirement lives there, generated
 **Regenerating** after changing a handler's annotations:
 
 ```bash
-cd Server
-swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
-swag fmt -g cmd/api/main.go
+cd Server && make swagger
+# equivalent to:
+#   swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
+#   swag fmt -g cmd/api/main.go
 ```
 
-`internal/swaggerdocs/` (the generated `docs.go` + `swagger.json` + `swagger.yaml`) is committed, not gitignored — `cmd/api/main.go` blank-imports `docs.go` for its `init()` side effect, so it needs to be present for `go build`/`go run` to work. There's no Makefile yet (Step 19) to fold regeneration into a build step.
+`internal/swaggerdocs/` (the generated `docs.go` + `swagger.json` + `swagger.yaml`) is committed, not gitignored — `cmd/api/main.go` blank-imports `docs.go` for its `init()` side effect, so it needs to be present for `go build`/`go run` to work.
 
 ## Conventions
 
