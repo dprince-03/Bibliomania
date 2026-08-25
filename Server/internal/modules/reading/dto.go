@@ -3,10 +3,13 @@ package reading
 import "time"
 
 type UpdateProgressRequest struct {
-	CurrentPage     uint32     `json:"current_page"     validate:"required,min=0"`
+	// CurrentPage has no "required" tag deliberately — 0 is the valid
+	// starting value (page 0 / not started yet), and go-playground/validator's
+	// "required" rejects the zero value for numeric types.
+	CurrentPage     uint32     `json:"current_page"     validate:"min=0"`
 	TotalPages      uint32     `json:"total_pages"      validate:"required,min=1"`
 	CurrentChapter  *string    `json:"current_chapter"  validate:"omitempty,max=255"`
-	ClientUpdatedAt *time.Time `json:"client_updated_at"`
+	ClientUpdatedAt *time.Time `json:"client_updated_at" validate:"required"`
 }
 
 type ReadingSessionResponse struct {

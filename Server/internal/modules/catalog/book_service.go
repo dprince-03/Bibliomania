@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dprince-03/Bibliotheca/internal/cache"
@@ -16,6 +19,8 @@ type BookService struct {
 	authorRepo     AuthorRepository
 	bookAuthorRepo BookAuthorRepository
 	cache          cache.Cache
+	storagePath    string
+	maxUploadMB    int64
 }
 
 func NewBookService(
@@ -23,12 +28,16 @@ func NewBookService(
 	authorRepo AuthorRepository,
 	bookAuthorRepo BookAuthorRepository,
 	cache cache.Cache,
+	storagePath string,
+	maxUploadMB int64,
 ) *BookService {
 	return &BookService{
 		bookRepo:       bookRepo,
 		authorRepo:     authorRepo,
 		bookAuthorRepo: bookAuthorRepo,
 		cache:          cache,
+		storagePath:    storagePath,
+		maxUploadMB:    maxUploadMB,
 	}
 }
 
@@ -330,6 +339,89 @@ func (s *BookService) Search(
 	}
 
 	return &resp, nil
+}
+
+// ── E-Library: Upload / Download ──────────────────────────
+
+// UploadFile validates and saves a book's digital copy, then updates the
+// book record. The stored path is relative to storagePath (not absolute) so
+// a differently-configured storagePath (e.g. between dev and prod) doesn't
+// orphan existing records — GetDownloadPath re-joins it at read time.
+func (s *BookService) UploadFile(ctx context.Context, bookID uint64, filename string, size int64, src io.Reader) (*BookResponse, error) {
+	if _, err := s.bookRepo.GetByID(ctx, bookID); err != nil {
+		return nil, err
+	}
+
+	format, err := utils.ValidateFileFormat(filename)
+	if err != nil {
+		return nil, apperrors.BadRequest(err.Error(), err)
+	}
+	if format != "pdf" && format != "epub" {
+		return nil, apperrors.BadRequest("only pdf and epub files are supported for books", nil)
+	}
+
+	if err := utils.ValidateFileSize(size, s.maxUploadMB); err != nil {
+		return nil, apperrors.BadRequest(err.Error(), err)
+	}
+
+	relDir := filepath.Join("books", fmt.Sprint(bookID))
+	absDir := filepath.Join(s.storagePath, relDir)
+	if err := os.MkdirAll(absDir, 0755); err != nil {
+		return nil, apperrors.Internal(err)
+	}
+
+	safeName := utils.SanitizeFilename(filename)
+	relPath := filepath.Join(relDir, safeName)
+	absPath := filepath.Join(s.storagePath, relPath)
+
+	dst, err := os.Create(absPath)
+	if err != nil {
+		return nil, apperrors.Internal(err)
+	}
+	defer dst.Close()
+
+	written, err := io.Copy(dst, src)
+	if err != nil {
+		return nil, apperrors.Internal(err)
+	}
+
+	if err := s.bookRepo.UpdateFilePath(ctx, bookID, relPath, written, format); err != nil {
+		return nil, err
+	}
+
+	s.invalidateBookCache(ctx, bookID)
+
+	updated, err := s.bookRepo.GetByID(ctx, bookID)
+	if err != nil {
+		return nil, err
+	}
+	authors, err := s.bookAuthorRepo.GetAuthorsByBookID(ctx, bookID)
+	if err != nil {
+		return nil, err
+	}
+	authorDTOs := make([]AuthorResponse, len(authors))
+	for i, a := range authors {
+		authorDTOs[i] = mapAuthorToResponse(a)
+	}
+
+	resp := mapBookToResponse(updated, authorDTOs)
+	return &resp, nil
+}
+
+// GetDownloadPath returns the absolute on-disk path and a display filename
+// for a book's digital copy, or a 404 if it doesn't have one.
+func (s *BookService) GetDownloadPath(ctx context.Context, bookID uint64) (absPath, filename string, err error) {
+	book, err := s.bookRepo.GetByID(ctx, bookID)
+	if err != nil {
+		return "", "", err
+	}
+	if book.FilePath == nil || *book.FilePath == "" {
+		return "", "", apperrors.NotFound("digital file for this book")
+	}
+
+	absPath = filepath.Join(s.storagePath, *book.FilePath)
+	filename = filepath.Base(absPath)
+	return absPath, filename, nil
 }
 
 // ── Helpers ───────────────────────────────────────────────

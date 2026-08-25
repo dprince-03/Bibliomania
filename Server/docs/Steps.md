@@ -114,23 +114,53 @@
              and both invalid-input cases (bad format, non-numeric author), all correct.
              Route (unchanged from Step 12): GET /api/v1/search?q=&genre=&format=&author=&year=&page=&limit=
 
-⏳ Step 14 — E-Library: Upload / Download / Offline Sync
-             internal/modules/catalog/book_handler.go (extended)
-             internal/modules/catalog/book_service.go  (extended)
-             Upload PDF/EPUB → save to storage/books/{bookID}/
-             Download with auth + role check + streaming
-             Offline sync endpoint:
-               PATCH /api/v1/reading/:bookId/sync
-               → client sends progress + client_updated_at
-               → server resolves conflict (last write wins)
+✅ Step 14 — E-Library: Upload / Download / Offline Sync
+             internal/modules/catalog/book_handler.go, book_service.go (extended)
+               Upload validates format (pdf/epub only — file_format column is
+               ENUM('pdf','epub'), so anything else is rejected before it
+               ever reaches the DB) and size (MAX_UPLOAD_SIZE_MB), streams to
+               {STORAGE_PATH}/books/{bookID}/{sanitized filename}, and stores
+               a path RELATIVE to STORAGE_PATH in the DB (so a differently
+               configured STORAGE_PATH between environments doesn't orphan
+               existing records). MaxBytesReader caps the request body before
+               ParseMultipartForm runs, so an oversized upload is rejected
+               before being buffered.
+               Download uses http.ServeFile (range requests, content-type
+               sniffing) with Content-Disposition: attachment.
+             internal/modules/reading/service.go, handler.go, dto.go (new —
+               first code in this package beyond repository-only; scoped to
+               just Sync for this step, Step 15 extends the same Service)
+               Sync verifies the book exists (clean 404 instead of a raw FK
+               violation), computes progress_pct/is_completed server-side
+               (the client only sends current_page/total_pages), and
+               delegates conflict resolution entirely to
+               SessionRepository.Upsert's SQL (last write wins, compared by
+               client_updated_at) — the service re-fetches afterward so the
+               response always reflects the authoritative merged state, not
+               necessarily what the client just sent.
+               Fixed along the way: UpdateProgressRequest.CurrentPage had a
+               `required` validator tag, which go-playground/validator
+               treats as failing on the zero value — meaning "start reading
+               at page 0" was impossible. Removed; added `required` to
+               ClientUpdatedAt instead, since the whole conflict-resolution
+               mechanism depends on it being present.
              Routes:
                POST  /api/v1/books/:id/upload   [librarian, admin]
-               GET   /api/v1/books/:id/download  [member, librarian, admin]
-               PATCH /api/v1/reading/:bookId/sync
+               GET   /api/v1/books/:id/download  [member, librarian, admin] (i.e. any authenticated user)
+               PATCH /api/v1/reading/:bookId/sync [member, librarian, admin]
+             Verified end-to-end against a live server + MySQL + Redis: wrong
+             file type → 400, no auth → 401/404 cases, successful upload
+             flips is_digital/file_format, download streams correct content
+             with correct headers, and — the important one — sync's
+             last-write-wins actually works (a stale update with an older
+             client_updated_at is correctly discarded, not applied).
+             `Server/storage/` added to root .gitignore (uploaded content,
+             never committed).
 
 ⏳ Step 15 — Reading Sessions + Progress + Bookmarks
-             internal/modules/reading/handler.go   (new)
-             internal/modules/reading/service.go   (new)
+             internal/modules/reading/handler.go, service.go — Step 14
+             already created these (scoped to just Sync); extend the same
+             Service/Handler, don't create new ones.
              Routes:
                GET   /api/v1/reading/:bookId/session
                PATCH /api/v1/reading/:bookId/progress

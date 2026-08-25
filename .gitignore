@@ -45,3 +45,6 @@ node_modules/
 dist/
 .next/
 coverage/
+
+# Uploaded e-library files (Step 14) — user-uploaded content, never committed
+Server/storage/

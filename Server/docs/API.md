@@ -160,6 +160,39 @@ adjusts `available_copies` by the same delta.
 ### `DELETE /books/{id}/authors/{authorId}` — `librarian`, `admin`
 Refuses (`400`) if it would leave the book with zero authors.
 
+### `POST /books/{id}/upload` — `librarian`, `admin`
+`multipart/form-data` with a single field named `file`. Only `.pdf`/`.epub`
+are accepted (the DB column is `ENUM('pdf','epub')` — anything else, even
+formats `ValidateFileFormat` otherwise recognizes like `.mobi`/`.txt`, is a
+`400`), and only up to `MAX_UPLOAD_SIZE_MB`. On success, sets
+`is_digital: true` and returns the updated `BookResponse` (now including
+`file_format`). Re-uploading replaces the previous file.
+
+### `GET /books/{id}/download` — any authenticated user
+Streams the file with `Content-Disposition: attachment`. `404` if the book
+has no uploaded file yet.
+
+## Reading
+
+### `PATCH /reading/{bookId}/sync` — any authenticated user
+Creates or updates the caller's own reading session for a book (there's no
+`user_id` in the body — it comes from the token). Designed for offline
+clients: send whatever the client has locally, including when it was last
+updated there.
+```json
+{ "current_page": 42, "total_pages": 300, "current_chapter": "Ch. 5", "client_updated_at": "2026-08-25T02:49:00Z" }
+```
+`client_updated_at` is required. If the server already has a session with a
+**newer** `client_updated_at` than what you send, your update is silently
+discarded and the response reflects the server's existing (newer) state —
+this is the "last write wins" conflict resolution, and it means the response
+may not match what you just sent. `progress_pct` and `is_completed` are
+computed server-side from `current_page`/`total_pages`, not accepted as
+input.
+```json
+{ "book_id": 1, "current_page": 42, "total_pages": 300, "progress_pct": 14.0, "current_chapter": "Ch. 5", "is_completed": false, "last_read_at": "2026-08-25T02:49:00Z" }
+```
+
 ## `GET /health` — public, no auth, no rate limit
 ```json
 { "status": "ok", "service": "bibliotheca" }
@@ -168,6 +201,7 @@ Does not currently check DB/Redis liveness (see `Server/docs/Steps.md` → Step 
 
 ## Not implemented yet
 
-Borrowing, reading sessions/bookmarks, user/member management, and e-library
-upload/download have no routes yet — see `Server/docs/Steps.md` (Steps 14-17)
-for the planned shape of each.
+Borrowing, user/member management, and the rest of reading (session lookup,
+progress-only updates without the sync semantics, library status, bookmarks)
+have no routes yet — see `Server/docs/Steps.md` (Steps 15-17) for the
+planned shape of each.

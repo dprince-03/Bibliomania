@@ -8,6 +8,7 @@ import (
 	"github.com/dprince-03/Bibliotheca/internal/middleware"
 	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
 	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
+	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
 	"github.com/dprince-03/Bibliotheca/pkg/jwt"
 )
 
@@ -17,6 +18,7 @@ func New(
 	authHandler *auth.Handler,
 	authorHandler *catalog.AuthorHandler,
 	bookHandler *catalog.BookHandler,
+	readingHandler *reading.Handler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -62,8 +64,6 @@ func New(
 		)
 	}
 
-	_, _ = requireAdmin, requireMember
-
 	// ── Health (public, no rate limit) ────────
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -106,19 +106,21 @@ func New(
 	mux.Handle("DELETE /api/v1/books/{id}/authors/{authorId}",
 		requireLibrarian(bookHandler.RemoveAuthor))
 
+	// ── E-Library (Step 14) ───────────────────
+	mux.Handle("POST /api/v1/books/{id}/upload",
+		requireLibrarian(bookHandler.Upload)) // librarian+
+	mux.Handle("GET /api/v1/books/{id}/download",
+		requireMember(bookHandler.Download)) // member+ (i.e. any authenticated user)
+
+	// ── Reading (Step 14: sync only; Step 15 adds the rest) ──
+	mux.Handle("PATCH /api/v1/reading/{bookId}/sync",
+		requireMember(readingHandler.Sync))
+
 	// ── Future route groups (added each step) ──
 	//
-	// Search (Step 13):
-	//   GET    /api/v1/search             → public
-	//
-	// E-Library (Step 14):
-	//   POST   /api/v1/books/:id/upload   → requireLibrarian
-	//   GET    /api/v1/books/:id/download → requireMember
-	//
-	// Reading (Step 15):
+	// Reading, continued (Step 15):
 	//   GET    /api/v1/reading/:bookId/session    → requireMember
 	//   PATCH  /api/v1/reading/:bookId/progress   → requireMember
-	//   PATCH  /api/v1/reading/:bookId/sync       → requireMember
 	//   GET    /api/v1/reading/:bookId/bookmarks  → requireMember
 	//   POST   /api/v1/reading/:bookId/bookmarks  → requireMember
 	//   DELETE /api/v1/reading/:bookId/bookmarks/:id → requireMember
