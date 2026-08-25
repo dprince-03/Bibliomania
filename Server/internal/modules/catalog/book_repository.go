@@ -21,7 +21,7 @@ type BookRepository interface {
 	UpdateFilePath(ctx context.Context, id uint64, path string, size int64, format string) error
 	DecrementAvailableCopies(ctx context.Context, id uint64) error
 	IncrementAvailableCopies(ctx context.Context, id uint64) error
-	Search(ctx context.Context, query, genre string, year, limit, offset int) ([]*Book, int, error)
+	Search(ctx context.Context, params BookSearchParams, limit, offset int) ([]*Book, int, error)
 }
 
 type bookRepository struct {
@@ -160,25 +160,41 @@ func (r *bookRepository) IncrementAvailableCopies(ctx context.Context, id uint64
 	return nil
 }
 
-func (r *bookRepository) Search(ctx context.Context, query, genre string, year, limit, offset int) ([]*Book, int, error) {
+// Search filters books by free-text query (matches title/description via
+// MySQL full-text search, OR author name), plus exact-match genre/format/
+// author/year filters. The author join is always present — needed both for
+// the free-text author-name match and the author_id filter — but GROUP BY
+// keeps one row per book even when a book has several matching authors.
+func (r *bookRepository) Search(ctx context.Context, params BookSearchParams, limit, offset int) ([]*Book, int, error) {
 	var books []*Book
 	var total int
 
-	// Build query dynamically based on filters provided
 	conditions := []string{}
 	args := []any{}
 
-	if query != "" {
-		conditions = append(conditions, "MATCH(title, description) AGAINST(? IN BOOLEAN MODE)")
-		args = append(args, query)
+	if params.Query != "" {
+		conditions = append(conditions,
+			"(MATCH(b.title, b.description) AGAINST(? IN BOOLEAN MODE) OR a.first_name LIKE ? OR a.last_name LIKE ?)")
+		like := "%" + params.Query + "%"
+		args = append(args, params.Query, like, like)
 	}
-	if genre != "" {
-		conditions = append(conditions, "genre = ?")
-		args = append(args, genre)
+	if params.Genre != "" {
+		conditions = append(conditions, "b.genre = ?")
+		args = append(args, params.Genre)
 	}
-	if year > 0 {
-		conditions = append(conditions, "published_year = ?")
-		args = append(args, year)
+	switch params.Format {
+	case "digital":
+		conditions = append(conditions, "b.is_digital = TRUE")
+	case "physical":
+		conditions = append(conditions, "b.is_digital = FALSE")
+	}
+	if params.AuthorID > 0 {
+		conditions = append(conditions, "ba.author_id = ?")
+		args = append(args, params.AuthorID)
+	}
+	if params.Year > 0 {
+		conditions = append(conditions, "b.published_year = ?")
+		args = append(args, params.Year)
 	}
 
 	whereClause := ""
@@ -186,14 +202,20 @@ func (r *bookRepository) Search(ctx context.Context, query, genre string, year, 
 		whereClause = "WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	countSQL := fmt.Sprintf("SELECT COUNT(*) FROM books %s", whereClause)
+	const fromClause = `
+		FROM books b
+		LEFT JOIN book_authors ba ON ba.book_id = b.id
+		LEFT JOIN authors a ON a.id = ba.author_id
+	`
+
+	countSQL := fmt.Sprintf("SELECT COUNT(DISTINCT b.id) %s %s", fromClause, whereClause)
 	if err := r.db.GetContext(ctx, &total, countSQL, args...); err != nil {
 		return nil, 0, apperrors.Internal(err)
 	}
 
 	searchSQL := fmt.Sprintf(
-		"SELECT * FROM books %s ORDER BY created_at DESC LIMIT ? OFFSET ?",
-		whereClause,
+		"SELECT b.* %s %s GROUP BY b.id ORDER BY b.created_at DESC LIMIT ? OFFSET ?",
+		fromClause, whereClause,
 	)
 	args = append(args, limit, offset)
 	if err := r.db.SelectContext(ctx, &books, searchSQL, args...); err != nil {

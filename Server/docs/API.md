@@ -117,11 +117,18 @@ Paginated list of `BookResponse`.
 }
 ```
 
-### `GET /search?q=&genre=&year=&page=&limit=` — public
-Same paginated `BookResponse` shape as `/books`. `q` does a MySQL full-text
-match against title+description; `genre` and `year` are exact-match filters.
-Author and format filters are not implemented yet (Step 13 is partial — see
-`Server/docs/Steps.md`).
+### `GET /search?q=&genre=&format=&author=&year=&page=&limit=` — public
+Same paginated `BookResponse` shape as `/books`. All params are optional and
+independent of each other:
+- `q` — free text. Matches book title/description (MySQL full-text) **or**
+  author first/last name — e.g. `q=Rowling` finds her books even if that
+  word appears nowhere in the title or description.
+- `genre` — exact match.
+- `format` — `digital` or `physical` (maps to `is_digital`); any other value
+  is a `400`.
+- `author` — an author **ID** (not a name — use `q` for name search); a
+  non-numeric value is a `400`.
+- `year` — exact match on `published_year`.
 
 ### `POST /books` — `librarian`, `admin`
 ```json
