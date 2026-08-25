@@ -76,7 +76,7 @@ func Internal(err error) *AppError {
 
 func TooManyRequests(msg string) *AppError {
 	return &AppError{
-		Code: http.StatusTooManyRequests,
+		Code:    http.StatusTooManyRequests,
 		Message: msg,
 	}
 }

@@ -35,7 +35,7 @@ func RunMigration(db *sqlx.DB, migrationsPath string) error {
 
 		return fmt.Errorf("migration failed: %w", err)
 	}
-	
+
 	log.Println("Migrations applied successfully")
 	return nil
 }

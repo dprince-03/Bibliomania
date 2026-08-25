@@ -23,7 +23,27 @@ import (
 	"github.com/dprince-03/Bibliotheca/pkg/jwt"
 	"github.com/dprince-03/Bibliotheca/pkg/mysqlclient"
 	"github.com/dprince-03/Bibliotheca/pkg/redisclient"
+
+	_ "github.com/dprince-03/Bibliotheca/internal/swaggerdocs"
 )
+
+//	@title			Bibliotheca API
+//	@version		1.0
+//	@description	Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.
+//	@description	All endpoints except /health and /auth/* return the shared JSON envelope: {"success", "message"|"error", "data"|"code"}.
+
+//	@contact.name	Bibliotheca
+//	@contact.url	https://github.com/dprince-03/Bibliotheca
+
+//	@license.name	MIT
+
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and the JWT access token (obtained from /auth/login or /auth/register).
 
 func main() {
 	// ── Config ────────────────────────────────

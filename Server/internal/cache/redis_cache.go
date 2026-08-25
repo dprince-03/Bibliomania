@@ -89,6 +89,6 @@ func (r *RedisCache) Flush(ctx context.Context) error {
 	if err := r.client.Del(ctx, keys...).Err(); err != nil {
 		return fmt.Errorf("cache flush error: %w", err)
 	}
-	
+
 	return nil
 }

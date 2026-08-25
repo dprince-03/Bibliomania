@@ -1,8 +1,9 @@
 # API Reference (frontend view)
 
-The endpoint list, request/response shapes, and auth model live in one place
-— **[`Server/docs/API.md`](../../Server/docs/API.md)** — don't duplicate them
-here; this file only covers what's specific to consuming that API *from* the
+The endpoint list, request/response shapes, and auth model live in the
+generated Swagger UI (`http://localhost:8080/swagger/index.html` when the
+server is running — see `Server/docs/API.md`) — don't duplicate them here;
+this file only covers what's specific to consuming that API *from* the
 apps in this `Client/` directory. None of the apps below have any API
 integration code yet (all are bare framework scaffolds) — this is here so
 that work starts against the right base URL from day one.

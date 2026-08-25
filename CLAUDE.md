@@ -28,6 +28,10 @@ air                            # hot reload during dev (config: Server/.air.toml
 
 migrate create -ext sql -dir migrations -seq <name>   # new migration pair
 migrate -path ./migrations -database "mysql://user:pass@tcp(localhost:3306)/bibliotheca" up
+
+# After changing a handler's swaggo comments, regenerate internal/swaggerdocs/ (committed, see Server/docs/API.md):
+swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
+swag fmt -g cmd/api/main.go
 ```
 
 There are no tests in the repo yet and no Makefile — don't assume `make test`/`make run` work.
@@ -62,8 +66,8 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docke
 
 ### Roadmap and current state
 
-`Server/docs/Steps.md` is the authoritative step-by-step build roadmap (Steps 1-20) and tracks what's actually implemented vs. planned — check it before assuming a module exists. `Server/docs/project_setup.md` documents `.env` vars and the migration/schema layout. As of the last audit: Steps 1-17 (every feature step) are done and `go build ./...`/`go vet ./...` succeed. Steps 18-20 are tooling/polish (Swagger generation, Makefile/Docker, final hardening), not new features, and have no code yet.
+`Server/docs/Steps.md` is the authoritative step-by-step build roadmap (Steps 1-20) and tracks what's actually implemented vs. planned — check it before assuming a module exists. `Server/docs/project_setup.md` documents `.env` vars and the migration/schema layout. As of the last audit: Steps 1-18 are done (every feature step, plus Swagger/OpenAPI docs at `GET /swagger/*`) and `go build ./...`/`go vet ./...` succeed. Steps 19-20 are tooling/polish (Makefile/Docker, final hardening), not new features, and have no code yet.
 
 ## Git workflow for this repo
 
-Each roadmap step (currently Steps 18-20 remain) is implemented on its own branch — one step per branch, not bundled. Branch naming: `feat/step-<N>-<short-slug>` (e.g. `feat/step-17-member-management`). After a step lands, update the corresponding entry in `Server/docs/Steps.md` (status marker + notes) as part of that same branch/PR. Non-roadmap work (infra, refactors) gets its own descriptively-named branch outside this numbering, e.g. `feat/infra-docker-stack`, `refactor/server-feature-structure`.
+Each roadmap step (currently Steps 19-20 remain) is implemented on its own branch — one step per branch, not bundled. Branch naming: `feat/step-<N>-<short-slug>` (e.g. `feat/step-18-swagger-docs`). After a step lands, update the corresponding entry in `Server/docs/Steps.md` (status marker + notes) as part of that same branch/PR. Non-roadmap work (infra, refactors) gets its own descriptively-named branch outside this numbering, e.g. `feat/infra-docker-stack`, `refactor/server-feature-structure`.

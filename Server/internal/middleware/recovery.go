@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
 	"log/slog"
 	"net/http"
+
+	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
+	"github.com/dprince-03/Bibliotheca/internal/utils"
 )
 
 func Recovery(next http.Handler) http.Handler {

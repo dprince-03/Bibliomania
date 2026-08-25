@@ -2,8 +2,9 @@ package utils
 
 import (
 	"encoding/json"
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
 	"net/http"
+
+	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
 )
 
 type APIResponse struct {

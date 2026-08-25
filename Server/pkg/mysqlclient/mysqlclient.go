@@ -2,9 +2,10 @@ package mysqlclient
 
 import (
 	"fmt"
-	"github.com/dprince-03/Bibliotheca/internal/config"
 	"log"
 	"time"
+
+	"github.com/dprince-03/Bibliotheca/internal/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
