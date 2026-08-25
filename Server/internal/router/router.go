@@ -7,6 +7,7 @@ import (
 	"github.com/dprince-03/Bibliotheca/internal/config"
 	"github.com/dprince-03/Bibliotheca/internal/middleware"
 	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
+	"github.com/dprince-03/Bibliotheca/internal/modules/borrow"
 	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
 	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
 	"github.com/dprince-03/Bibliotheca/pkg/jwt"
@@ -19,6 +20,7 @@ func New(
 	authorHandler *catalog.AuthorHandler,
 	bookHandler *catalog.BookHandler,
 	readingHandler *reading.Handler,
+	borrowHandler *borrow.Handler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -126,13 +128,17 @@ func New(
 	mux.Handle("DELETE /api/v1/reading/{bookId}/bookmarks/{id}",
 		requireMember(readingHandler.DeleteBookmark))
 
+	// ── Borrows (Step 16) ──────────────────────
+	mux.Handle("GET /api/v1/borrows",
+		requireLibrarian(borrowHandler.GetAll)) // librarian, admin
+	mux.Handle("GET /api/v1/borrows/my",
+		requireMember(borrowHandler.GetMyBorrows))
+	mux.Handle("POST /api/v1/borrows",
+		requireMember(borrowHandler.Borrow))
+	mux.Handle("PATCH /api/v1/borrows/{id}/return",
+		requireMember(borrowHandler.Return)) // ownership enforced in the service (self, or librarian/admin)
+
 	// ── Future route groups (added each step) ──
-	//
-	// Borrows (Step 16):
-	//   GET    /api/v1/borrows            → requireLibrarian
-	//   GET    /api/v1/borrows/my         → requireMember
-	//   POST   /api/v1/borrows            → requireMember
-	//   PATCH  /api/v1/borrows/:id/return → requireMember
 	//
 	// Users (Step 17):
 	//   GET    /api/v1/users/me           → requireMember

@@ -196,16 +196,40 @@
              the one that matters most — a second user cannot delete or see
              the first user's bookmarks (403, and confirmed not deleted).
 
-⏳ Step 16 — Borrowing System
-             internal/modules/borrow/handler.go   (new)
-             internal/modules/borrow/service.go   (new)
-             Auto-detect overdue on fetch
-             Decrements/increments available_copies atomically
+✅ Step 16 — Borrowing System
+             internal/modules/borrow/handler.go, service.go (new)
+             internal/config: new BorrowLoanDays (BORROW_LOAN_DAYS, default
+             14) — loan period length, added since nothing like it existed.
+             Auto-detect overdue on fetch: GetAll/GetMyBorrows both sweep
+             borrowRepo.UpdateOverdue before reading — a read-time sweep,
+             since there's no cron/worker in this codebase (verified: a
+             borrow created with a due date already in the past shows
+             status="active" right after Borrow, then "overdue" on the very
+             next GET).
+             Decrements/increments available_copies atomically:
+             DecrementAvailableCopies IS the concurrency-safe check-and-update
+             (WHERE available_copies > 0) — HasActiveBorrow is a separate
+             business-rule guard (no double-borrowing the same book), not
+             the safety mechanism. If Create fails after the decrement
+             succeeds, the decrement is compensated (incremented back) so a
+             failed borrow can't leak a copy.
+             Return ownership: self, or librarian/admin (staff processing a
+             return on someone's behalf) — enforced in the service, not
+             route middleware, matching how reading/bookmark ownership was
+             done in Step 15. Returning an already-returned borrow is a 409,
+             not a silent no-op (double-return would double-increment
+             available_copies).
              Routes:
                GET  /api/v1/borrows              [admin, librarian]
                GET  /api/v1/borrows/my           [member]
                POST /api/v1/borrows              [member]
                PATCH /api/v1/borrows/:id/return  [member, librarian, admin]
+             Verified end-to-end (3 real registered users + admin): full
+             borrow→return lifecycle, copies dropping to 0 across 2 borrows
+             on a 2-copy book then a 3rd borrower correctly rejected (400),
+             double-borrow rejected (409), cross-user return rejected (403),
+             double-return rejected (409), staff-on-behalf return succeeds,
+             and the overdue auto-detection above.
 
 ⏳ Step 17 — Member Management + User Library
              internal/modules/user/handler.go   (new)

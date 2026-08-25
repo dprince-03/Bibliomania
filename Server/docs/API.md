@@ -227,6 +227,38 @@ the same book.
 `bookId` in the URL — no admin override (a bookmark is a personal note, not
 shared library data).
 
+## Borrows
+
+### `GET /borrows` — `librarian`, `admin`
+Every borrow record in the system, paginated. Sweeps overdue records first
+(any `active` record past its `due_at` becomes `overdue`), so `status` here
+is always current as of this request, not just as of whenever it was
+originally computed.
+
+### `GET /borrows/my` — any authenticated user
+Same shape, filtered to the caller's own borrows. Same overdue sweep.
+
+Both return `BorrowResponse` items:
+```json
+{ "id": 1, "book_id": 5, "book_title": "The Hobbit", "borrowed_at": "2026-08-25T04:16:38Z", "due_at": "2026-09-08T04:16:38Z", "returned_at": null, "status": "active" }
+```
+`status` is one of `active`, `returned`, `overdue`.
+
+### `POST /borrows` — any authenticated user
+```json
+{ "book_id": 5 }
+```
+`409` if you already have an active (unreturned) borrow for this book. `400`
+if the book has no available copies. On success, `due_at` is `now +
+BORROW_LOAN_DAYS` (14 by default) and the book's `available_copies` drops by
+one.
+
+### `PATCH /borrows/{id}/return` — owner, or `librarian`/`admin`
+No body. A member may only return their own borrow; librarian/admin may
+return anyone's (e.g. processing a physical return at a desk). `403` for
+anyone else. `409` if it's already been returned. On success,
+`available_copies` goes back up by one.
+
 ## `GET /health` — public, no auth, no rate limit
 ```json
 { "status": "ok", "service": "bibliotheca" }
@@ -235,7 +267,6 @@ Does not currently check DB/Redis liveness (see `Server/docs/Steps.md` → Step 
 
 ## Not implemented yet
 
-Borrowing and user/member management (including the user library — a
-book's status like "wishlist"/"reading"/"completed" for a given user) have
-no routes yet — see `Server/docs/Steps.md` (Steps 16-17) for the planned
-shape of each.
+User/member management, including the user library (a book's status like
+"wishlist"/"reading"/"completed" for a given user), has no routes yet — see
+`Server/docs/Steps.md` (Step 17) for the planned shape.
