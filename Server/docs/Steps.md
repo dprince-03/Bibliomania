@@ -1,9 +1,10 @@
-> Status as of 2026-08-24: Steps 1-12 have code written for them, and
+> Status as of 2026-08-25: Steps 1-17 (every feature step) are done and
 > `go build ./...` / `go vet ./...` succeed — see "Build history" at the
-> bottom of this file for how it got there. `internal/modules/` is now
+> bottom of this file for how it got there. `internal/modules/` is
 > organized **by feature** (`auth/`, `user/`, `catalog/`, `borrow/`,
 > `reading/`), not by layer — see `docs/ARCHITECTURE.md` for the package
-> map. Steps 13-20 have no code yet beyond what's noted below.
+> map. Steps 18-20 are tooling/polish (Swagger docs, Makefile/Docker,
+> final hardening), not new features, and have no code yet.
 
 ```
 ✅ Step 1  — Scaffold: folder structure, go.mod, git init
@@ -231,9 +232,30 @@
              double-return rejected (409), staff-on-behalf return succeeds,
              and the overdue auto-detection above.
 
-⏳ Step 17 — Member Management + User Library
-             internal/modules/user/handler.go   (new)
-             internal/modules/user/service.go   (new)
+✅ Step 17 — Member Management + User Library
+             internal/modules/user/handler.go, service.go (new)
+             UserLibrary + LibraryRepository moved here from
+             internal/modules/reading (Step 15 had put them there since the
+             old models/reading.model.go pre-restructure file happened to
+             group ReadingSession/UserLibrary/Bookmark together — but this
+             step's own name, "Member Management + User Library", says
+             where it actually belongs; nothing consumed LibraryRepository
+             yet, so the move was free). user/model.go picked up a
+             dependency on catalog (for UserLibrary.Book), same pattern as
+             reading → catalog already established.
+             internal/modules/user/repository.go gained Repository.GetAll —
+             deliberately does NOT filter by is_active like GetByID does:
+             an admin needs to see deactivated accounts too, precisely to
+             reactivate them.
+             internal/modules/reading/repository.go gained
+             SessionRepository.GetAllByUserID, added specifically to power
+             history below — ReadingSession itself stays owned by reading,
+             user.Service just reads through it (one-directional
+             user → reading dependency, no cycle).
+             GET /users/me/history is reading activity (session data), a
+             different concept from GET /borrows/my (Step 16 — physical/
+             digital checkout) — the two were never meant to be the same
+             list, both named "history"-ish for different reasons.
              Routes:
                GET   /api/v1/users/me
                PATCH /api/v1/users/me
@@ -242,6 +264,14 @@
                GET   /api/v1/users/me/history
                GET   /api/v1/users             [admin]
                PATCH /api/v1/users/:id/status  [admin]
+             Verified end-to-end: profile get/update, library upsert
+             (wishlist → reading transition on the same book, not a
+             duplicate row), status-filtered library listing, history
+             reflecting real synced reading progress, admin-only listing
+             (403 for a member), and — the interesting one — deactivating a
+             user via PATCH /users/:id/status immediately blocks both future
+             login AND their still-valid token's own GetMe (GetByID's
+             is_active filter), confirmed reactivation undoes both.
 
 ⏳ Step 18 — Swagger / OpenAPI Docs
              Annotate all handlers with swaggo comments

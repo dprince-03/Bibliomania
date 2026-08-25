@@ -1,6 +1,10 @@
 package user
 
-import "time"
+import (
+	"time"
+
+	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
+)
 
 type User struct {
 	ID        uint64    `db:"id"`
@@ -26,4 +30,20 @@ type UserProfile struct {
 	TotalPagesRead uint32     `db:"total_pages_read"`
 	CreatedAt      time.Time  `db:"created_at"`
 	UpdatedAt      time.Time  `db:"updated_at"`
+}
+
+// UserLibrary is a member's personal book-status shelf (wishlist, reading,
+// completed, ...) — moved here from internal/modules/reading during Step 17,
+// since it's conceptually a member-management concept ("my library") the
+// roadmap itself groups with profile/history, not a reading-progress concept.
+type UserLibrary struct {
+	ID        uint64    `db:"id"`
+	UserID    uint64    `db:"user_id"`
+	BookID    uint64    `db:"book_id"`
+	Status    string    `db:"status"`
+	AddedAt   time.Time `db:"added_at"`
+	UpdatedAt time.Time `db:"updated_at"`
+
+	// Populated via JOIN
+	Book *catalog.Book `db:"-"`
 }

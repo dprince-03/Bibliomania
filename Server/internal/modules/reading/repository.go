@@ -12,13 +12,11 @@ import (
 
 type SessionRepository interface {
 	GetByUserAndBook(ctx context.Context, userID, bookID uint64) (*ReadingSession, error)
+	// GetAllByUserID powers GET /users/me/history (see internal/modules/user) —
+	// declared here, not there, since ReadingSession itself stays owned by
+	// this package; user.Service just reads through it.
+	GetAllByUserID(ctx context.Context, userID uint64, limit, offset int) ([]*ReadingSession, int, error)
 	Upsert(ctx context.Context, session *ReadingSession) error
-}
-
-type LibraryRepository interface {
-	GetByUserID(ctx context.Context, userID uint64, status string, limit, offset int) ([]*UserLibrary, int, error)
-	GetEntry(ctx context.Context, userID, bookID uint64) (*UserLibrary, error)
-	Upsert(ctx context.Context, entry *UserLibrary) error
 }
 
 type BookmarkRepository interface {
@@ -52,6 +50,27 @@ func (r *sessionRepository) GetByUserAndBook(ctx context.Context, userID, bookID
 	return session, nil
 }
 
+func (r *sessionRepository) GetAllByUserID(ctx context.Context, userID uint64, limit, offset int) ([]*ReadingSession, int, error) {
+	var sessions []*ReadingSession
+	var total int
+
+	countQuery := `SELECT COUNT(*) FROM reading_sessions WHERE user_id = ?`
+	if err := r.db.GetContext(ctx, &total, countQuery, userID); err != nil {
+		return nil, 0, apperrors.Internal(err)
+	}
+
+	query := `
+		SELECT * FROM reading_sessions
+		WHERE user_id = ?
+		ORDER BY last_read_at DESC
+		LIMIT ? OFFSET ?
+	`
+	if err := r.db.SelectContext(ctx, &sessions, query, userID, limit, offset); err != nil {
+		return nil, 0, apperrors.Internal(err)
+	}
+	return sessions, total, nil
+}
+
 // Upsert creates or updates a reading session.
 // On conflict (same user + book), updates progress only if client data is newer.
 func (r *sessionRepository) Upsert(ctx context.Context, session *ReadingSession) error {
@@ -72,75 +91,6 @@ func (r *sessionRepository) Upsert(ctx context.Context, session *ReadingSession)
 		    client_updated_at = IF(client_updated_at >= VALUES(client_updated_at), client_updated_at, VALUES(client_updated_at))
 	`
 	_, err := r.db.NamedExecContext(ctx, query, session)
-	if err != nil {
-		return apperrors.Internal(err)
-	}
-	return nil
-}
-
-// ── User Library ─────────────────────────────────────────
-
-type libraryRepository struct {
-	db *sqlx.DB
-}
-
-func NewLibraryRepository(db *sqlx.DB) LibraryRepository {
-	return &libraryRepository{db: db}
-}
-
-func (r *libraryRepository) GetByUserID(ctx context.Context, userID uint64, status string, limit, offset int) ([]*UserLibrary, int, error) {
-	var entries []*UserLibrary
-	var total int
-
-	countQuery := `SELECT COUNT(*) FROM user_library WHERE user_id = ?`
-	countArgs := []any{userID}
-
-	if status != "" {
-		countQuery += ` AND status = ?`
-		countArgs = append(countArgs, status)
-	}
-
-	if err := r.db.GetContext(ctx, &total, countQuery, countArgs...); err != nil {
-		return nil, 0, apperrors.Internal(err)
-	}
-
-	query := `SELECT * FROM user_library WHERE user_id = ?`
-	args := []any{userID}
-
-	if status != "" {
-		query += ` AND status = ?`
-		args = append(args, status)
-	}
-	query += ` ORDER BY updated_at DESC LIMIT ? OFFSET ?`
-	args = append(args, limit, offset)
-
-	if err := r.db.SelectContext(ctx, &entries, query, args...); err != nil {
-		return nil, 0, apperrors.Internal(err)
-	}
-	return entries, total, nil
-}
-
-func (r *libraryRepository) GetEntry(ctx context.Context, userID, bookID uint64) (*UserLibrary, error) {
-	entry := &UserLibrary{}
-	query := `SELECT * FROM user_library WHERE user_id = ? AND book_id = ?`
-
-	err := r.db.GetContext(ctx, entry, query, userID, bookID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, apperrors.NotFound("library entry")
-		}
-		return nil, apperrors.Internal(err)
-	}
-	return entry, nil
-}
-
-func (r *libraryRepository) Upsert(ctx context.Context, entry *UserLibrary) error {
-	query := `
-		INSERT INTO user_library (user_id, book_id, status)
-		VALUES (:user_id, :book_id, :status)
-		ON DUPLICATE KEY UPDATE status = VALUES(status)
-	`
-	_, err := r.db.NamedExecContext(ctx, query, entry)
 	if err != nil {
 		return apperrors.Internal(err)
 	}

@@ -1,10 +1,6 @@
 package reading
 
-import (
-	"time"
-
-	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
-)
+import "time"
 
 type ReadingSession struct {
 	ID              uint64     `db:"id"`
@@ -21,18 +17,6 @@ type ReadingSession struct {
 	ClientUpdatedAt *time.Time `db:"client_updated_at"`
 	CreatedAt       time.Time  `db:"created_at"`
 	UpdatedAt       time.Time  `db:"updated_at"`
-}
-
-type UserLibrary struct {
-	ID        uint64    `db:"id"`
-	UserID    uint64    `db:"user_id"`
-	BookID    uint64    `db:"book_id"`
-	Status    string    `db:"status"`
-	AddedAt   time.Time `db:"added_at"`
-	UpdatedAt time.Time `db:"updated_at"`
-
-	// Populated via JOIN
-	Book *catalog.Book `db:"-"`
 }
 
 type Bookmark struct {
