@@ -157,16 +157,44 @@
              `Server/storage/` added to root .gitignore (uploaded content,
              never committed).
 
-⏳ Step 15 — Reading Sessions + Progress + Bookmarks
-             internal/modules/reading/handler.go, service.go — Step 14
-             already created these (scoped to just Sync); extend the same
-             Service/Handler, don't create new ones.
+✅ Step 15 — Reading Sessions + Progress + Bookmarks
+             internal/modules/reading/handler.go, service.go extended (not
+             recreated — Step 14 already started them with Sync).
+             internal/modules/reading/dto.go gained ProgressUpdateRequest —
+             deliberately a separate type from Sync's UpdateProgressRequest:
+             the progress endpoint is always-online (no client_updated_at
+             from the caller; the server stamps "now" itself), Sync is for
+             offline clients replaying their own clock.
+             Both endpoints share one upsertProgress(...) helper for the
+             progress_pct/is_completed computation and the Upsert call —
+             they only differ in whose timestamp feeds the conflict check.
+             Bookmarks: ownership enforced in the service (DeleteBookmark
+             checks both user_id and book_id against the URL, no admin
+             bypass — a bookmark is a personal note, not shared library data).
+             Real bug found via this step's own rapid-fire progress testing:
+             `reading_sessions.client_updated_at` was plain DATETIME
+             (1-second resolution). Two updates landing in the same second
+             got equal, truncated timestamps, and the Upsert SQL's `>=`
+             comparison means ties favor the OLD row — a legitimate second
+             update was silently dropped. This wasn't hit by Step 14's Sync
+             (tested once, not back-to-back) but Step 15's UpdateProgress
+             (meant for frequent online calls) hit it immediately. Fixed via
+             migration 000011: column is now DATETIME(6) (microsecond
+             precision) — verified by reproducing the exact rapid-fire
+             sequence before and after.
              Routes:
                GET   /api/v1/reading/:bookId/session
                PATCH /api/v1/reading/:bookId/progress
                GET   /api/v1/reading/:bookId/bookmarks
                POST  /api/v1/reading/:bookId/bookmarks
                DELETE /api/v1/reading/:bookId/bookmarks/:id
+             Verified end-to-end (2 real registered users, not synthetic
+             tokens, specifically to exercise the reading_sessions FK):
+             session/progress/bookmark happy paths, page-0 acceptance, the
+             rapid-fire fix above, validation errors (missing page, bad
+             color, missing total_pages), 404s for nonexistent books, and —
+             the one that matters most — a second user cannot delete or see
+             the first user's bookmarks (403, and confirmed not deleted).
 
 ⏳ Step 16 — Borrowing System
              internal/modules/borrow/handler.go   (new)

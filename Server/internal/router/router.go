@@ -112,18 +112,21 @@ func New(
 	mux.Handle("GET /api/v1/books/{id}/download",
 		requireMember(bookHandler.Download)) // member+ (i.e. any authenticated user)
 
-	// ── Reading (Step 14: sync only; Step 15 adds the rest) ──
+	// ── Reading (Step 14 + 15) ─────────────────
 	mux.Handle("PATCH /api/v1/reading/{bookId}/sync",
 		requireMember(readingHandler.Sync))
+	mux.Handle("GET /api/v1/reading/{bookId}/session",
+		requireMember(readingHandler.GetSession))
+	mux.Handle("PATCH /api/v1/reading/{bookId}/progress",
+		requireMember(readingHandler.UpdateProgress))
+	mux.Handle("GET /api/v1/reading/{bookId}/bookmarks",
+		requireMember(readingHandler.GetBookmarks))
+	mux.Handle("POST /api/v1/reading/{bookId}/bookmarks",
+		requireMember(readingHandler.CreateBookmark))
+	mux.Handle("DELETE /api/v1/reading/{bookId}/bookmarks/{id}",
+		requireMember(readingHandler.DeleteBookmark))
 
 	// ── Future route groups (added each step) ──
-	//
-	// Reading, continued (Step 15):
-	//   GET    /api/v1/reading/:bookId/session    → requireMember
-	//   PATCH  /api/v1/reading/:bookId/progress   → requireMember
-	//   GET    /api/v1/reading/:bookId/bookmarks  → requireMember
-	//   POST   /api/v1/reading/:bookId/bookmarks  → requireMember
-	//   DELETE /api/v1/reading/:bookId/bookmarks/:id → requireMember
 	//
 	// Borrows (Step 16):
 	//   GET    /api/v1/borrows            → requireLibrarian
