@@ -15,6 +15,7 @@ import (
 	"github.com/dprince-03/Bibliotheca/internal/config"
 	"github.com/dprince-03/Bibliotheca/internal/database"
 	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
+	"github.com/dprince-03/Bibliotheca/internal/modules/borrow"
 	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
 	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
 	"github.com/dprince-03/Bibliotheca/internal/modules/user"
@@ -65,21 +66,24 @@ func main() {
 	bookAuthorRepo := catalog.NewBookAuthorRepository(db)
 	readingSessionRepo := reading.NewSessionRepository(db)
 	bookmarkRepo := reading.NewBookmarkRepository(db)
+	borrowRepo := borrow.NewRepository(db)
 
 	// ── Services ──────────────────────────────
 	authService := auth.NewService(userRepo, profileRepo, tokenRepo, jwtManager, cfg.RefreshTokenTTL)
 	authorService := catalog.NewAuthorService(authorRepo, bookAuthorRepo, appCache)
 	bookService := catalog.NewBookService(bookRepo, authorRepo, bookAuthorRepo, appCache, cfg.StoragePath, cfg.MaxUploadSizeMB)
 	readingService := reading.NewService(readingSessionRepo, bookmarkRepo, bookRepo)
+	borrowService := borrow.NewService(borrowRepo, bookRepo, cfg.BorrowLoanDays)
 
 	// ── Handlers ──────────────────────────────
 	authHandler := auth.NewHandler(authService, validate)
 	authorHandler := catalog.NewAuthorHandler(authorService, validate)
 	bookHandler := catalog.NewBookHandler(bookService, validate, cfg.MaxUploadSizeMB)
 	readingHandler := reading.NewHandler(readingService, validate)
+	borrowHandler := borrow.NewHandler(borrowService, validate)
 
 	// ── Router ────────────────────────────────
-	r := router.New(cfg, jwtManager, authHandler, authorHandler, bookHandler, readingHandler)
+	r := router.New(cfg, jwtManager, authHandler, authorHandler, bookHandler, readingHandler, borrowHandler)
 
 	// ── Server ────────────────────────────────
 	srv := &http.Server{

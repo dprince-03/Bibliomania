@@ -42,6 +42,9 @@ type Config struct {
 	// Rate Limiting
 	RateLimitRPS   float64
 	RateLimitBurst int
+
+	// Borrowing
+	BorrowLoanDays int
 }
 
 func getEnv(key, fallback string) string {
@@ -134,6 +137,9 @@ func Load() (*Config, error) {
 		// Rate Limiting
 		RateLimitRPS:   getEnvAsFloat("RATE_LIMIT_RPS", 100),
 		RateLimitBurst: getEnvAsInt("RATE_LIMIT_BURST", 200),
+
+		// Borrowing
+		BorrowLoanDays: getEnvAsInt("BORROW_LOAN_DAYS", 14),
 	}
 
 	if err := cfg.validate(); err != nil {
