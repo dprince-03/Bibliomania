@@ -40,3 +40,14 @@ func Error(w http.ResponseWriter, err *apperrors.AppError) {
 		Code:    err.Code,
 	})
 }
+
+// HandleError is the single point every handler routes service/repository
+// errors through: known *apperrors.AppError values keep their status code and
+// message, anything else is treated as an unexpected 500.
+func HandleError(w http.ResponseWriter, err error) {
+	if appErr, ok := err.(*apperrors.AppError); ok {
+		Error(w, appErr)
+		return
+	}
+	Error(w, apperrors.Internal(err))
+}

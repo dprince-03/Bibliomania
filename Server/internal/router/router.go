@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dprince-03/Bibliotheca/internal/config"
+	"github.com/dprince-03/Bibliotheca/internal/health"
 	"github.com/dprince-03/Bibliotheca/internal/middleware"
 	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
 	"github.com/dprince-03/Bibliotheca/internal/modules/borrow"
@@ -25,6 +26,7 @@ func New(
 	readingHandler *reading.Handler,
 	borrowHandler *borrow.Handler,
 	userHandler *user.Handler,
+	healthChecker *health.Checker,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -71,11 +73,7 @@ func New(
 	}
 
 	// ── Health (public, no rate limit) ────────
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok","service":"bibliotheca"}`))
-	})
+	mux.HandleFunc("GET /health", healthChecker.Handle)
 
 	// ── Swagger / OpenAPI docs (Step 18, public) ──
 	// httpSwagger.Handler parses r.RequestURI itself to find the sub-path

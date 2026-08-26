@@ -35,7 +35,7 @@ func (h *BookHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetAll(r.Context(), pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *BookHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetByID(r.Context(), id)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (h *BookHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Create(r.Context(), req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (h *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Update(r.Context(), id, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -169,7 +169,7 @@ func (h *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Delete(r.Context(), id); err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (h *BookHandler) AssignAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.AssignAuthor(r.Context(), bookID, req); err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -242,7 +242,7 @@ func (h *BookHandler) RemoveAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.RemoveAuthor(r.Context(), bookID, authorID); err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -289,7 +289,7 @@ func (h *BookHandler) Upload(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.UploadFile(r.Context(), bookID, header.Filename, header.Size, file)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -318,7 +318,7 @@ func (h *BookHandler) Download(w http.ResponseWriter, r *http.Request) {
 
 	absPath, filename, err := h.service.GetDownloadPath(r.Context(), bookID)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -379,17 +379,9 @@ func (h *BookHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Search(r.Context(), params, pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
 	utils.Success(w, http.StatusOK, "search results", resp)
-}
-
-func (h *BookHandler) handleError(w http.ResponseWriter, err error) {
-	if appErr, ok := err.(*apperrors.AppError); ok {
-		utils.Error(w, appErr)
-		return
-	}
-	utils.Error(w, apperrors.Internal(err))
 }

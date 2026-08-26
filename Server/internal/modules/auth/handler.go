@@ -49,11 +49,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Register(r.Context(), req)
 	if err != nil {
-		if appErr, ok := err.(*apperrors.AppError); ok {
-			utils.Error(w, appErr)
-			return
-		}
-		utils.Error(w, apperrors.Internal(err))
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -87,11 +83,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Login(r.Context(), req)
 	if err != nil {
-		if appErr, ok := err.(*apperrors.AppError); ok {
-			utils.Error(w, appErr)
-			return
-		}
-		utils.Error(w, apperrors.Internal(err))
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -124,11 +116,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.Logout(r.Context(), req.RefreshToken)
 	if err != nil {
-		if appErr, ok := err.(*apperrors.AppError); ok {
-			utils.Error(w, appErr)
-			return
-		}
-		utils.Error(w, apperrors.Internal(err))
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -162,11 +150,7 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.RefreshToken(r.Context(), req.RefreshToken)
 	if err != nil {
-		if appErr, ok := err.(*apperrors.AppError); ok {
-			utils.Error(w, appErr)
-			return
-		}
-		utils.Error(w, apperrors.Internal(err))
+		utils.HandleError(w, err)
 		return
 	}
 

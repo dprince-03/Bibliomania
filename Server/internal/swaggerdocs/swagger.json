@@ -1550,6 +1550,32 @@
                 }
             }
         },
+        "/health": {
+            "get": {
+                "description": "Pings the database and Redis; returns 200 \"ok\" only if both are reachable, 503 \"degraded\" otherwise",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Liveness check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_health.status"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/internal_health.status"
+                        }
+                    }
+                }
+            }
+        },
         "/reading/{bookId}/bookmarks": {
             "get": {
                 "security": [
@@ -2664,6 +2690,23 @@
                 },
                 "total_pages": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_health.status": {
+            "type": "object",
+            "properties": {
+                "cache": {
+                    "type": "string"
+                },
+                "database": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

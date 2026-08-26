@@ -48,6 +48,17 @@ definitions:
       total_pages:
         type: integer
     type: object
+  internal_health.status:
+    properties:
+      cache:
+        type: string
+      database:
+        type: string
+      service:
+        type: string
+      status:
+        type: string
+    type: object
   internal_modules_auth.AuthResponse:
     properties:
       token:
@@ -1461,6 +1472,24 @@ paths:
       summary: List my borrow records
       tags:
       - borrows
+  /health:
+    get:
+      description: Pings the database and Redis; returns 200 "ok" only if both are
+        reachable, 503 "degraded" otherwise
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_health.status'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_health.status'
+      summary: Liveness check
+      tags:
+      - health
   /reading/{bookId}/bookmarks:
     get:
       description: Bookmarks are private per user — this never returns another user's
