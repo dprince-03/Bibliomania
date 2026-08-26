@@ -1,0 +1,2112 @@
+basePath: /api/v1
+definitions:
+  github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      role:
+        type: string
+    type: object
+  github_com_dprince-03_Bibliotheca_internal_utils.APIError:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
+  github_com_dprince-03_Bibliotheca_internal_utils.APIResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse:
+    properties:
+      has_next_page:
+        type: boolean
+      has_previous_page:
+        type: boolean
+      items: {}
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_count:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  internal_modules_auth.AuthResponse:
+    properties:
+      token:
+        $ref: '#/definitions/internal_modules_auth.TokenResponse'
+      user:
+        $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse'
+    type: object
+  internal_modules_auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_modules_auth.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_modules_auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        maxLength: 72
+        minLength: 8
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  internal_modules_auth.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        description: seconds
+        type: integer
+      refresh_token:
+        type: string
+    type: object
+  internal_modules_borrow.BorrowRequest:
+    properties:
+      book_id:
+        type: integer
+    required:
+    - book_id
+    type: object
+  internal_modules_borrow.BorrowResponse:
+    properties:
+      book_id:
+        type: integer
+      book_title:
+        type: string
+      borrowed_at:
+        type: string
+      due_at:
+        type: string
+      id:
+        type: integer
+      returned_at:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_modules_catalog.AssignAuthorRequest:
+    properties:
+      author_id:
+        type: integer
+      role:
+        enum:
+        - primary
+        - co-author
+        - editor
+        - illustrator
+        type: string
+    required:
+    - author_id
+    - role
+    type: object
+  internal_modules_catalog.AuthorResponse:
+    properties:
+      biography:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+    type: object
+  internal_modules_catalog.BookResponse:
+    properties:
+      authors:
+        items:
+          $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+        type: array
+      available_copies:
+        type: integer
+      cover_image:
+        type: string
+      description:
+        type: string
+      file_format:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      is_digital:
+        type: boolean
+      isbn:
+        type: string
+      published_year:
+        type: integer
+      title:
+        type: string
+      total_copies:
+        type: integer
+    type: object
+  internal_modules_catalog.CreateAuthorRequest:
+    properties:
+      biography:
+        maxLength: 2000
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      image:
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      middle_name:
+        maxLength: 100
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    required:
+    - first_name
+    - last_name
+    type: object
+  internal_modules_catalog.CreateBookRequest:
+    properties:
+      author_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      author_roles:
+        items:
+          type: string
+        type: array
+      cover_image:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      genre:
+        maxLength: 100
+        type: string
+      is_digital:
+        type: boolean
+      isbn:
+        maxLength: 20
+        type: string
+      published_year:
+        maximum: 2100
+        minimum: 1000
+        type: integer
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      total_copies:
+        minimum: 1
+        type: integer
+    required:
+    - author_ids
+    - genre
+    - isbn
+    - title
+    - total_copies
+    type: object
+  internal_modules_catalog.UpdateAuthorRequest:
+    properties:
+      biography:
+        maxLength: 2000
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      image:
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      middle_name:
+        maxLength: 100
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    type: object
+  internal_modules_catalog.UpdateBookRequest:
+    properties:
+      cover_image:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      genre:
+        maxLength: 100
+        type: string
+      is_digital:
+        type: boolean
+      published_year:
+        maximum: 2100
+        minimum: 1000
+        type: integer
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      total_copies:
+        minimum: 1
+        type: integer
+    type: object
+  internal_modules_reading.BookmarkRequest:
+    properties:
+      color:
+        enum:
+        - yellow
+        - green
+        - blue
+        - pink
+        - purple
+        type: string
+      highlight:
+        maxLength: 1000
+        type: string
+      note:
+        maxLength: 500
+        type: string
+      page:
+        minimum: 1
+        type: integer
+    required:
+    - page
+    type: object
+  internal_modules_reading.BookmarkResponse:
+    properties:
+      book_id:
+        type: integer
+      color:
+        type: string
+      highlight:
+        type: string
+      id:
+        type: integer
+      note:
+        type: string
+      page:
+        type: integer
+    type: object
+  internal_modules_reading.ProgressUpdateRequest:
+    properties:
+      current_chapter:
+        maxLength: 255
+        type: string
+      current_page:
+        minimum: 0
+        type: integer
+      total_pages:
+        minimum: 1
+        type: integer
+    required:
+    - total_pages
+    type: object
+  internal_modules_reading.ReadingSessionResponse:
+    properties:
+      book_id:
+        type: integer
+      current_chapter:
+        type: string
+      current_page:
+        type: integer
+      is_completed:
+        type: boolean
+      last_read_at:
+        type: string
+      progress_pct:
+        type: number
+      total_pages:
+        type: integer
+    type: object
+  internal_modules_reading.UpdateProgressRequest:
+    properties:
+      client_updated_at:
+        type: string
+      current_chapter:
+        maxLength: 255
+        type: string
+      current_page:
+        description: |-
+          CurrentPage has no "required" tag deliberately — 0 is the valid
+          starting value (page 0 / not started yet), and go-playground/validator's
+          "required" rejects the zero value for numeric types.
+        minimum: 0
+        type: integer
+      total_pages:
+        minimum: 1
+        type: integer
+    required:
+    - client_updated_at
+    - total_pages
+    type: object
+  internal_modules_user.HistoryEntryResponse:
+    properties:
+      book_id:
+        type: integer
+      book_title:
+        type: string
+      current_page:
+        type: integer
+      is_completed:
+        type: boolean
+      last_read_at:
+        type: string
+      progress_pct:
+        type: number
+      total_pages:
+        type: integer
+    type: object
+  internal_modules_user.LibraryEntryResponse:
+    properties:
+      added_at:
+        type: string
+      book_id:
+        type: integer
+      book_title:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_user.UpdateLibraryStatusRequest:
+    properties:
+      status:
+        enum:
+        - wishlist
+        - to_read
+        - reading
+        - completed
+        - dropped
+        type: string
+    required:
+    - status
+    type: object
+  internal_modules_user.UpdateProfileRequest:
+    properties:
+      bio:
+        maxLength: 500
+        type: string
+      phone_number:
+        maxLength: 20
+        minLength: 7
+        type: string
+      profile_picture:
+        type: string
+    type: object
+  internal_modules_user.UpdateUserStatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  internal_modules_user.UserProfileResponse:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      last_online_at:
+        type: string
+      phone_number:
+        type: string
+      profile_picture:
+        type: string
+      role:
+        type: string
+      total_books_read:
+        type: integer
+      total_pages_read:
+        type: integer
+    type: object
+  internal_modules_user.UserResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Bibliotheca
+    url: https://github.com/dprince-03/Bibliotheca
+  description: |-
+    Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.
+    All endpoints except /health and /auth/* return the shared JSON envelope: {"success", "message"|"error", "data"|"code"}.
+  license:
+    name: MIT
+  title: Bibliotheca API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Verifies credentials and returns access + refresh tokens
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_auth.AuthResponse'
+              type: object
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: wrong credentials or deactivated account
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Log in
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes the given refresh token (does not touch the still-live
+        access token — it just expires naturally)
+      parameters:
+      - description: Refresh token to revoke
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Log out
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rotates the refresh token (one-time use — the old one is revoked)
+        and returns a new access + refresh token pair
+      parameters:
+      - description: Current refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_auth.AuthResponse'
+              type: object
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: invalid, expired, or already-used refresh token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Refresh tokens
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a member account (role is always "member") and returns
+        access + refresh tokens
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_auth.AuthResponse'
+              type: object
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "409":
+          description: email already registered
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Register a new member
+      tags:
+      - auth
+  /authors:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+                        type: array
+                    type: object
+              type: object
+      summary: List authors
+      tags:
+      - authors
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Author details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_catalog.CreateAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+              type: object
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create an author
+      tags:
+      - authors
+  /authors/{id}:
+    delete:
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: author not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete an author
+      tags:
+      - authors
+    get:
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+              type: object
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: author not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Get an author
+      tags:
+      - authors
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update (all optional)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_catalog.UpdateAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+              type: object
+        "400":
+          description: invalid id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: author not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update an author
+      tags:
+      - authors
+  /authors/{id}/books:
+    get:
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: author not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: List an author's books
+      tags:
+      - authors
+  /books:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                        type: array
+                    type: object
+              type: object
+      summary: List books
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: author_ids is required (every author must already exist); author_roles
+        is optional and positional. available_copies is set equal to total_copies
+        and cannot be set directly.
+      parameters:
+      - description: Book details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_catalog.CreateBookRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+              type: object
+        "400":
+          description: invalid body, or an author_id doesn't exist
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create a book
+      tags:
+      - books
+  /books/{id}:
+    delete:
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete a book
+      tags:
+      - books
+    get:
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+              type: object
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Get a book
+      tags:
+      - books
+    put:
+      consumes:
+      - application/json
+      description: Use the assign/remove-author endpoints for authors, not this one.
+        Changing total_copies adjusts available_copies by the same delta.
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update (all optional)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_catalog.UpdateBookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+              type: object
+        "400":
+          description: invalid id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update a book
+      tags:
+      - books
+  /books/{id}/authors:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Author + role
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_catalog.AssignAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book or author not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Assign an author to a book
+      tags:
+      - books
+  /books/{id}/authors/{authorId}:
+    delete:
+      description: Refuses if it would leave the book with zero authors
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Author ID
+        in: path
+        name: authorId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid ids, or would leave zero authors
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Remove an author from a book
+      tags:
+      - books
+  /books/{id}/download:
+    get:
+      description: Streams the file (supports range requests). 404 if the book has
+        no uploaded file yet.
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found, or no file uploaded
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Download a book's digital file
+      tags:
+      - books
+  /books/{id}/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: multipart/form-data with a single field named "file". Only .pdf/.epub
+        are accepted, up to MAX_UPLOAD_SIZE_MB. Sets is_digital=true on success; re-uploading
+        replaces the previous file.
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: PDF or EPUB file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+              type: object
+        "400":
+          description: invalid id, unsupported format, too large, or missing file
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Upload a book's digital file
+      tags:
+      - books
+  /borrows:
+    get:
+      description: Sweeps overdue records first, so status is always current as of
+        this request.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
+                        type: array
+                    type: object
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: librarian/admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: List every borrow record
+      tags:
+      - borrows
+    post:
+      consumes:
+      - application/json
+      description: 409 if you already have an active borrow for this book. 400 if
+        no copies are available. due_at is now + BORROW_LOAN_DAYS.
+      parameters:
+      - description: Book to borrow
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_borrow.BorrowRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
+              type: object
+        "400":
+          description: invalid body, or no available copies
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "409":
+          description: already have an active borrow for this book
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Borrow a book
+      tags:
+      - borrows
+  /borrows/{id}/return:
+    patch:
+      description: A member may only return their own borrow; librarian/admin may
+        return anyone's (e.g. processing a physical return at a desk).
+      parameters:
+      - description: Borrow ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: not your borrow, and not librarian/admin
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: borrow not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "409":
+          description: already returned
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Return a borrowed book
+      tags:
+      - borrows
+  /borrows/my:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
+                        type: array
+                    type: object
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: List my borrow records
+      tags:
+      - borrows
+  /reading/{bookId}/bookmarks:
+    get:
+      description: Bookmarks are private per user — this never returns another user's
+        bookmarks for the same book.
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_modules_reading.BookmarkResponse'
+                  type: array
+              type: object
+        "400":
+          description: invalid book id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: List my bookmarks for a book
+      tags:
+      - reading
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      - description: Bookmark details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_reading.BookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_reading.BookmarkResponse'
+              type: object
+        "400":
+          description: invalid book id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Create a bookmark
+      tags:
+      - reading
+  /reading/{bookId}/bookmarks/{id}:
+    delete:
+      description: 403 if the bookmark belongs to someone else or a different book
+        — no admin override, a bookmark is a personal note.
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      - description: Bookmark ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid ids
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: not your bookmark
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: bookmark not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Delete a bookmark
+      tags:
+      - reading
+  /reading/{bookId}/progress:
+    patch:
+      consumes:
+      - application/json
+      description: The plain, always-online counterpart to sync — no client_updated_at;
+        the server stamps "now", which always beats an offline client syncing in later
+        with an older timestamp.
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      - description: Current progress
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_reading.ProgressUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
+              type: object
+        "400":
+          description: invalid book id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update reading progress (online)
+      tags:
+      - reading
+  /reading/{bookId}/session:
+    get:
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
+              type: object
+        "400":
+          description: invalid book id
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found, or no session started yet
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get my reading session for a book
+      tags:
+      - reading
+  /reading/{bookId}/sync:
+    patch:
+      consumes:
+      - application/json
+      description: 'For offline clients: send local progress plus when it was last
+        updated there. If the server already has a newer client_updated_at, this update
+        is silently discarded and the response reflects the server''s existing (newer)
+        state — last write wins.'
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      - description: Local progress + client clock
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_reading.UpdateProgressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
+              type: object
+        "400":
+          description: invalid book id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Sync offline reading progress
+      tags:
+      - reading
+  /search:
+    get:
+      description: q matches book title/description (full-text) OR author name. genre/format/author/year
+        are exact-match filters, independent of q and each other.
+      parameters:
+      - description: Free text — matches title/description or author name
+        in: query
+        name: q
+        type: string
+      - description: Exact genre match
+        in: query
+        name: genre
+        type: string
+      - description: digital or physical
+        enum:
+        - digital
+        - physical
+        in: query
+        name: format
+        type: string
+      - description: Author ID (not a name — use q for name search)
+        in: query
+        name: author
+        type: integer
+      - description: Exact published_year match
+        in: query
+        name: year
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: invalid format/author/year parameter
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      summary: Search books
+      tags:
+      - books
+  /users:
+    get:
+      description: Includes deactivated accounts (unlike most other lookups), so an
+        admin can find and reactivate one.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_user.UserResponse'
+                        type: array
+                    type: object
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: List every user
+      tags:
+      - users
+  /users/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Deactivating immediately blocks the user's next login and any endpoint
+        that filters to is_active=TRUE (e.g. their own GET /users/me starts 404ing,
+        even with a still-valid token).
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_user.UpdateUserStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+        "400":
+          description: invalid id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "403":
+          description: admin only
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Activate or deactivate a user
+      tags:
+      - users
+  /users/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_user.UserProfileResponse'
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: account deactivated
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get my profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Only touches profile fields (phone_number, bio, profile_picture)
+        — no route changes first_name/last_name/email yet.
+      parameters:
+      - description: Fields to update (all optional)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_user.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_user.UserProfileResponse'
+              type: object
+        "400":
+          description: invalid body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update my profile
+      tags:
+      - users
+  /users/me/history:
+    get:
+      description: Reading activity (from session data) — not the same as GET /borrows/my,
+        which is checkout history.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_user.HistoryEntryResponse'
+                        type: array
+                    type: object
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get my reading history
+      tags:
+      - users
+  /users/me/library:
+    get:
+      parameters:
+      - description: Filter to one status
+        enum:
+        - wishlist
+        - to_read
+        - reading
+        - completed
+        - dropped
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/internal_modules_user.LibraryEntryResponse'
+                        type: array
+                    type: object
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get my library
+      tags:
+      - users
+  /users/me/library/{bookId}:
+    patch:
+      consumes:
+      - application/json
+      description: Upsert — calling it again for the same book updates the existing
+        entry rather than creating a duplicate.
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookId
+        required: true
+        type: integer
+      - description: New status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_user.UpdateLibraryStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_modules_user.LibraryEntryResponse'
+              type: object
+        "400":
+          description: invalid book id/body
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+        "422":
+          description: validation failed
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Set a book's status on my library shelf
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT access token (obtained
+      from /auth/login or /auth/register).
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -20,9 +20,22 @@ func NewHandler(service *Service, validate *validator.Validate) *Handler {
 	return &Handler{service: service, validate: validate}
 }
 
-// Sync handles PATCH /api/v1/reading/{bookId}/sync — the client sends its
-// local progress plus when it was last updated, and the server resolves any
-// conflict against what it already has (see Service.Sync).
+// Sync godoc
+//
+//	@Summary		Sync offline reading progress
+//	@Description	For offline clients: send local progress plus when it was last updated there. If the server already has a newer client_updated_at, this update is silently discarded and the response reflects the server's existing (newer) state — last write wins.
+//	@Tags			reading
+//	@Accept			json
+//	@Produce		json
+//	@Param			bookId	path		int						true	"Book ID"
+//	@Param			request	body		UpdateProgressRequest	true	"Local progress + client clock"
+//	@Success		200		{object}	utils.APIResponse{data=ReadingSessionResponse}
+//	@Failure		400		{object}	utils.APIError	"invalid book id/body"
+//	@Failure		401		{object}	utils.APIError	"missing/invalid token"
+//	@Failure		404		{object}	utils.APIError	"book not found"
+//	@Failure		422		{object}	utils.APIError	"validation failed"
+//	@Security		BearerAuth
+//	@Router			/reading/{bookId}/sync [patch]
 func (h *Handler) Sync(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	bookID := utils.GetPathID(r, "bookId")
@@ -51,7 +64,18 @@ func (h *Handler) Sync(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, http.StatusOK, "reading progress synced", resp)
 }
 
-// GetSession handles GET /api/v1/reading/{bookId}/session.
+// GetSession godoc
+//
+//	@Summary	Get my reading session for a book
+//	@Tags		reading
+//	@Produce	json
+//	@Param		bookId	path		int	true	"Book ID"
+//	@Success	200		{object}	utils.APIResponse{data=ReadingSessionResponse}
+//	@Failure	400		{object}	utils.APIError	"invalid book id"
+//	@Failure	401		{object}	utils.APIError	"missing/invalid token"
+//	@Failure	404		{object}	utils.APIError	"book not found, or no session started yet"
+//	@Security	BearerAuth
+//	@Router		/reading/{bookId}/session [get]
 func (h *Handler) GetSession(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	bookID := utils.GetPathID(r, "bookId")
@@ -69,8 +93,22 @@ func (h *Handler) GetSession(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, http.StatusOK, "reading session retrieved", resp)
 }
 
-// UpdateProgress handles PATCH /api/v1/reading/{bookId}/progress — the
-// plain online update, distinct from Sync's offline conflict resolution.
+// UpdateProgress godoc
+//
+//	@Summary		Update reading progress (online)
+//	@Description	The plain, always-online counterpart to sync — no client_updated_at; the server stamps "now", which always beats an offline client syncing in later with an older timestamp.
+//	@Tags			reading
+//	@Accept			json
+//	@Produce		json
+//	@Param			bookId	path		int						true	"Book ID"
+//	@Param			request	body		ProgressUpdateRequest	true	"Current progress"
+//	@Success		200		{object}	utils.APIResponse{data=ReadingSessionResponse}
+//	@Failure		400		{object}	utils.APIError	"invalid book id/body"
+//	@Failure		401		{object}	utils.APIError	"missing/invalid token"
+//	@Failure		404		{object}	utils.APIError	"book not found"
+//	@Failure		422		{object}	utils.APIError	"validation failed"
+//	@Security		BearerAuth
+//	@Router			/reading/{bookId}/progress [patch]
 func (h *Handler) UpdateProgress(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	bookID := utils.GetPathID(r, "bookId")
@@ -99,7 +137,19 @@ func (h *Handler) UpdateProgress(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, http.StatusOK, "reading progress updated", resp)
 }
 
-// GetBookmarks handles GET /api/v1/reading/{bookId}/bookmarks.
+// GetBookmarks godoc
+//
+//	@Summary		List my bookmarks for a book
+//	@Description	Bookmarks are private per user — this never returns another user's bookmarks for the same book.
+//	@Tags			reading
+//	@Produce		json
+//	@Param			bookId	path		int	true	"Book ID"
+//	@Success		200		{object}	utils.APIResponse{data=[]BookmarkResponse}
+//	@Failure		400		{object}	utils.APIError	"invalid book id"
+//	@Failure		401		{object}	utils.APIError	"missing/invalid token"
+//	@Failure		404		{object}	utils.APIError	"book not found"
+//	@Security		BearerAuth
+//	@Router			/reading/{bookId}/bookmarks [get]
 func (h *Handler) GetBookmarks(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	bookID := utils.GetPathID(r, "bookId")
@@ -117,7 +167,21 @@ func (h *Handler) GetBookmarks(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, http.StatusOK, "bookmarks retrieved", resp)
 }
 
-// CreateBookmark handles POST /api/v1/reading/{bookId}/bookmarks.
+// CreateBookmark godoc
+//
+//	@Summary	Create a bookmark
+//	@Tags		reading
+//	@Accept		json
+//	@Produce	json
+//	@Param		bookId	path		int				true	"Book ID"
+//	@Param		request	body		BookmarkRequest	true	"Bookmark details"
+//	@Success	201		{object}	utils.APIResponse{data=BookmarkResponse}
+//	@Failure	400		{object}	utils.APIError	"invalid book id/body"
+//	@Failure	401		{object}	utils.APIError	"missing/invalid token"
+//	@Failure	404		{object}	utils.APIError	"book not found"
+//	@Failure	422		{object}	utils.APIError	"validation failed"
+//	@Security	BearerAuth
+//	@Router		/reading/{bookId}/bookmarks [post]
 func (h *Handler) CreateBookmark(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	bookID := utils.GetPathID(r, "bookId")
@@ -146,7 +210,21 @@ func (h *Handler) CreateBookmark(w http.ResponseWriter, r *http.Request) {
 	utils.Success(w, http.StatusCreated, "bookmark created", resp)
 }
 
-// DeleteBookmark handles DELETE /api/v1/reading/{bookId}/bookmarks/{id}.
+// DeleteBookmark godoc
+//
+//	@Summary		Delete a bookmark
+//	@Description	403 if the bookmark belongs to someone else or a different book — no admin override, a bookmark is a personal note.
+//	@Tags			reading
+//	@Produce		json
+//	@Param			bookId	path		int	true	"Book ID"
+//	@Param			id		path		int	true	"Bookmark ID"
+//	@Success		200		{object}	utils.APIResponse
+//	@Failure		400		{object}	utils.APIError	"invalid ids"
+//	@Failure		401		{object}	utils.APIError	"missing/invalid token"
+//	@Failure		403		{object}	utils.APIError	"not your bookmark"
+//	@Failure		404		{object}	utils.APIError	"bookmark not found"
+//	@Security		BearerAuth
+//	@Router			/reading/{bookId}/bookmarks/{id} [delete]
 func (h *Handler) DeleteBookmark(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	bookID := utils.GetPathID(r, "bookId")

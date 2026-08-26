@@ -273,10 +273,38 @@
              login AND their still-valid token's own GetMe (GetByID's
              is_active filter), confirmed reactivation undoes both.
 
-⏳ Step 18 — Swagger / OpenAPI Docs
-             Annotate all handlers with swaggo comments
-             Auto-generate with: swag init -g cmd/api/main.go
-             Served at: GET /swagger/*
+✅ Step 18 — Swagger / OpenAPI Docs
+             All 37 handler methods annotated with swaggo comments (auth 4,
+             catalog/author 6, catalog/book 10, reading 6, borrow 4, user 7)
+             — every route in Server/docs/API.md now also has a live,
+             interactive counterpart. General API info (title, BasePath
+             /api/v1, BearerAuth security scheme) lives in cmd/api/main.go
+             above func main().
+             Generated via: swag init -g cmd/api/main.go --output
+             internal/swaggerdocs --parseInternal --parseDependency
+             (--parseInternal needed since every model lives under
+             internal/, which swag skips by default; --parseDependency
+             needed for utils.APIResponse/PaginatedResponse/APIError, which
+             live in a different package than the handlers referencing them).
+             The generated internal/swaggerdocs/ (docs.go + swagger.json +
+             swagger.yaml) is committed, not gitignored — cmd/api/main.go
+             blank-imports docs.go for its init() side effect (registering
+             the spec), so `go build`/`go run` need it present; there's no
+             Makefile yet (Step 19) to regenerate it as part of a build step.
+             Whenever a handler's annotations change, regenerate by hand:
+             `cd Server && swag init -g cmd/api/main.go --output
+             internal/swaggerdocs --parseInternal --parseDependency`, then
+             `swag fmt -g cmd/api/main.go` to keep comment columns aligned.
+             Served at GET /swagger/* via github.com/swaggo/http-swagger —
+             registered as a single "GET /swagger/" prefix route; the
+             handler parses r.RequestURI itself to find index.html/doc.json/
+             assets, so no http.StripPrefix is needed.
+             Verified: GET /swagger/ redirects to index.html (200), GET
+             /swagger/doc.json is valid JSON with the correct title/
+             basePath/37 operations/BearerAuth security definition, and spot
+             checks (nested response schemas via allOf, the multipart file
+             param on /books/{id}/upload, per-route security requirements)
+             all matched the actual handler behavior.
 
 ⏳ Step 19 — Makefile + Docker Polish
              make run          → go run cmd/api/main.go

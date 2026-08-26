@@ -69,11 +69,14 @@ feature roadmap (Steps 13-20).
       code-signing or app-store/distribution pipeline exists for either
       platform.
 
-## Product code (nothing built yet — all scaffolds)
+## Product code
 
-- [ ] `Server`: Steps 13-20 (search/filtering completion, e-library
-      upload/download, reading sessions, borrowing, user/member management,
-      Swagger docs, Makefile) — see `Server/docs/Steps.md`.
+- [x] `Server`: Steps 1-18 (config/DB/Redis, auth, authors, books, search,
+      e-library upload/download, reading sessions/sync/bookmarks, borrowing,
+      user/member management, Swagger docs) — every feature step is done.
+      Remaining: Step 19 (Makefile + Docker polish) and Step 20 (final
+      hardening — global error handler, real `/health` DB/Redis check,
+      graceful shutdown is already done). See `Server/docs/Steps.md`.
 - [ ] `Client/web/app` — the actual library product app (currently the bare
       Next.js template).
 - [ ] `Client/web/main` — the marketing site (currently the bare Next.js

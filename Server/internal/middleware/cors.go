@@ -31,11 +31,11 @@ func contains(slice []string, item string) bool {
 }
 
 func DefaultCORSConfig() CORSConfig {
-	return CORSConfig {
+	return CORSConfig{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{
-			"Content-Type", 
+			"Content-Type",
 			"Authorization",
 			"X-Request-With",
 		},

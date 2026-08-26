@@ -1,0 +1,3334 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Library Management \u0026 E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.\nAll endpoints except /health and /auth/* return the shared JSON envelope: {\"success\", \"message\"|\"error\", \"data\"|\"code\"}.",
+        "title": "Bibliotheca API",
+        "contact": {
+            "name": "Bibliotheca",
+            "url": "https://github.com/dprince-03/Bibliotheca"
+        },
+        "license": {
+            "name": "MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "Verifies credentials and returns access + refresh tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Log in",
+                "parameters": [
+                    {
+                        "description": "Credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "wrong credentials or deactivated account",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "description": "Revokes the given refresh token (does not touch the still-live access token — it just expires naturally)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Log out",
+                "parameters": [
+                    {
+                        "description": "Refresh token to revoke",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Rotates the refresh token (one-time use — the old one is revoked) and returns a new access + refresh token pair",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh tokens",
+                "parameters": [
+                    {
+                        "description": "Current refresh token",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "invalid, expired, or already-used refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Creates a member account (role is always \"member\") and returns access + refresh tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new member",
+                "parameters": [
+                    {
+                        "description": "Registration details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "email already registered",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/authors": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "List authors",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Create an author",
+                "parameters": [
+                    {
+                        "description": "Author details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_catalog.CreateAuthorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/authors/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Get an author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "author not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Update an author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update (all optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_catalog.UpdateAuthorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "author not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Delete an author",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "author not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/authors/{id}/books": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "List an author's books",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Author ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "author not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/books": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "List books",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "author_ids is required (every author must already exist); author_roles is optional and positional. available_copies is set equal to total_copies and cannot be set directly.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Create a book",
+                "parameters": [
+                    {
+                        "description": "Book details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_catalog.CreateBookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body, or an author_id doesn't exist",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Get a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Use the assign/remove-author endpoints for authors, not this one. Changing total_copies adjusts available_copies by the same delta.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Update a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update (all optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_catalog.UpdateBookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Delete a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}/authors": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Assign an author to a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Author + role",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_catalog.AssignAuthorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book or author not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}/authors/{authorId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Refuses if it would leave the book with zero authors",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Remove an author from a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Author ID",
+                        "name": "authorId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid ids, or would leave zero authors",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}/download": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Streams the file (supports range requests). 404 if the book has no uploaded file yet.",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Download a book's digital file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found, or no file uploaded",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "multipart/form-data with a single field named \"file\". Only .pdf/.epub are accepted, up to MAX_UPLOAD_SIZE_MB. Sets is_digital=true on success; re-uploading replaces the previous file.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Upload a book's digital file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "PDF or EPUB file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id, unsupported format, too large, or missing file",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/borrows": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sweeps overdue records first, so status is always current as of this request.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "borrows"
+                ],
+                "summary": "List every borrow record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_borrow.BorrowResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "librarian/admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "409 if you already have an active borrow for this book. 400 if no copies are available. due_at is now + BORROW_LOAN_DAYS.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "borrows"
+                ],
+                "summary": "Borrow a book",
+                "parameters": [
+                    {
+                        "description": "Book to borrow",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_borrow.BorrowRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_borrow.BorrowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body, or no available copies",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "already have an active borrow for this book",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/borrows/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "borrows"
+                ],
+                "summary": "List my borrow records",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_borrow.BorrowResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/borrows/{id}/return": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "A member may only return their own borrow; librarian/admin may return anyone's (e.g. processing a physical return at a desk).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "borrows"
+                ],
+                "summary": "Return a borrowed book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Borrow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "not your borrow, and not librarian/admin",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "borrow not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "already returned",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reading/{bookId}/bookmarks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Bookmarks are private per user — this never returns another user's bookmarks for the same book.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "List my bookmarks for a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_modules_reading.BookmarkResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid book id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "Create a bookmark",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Bookmark details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_reading.BookmarkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_reading.BookmarkResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid book id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reading/{bookId}/bookmarks/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "403 if the bookmark belongs to someone else or a different book — no admin override, a bookmark is a personal note.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "Delete a bookmark",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Bookmark ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid ids",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "not your bookmark",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "bookmark not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reading/{bookId}/progress": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "The plain, always-online counterpart to sync — no client_updated_at; the server stamps \"now\", which always beats an offline client syncing in later with an older timestamp.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "Update reading progress (online)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Current progress",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_reading.ProgressUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_reading.ReadingSessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid book id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reading/{bookId}/session": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "Get my reading session for a book",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_reading.ReadingSessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid book id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found, or no session started yet",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/reading/{bookId}/sync": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "For offline clients: send local progress plus when it was last updated there. If the server already has a newer client_updated_at, this update is silently discarded and the response reflects the server's existing (newer) state — last write wins.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reading"
+                ],
+                "summary": "Sync offline reading progress",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Local progress + client clock",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_reading.UpdateProgressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_reading.ReadingSessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid book id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/search": {
+            "get": {
+                "description": "q matches book title/description (full-text) OR author name. genre/format/author/year are exact-match filters, independent of q and each other.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Search books",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Free text — matches title/description or author name",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exact genre match",
+                        "name": "genre",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "digital",
+                            "physical"
+                        ],
+                        "type": "string",
+                        "description": "digital or physical",
+                        "name": "format",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Author ID (not a name — use q for name search)",
+                        "name": "author",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Exact published_year match",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid format/author/year parameter",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Includes deactivated accounts (unlike most other lookups), so an admin can find and reactivate one.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List every user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_user.UserResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get my profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_user.UserProfileResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "account deactivated",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Only touches profile fields (phone_number, bio, profile_picture) — no route changes first_name/last_name/email yet.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update my profile",
+                "parameters": [
+                    {
+                        "description": "Fields to update (all optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_user.UpdateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_user.UserProfileResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reading activity (from session data) — not the same as GET /borrows/my, which is checkout history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get my reading history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_user.HistoryEntryResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/library": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get my library",
+                "parameters": [
+                    {
+                        "enum": [
+                            "wishlist",
+                            "to_read",
+                            "reading",
+                            "completed",
+                            "dropped"
+                        ],
+                        "type": "string",
+                        "description": "Filter to one status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/internal_modules_user.LibraryEntryResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/library/{bookId}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upsert — calling it again for the same book updates the existing entry rather than creating a duplicate.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Set a book's status on my library shelf",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Book ID",
+                        "name": "bookId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_user.UpdateLibraryStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_modules_user.LibraryEntryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid book id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "422": {
+                        "description": "validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deactivating immediately blocks the user's next login and any endpoint that filters to is_active=TRUE (e.g. their own GET /users/me starts 404ing, even with a still-valid token).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Activate or deactivate a user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_user.UpdateUserStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid id/body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "admin only",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_dprince-03_Bibliotheca_internal_utils.APIError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_dprince-03_Bibliotheca_internal_utils.APIResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "has_previous_page": {
+                    "type": "boolean"
+                },
+                "items": {},
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_auth.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "$ref": "#/definitions/internal_modules_auth.TokenResponse"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse"
+                }
+            }
+        },
+        "internal_modules_auth.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "first_name",
+                "last_name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
+                }
+            }
+        },
+        "internal_modules_auth.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "description": "seconds",
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_borrow.BorrowRequest": {
+            "type": "object",
+            "required": [
+                "book_id"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_borrow.BorrowResponse": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "borrowed_at": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "returned_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_catalog.AssignAuthorRequest": {
+            "type": "object",
+            "required": [
+                "author_id",
+                "role"
+            ],
+            "properties": {
+                "author_id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "primary",
+                        "co-author",
+                        "editor",
+                        "illustrator"
+                    ]
+                }
+            }
+        },
+        "internal_modules_catalog.AuthorResponse": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "middle_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_catalog.BookResponse": {
+            "type": "object",
+            "properties": {
+                "authors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                    }
+                },
+                "available_copies": {
+                    "type": "integer"
+                },
+                "cover_image": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "file_format": {
+                    "type": "string"
+                },
+                "genre": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_digital": {
+                    "type": "boolean"
+                },
+                "isbn": {
+                    "type": "string"
+                },
+                "published_year": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_copies": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_catalog.CreateAuthorRequest": {
+            "type": "object",
+            "required": [
+                "first_name",
+                "last_name"
+            ],
+            "properties": {
+                "biography": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "middle_name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "internal_modules_catalog.CreateBookRequest": {
+            "type": "object",
+            "required": [
+                "author_ids",
+                "genre",
+                "isbn",
+                "title",
+                "total_copies"
+            ],
+            "properties": {
+                "author_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "author_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cover_image": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "genre": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "is_digital": {
+                    "type": "boolean"
+                },
+                "isbn": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "published_year": {
+                    "type": "integer",
+                    "maximum": 2100,
+                    "minimum": 1000
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "total_copies": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "internal_modules_catalog.UpdateAuthorRequest": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "middle_name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "internal_modules_catalog.UpdateBookRequest": {
+            "type": "object",
+            "properties": {
+                "cover_image": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "genre": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "is_digital": {
+                    "type": "boolean"
+                },
+                "published_year": {
+                    "type": "integer",
+                    "maximum": 2100,
+                    "minimum": 1000
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "total_copies": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "internal_modules_reading.BookmarkRequest": {
+            "type": "object",
+            "required": [
+                "page"
+            ],
+            "properties": {
+                "color": {
+                    "type": "string",
+                    "enum": [
+                        "yellow",
+                        "green",
+                        "blue",
+                        "pink",
+                        "purple"
+                    ]
+                },
+                "highlight": {
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "note": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "page": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "internal_modules_reading.BookmarkResponse": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "highlight": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_reading.ProgressUpdateRequest": {
+            "type": "object",
+            "required": [
+                "total_pages"
+            ],
+            "properties": {
+                "current_chapter": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "current_page": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "internal_modules_reading.ReadingSessionResponse": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                },
+                "current_chapter": {
+                    "type": "string"
+                },
+                "current_page": {
+                    "type": "integer"
+                },
+                "is_completed": {
+                    "type": "boolean"
+                },
+                "last_read_at": {
+                    "type": "string"
+                },
+                "progress_pct": {
+                    "type": "number"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_reading.UpdateProgressRequest": {
+            "type": "object",
+            "required": [
+                "client_updated_at",
+                "total_pages"
+            ],
+            "properties": {
+                "client_updated_at": {
+                    "type": "string"
+                },
+                "current_chapter": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "current_page": {
+                    "description": "CurrentPage has no \"required\" tag deliberately — 0 is the valid\nstarting value (page 0 / not started yet), and go-playground/validator's\n\"required\" rejects the zero value for numeric types.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "internal_modules_user.HistoryEntryResponse": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "current_page": {
+                    "type": "integer"
+                },
+                "is_completed": {
+                    "type": "boolean"
+                },
+                "last_read_at": {
+                    "type": "string"
+                },
+                "progress_pct": {
+                    "type": "number"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_user.LibraryEntryResponse": {
+            "type": "object",
+            "properties": {
+                "added_at": {
+                    "type": "string"
+                },
+                "book_id": {
+                    "type": "integer"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_user.UpdateLibraryStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "wishlist",
+                        "to_read",
+                        "reading",
+                        "completed",
+                        "dropped"
+                    ]
+                }
+            }
+        },
+        "internal_modules_user.UpdateProfileRequest": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "phone_number": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 7
+                },
+                "profile_picture": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_user.UpdateUserStatusRequest": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_modules_user.UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "last_online_at": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "total_books_read": {
+                    "type": "integer"
+                },
+                "total_pages_read": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_user.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and the JWT access token (obtained from /auth/login or /auth/register).",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

@@ -12,6 +12,8 @@ import (
 	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
 	"github.com/dprince-03/Bibliotheca/internal/modules/user"
 	"github.com/dprince-03/Bibliotheca/pkg/jwt"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func New(
@@ -74,6 +76,14 @@ func New(
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok","service":"bibliotheca"}`))
 	})
+
+	// ── Swagger / OpenAPI docs (Step 18, public) ──
+	// httpSwagger.Handler parses r.RequestURI itself to find the sub-path
+	// (index.html, doc.json, static assets), so this trailing-slash prefix
+	// route is enough — no http.StripPrefix needed.
+	mux.Handle("GET /swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	// ── Auth (public, STRICT rate limit) ──────
 	// Each auth route gets the strict limiter applied individually
