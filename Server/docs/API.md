@@ -259,14 +259,73 @@ return anyone's (e.g. processing a physical return at a desk). `403` for
 anyone else. `409` if it's already been returned. On success,
 `available_copies` goes back up by one.
 
+## Users
+
+### `GET /users/me` — any authenticated user
+```json
+{ "id": 9, "first_name": "Fiona", "last_name": "Franklin", "email": "fiona@example.com", "role": "member", "is_active": true, "phone_number": null, "bio": null, "profile_picture": null, "last_online_at": null, "total_books_read": 0, "total_pages_read": 0 }
+```
+
+### `PATCH /users/me` — any authenticated user
+```json
+{ "phone_number": "+15551234567", "bio": "I love reading" }
+```
+Only touches profile fields (`phone_number`, `bio`, `profile_picture`) — no
+route changes `first_name`/`last_name`/`email` yet. Same response shape as
+`GET /users/me`.
+
+### `GET /users/me/library?status=` — any authenticated user
+The caller's personal book shelf, paginated. `status` optionally filters to
+one value (see below).
+```json
+[{ "book_id": 6, "book_title": "Dune", "status": "reading", "added_at": "2026-08-25T12:00:14Z", "updated_at": "2026-08-25T12:00:14Z" }]
+```
+
+### `PATCH /users/me/library/{bookId}` — any authenticated user
+```json
+{ "status": "reading" }
+```
+`status` is one of `wishlist`, `to_read`, `reading`, `completed`, `dropped`.
+Upsert — calling it again for the same book updates the existing entry
+rather than creating a duplicate. `404` if the book doesn't exist.
+
+### `GET /users/me/history` — any authenticated user
+The caller's reading activity (from `internal/modules/reading`'s session
+data) — **not** the same thing as `GET /borrows/my`, which is physical/
+digital checkout history. A book only appears here once there's been a
+`sync` or `progress` call for it.
+```json
+[{ "book_id": 6, "book_title": "Dune", "current_page": 30, "total_pages": 250, "progress_pct": 12.0, "is_completed": false, "last_read_at": "2026-08-25T12:00:38Z" }]
+```
+
+### `GET /users` — `admin`
+Every user, paginated — **including deactivated accounts** (unlike most
+other lookups in this API, which exclude them), precisely so an admin can
+find and reactivate one.
+```json
+{ "id": 9, "first_name": "Fiona", "last_name": "Franklin", "email": "fiona@example.com", "role": "member", "is_active": true }
+```
+
+### `PATCH /users/{id}/status` — `admin`
+```json
+{ "is_active": false }
+```
+Deactivating a user immediately blocks their next login (`401`) **and**
+invalidates their already-issued access token for any endpoint that reads
+the user record (e.g. `GET /users/me` starts returning `404` even though
+the token itself hasn't expired) — because those lookups filter to
+`is_active = TRUE`. It does not revoke the refresh token itself, but a
+revoked/deactivated account can't successfully refresh either, since
+`Login`/`RefreshToken` both re-check `is_active`.
+
 ## `GET /health` — public, no auth, no rate limit
 ```json
 { "status": "ok", "service": "bibliotheca" }
 ```
 Does not currently check DB/Redis liveness (see `Server/docs/Steps.md` → Step 20).
 
-## Not implemented yet
+## Not yet built
 
-User/member management, including the user library (a book's status like
-"wishlist"/"reading"/"completed" for a given user), has no routes yet — see
-`Server/docs/Steps.md` (Step 17) for the planned shape.
+Steps 18-20 (Swagger/OpenAPI generation, Makefile/Docker polish, final
+hardening like a real `/health` DB/Redis check) are tooling and polish, not
+new endpoints — see `Server/docs/Steps.md` for what each covers.

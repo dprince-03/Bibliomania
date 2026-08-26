@@ -32,10 +32,6 @@ type ReadingSessionResponse struct {
 	LastReadAt     time.Time `json:"last_read_at"`
 }
 
-type UpdateLibraryStatusRequest struct {
-	Status string `json:"status" validate:"required,oneof=wishlist to_read reading completed dropped"`
-}
-
 type BookmarkRequest struct {
 	Page      uint32  `json:"page"      validate:"required,min=1"`
 	Note      *string `json:"note"      validate:"omitempty,max=500"`

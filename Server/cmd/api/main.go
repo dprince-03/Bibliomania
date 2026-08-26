@@ -67,6 +67,7 @@ func main() {
 	readingSessionRepo := reading.NewSessionRepository(db)
 	bookmarkRepo := reading.NewBookmarkRepository(db)
 	borrowRepo := borrow.NewRepository(db)
+	libraryRepo := user.NewLibraryRepository(db)
 
 	// ── Services ──────────────────────────────
 	authService := auth.NewService(userRepo, profileRepo, tokenRepo, jwtManager, cfg.RefreshTokenTTL)
@@ -74,6 +75,7 @@ func main() {
 	bookService := catalog.NewBookService(bookRepo, authorRepo, bookAuthorRepo, appCache, cfg.StoragePath, cfg.MaxUploadSizeMB)
 	readingService := reading.NewService(readingSessionRepo, bookmarkRepo, bookRepo)
 	borrowService := borrow.NewService(borrowRepo, bookRepo, cfg.BorrowLoanDays)
+	userService := user.NewService(userRepo, profileRepo, libraryRepo, readingSessionRepo, bookRepo)
 
 	// ── Handlers ──────────────────────────────
 	authHandler := auth.NewHandler(authService, validate)
@@ -81,9 +83,10 @@ func main() {
 	bookHandler := catalog.NewBookHandler(bookService, validate, cfg.MaxUploadSizeMB)
 	readingHandler := reading.NewHandler(readingService, validate)
 	borrowHandler := borrow.NewHandler(borrowService, validate)
+	userHandler := user.NewHandler(userService, validate)
 
 	// ── Router ────────────────────────────────
-	r := router.New(cfg, jwtManager, authHandler, authorHandler, bookHandler, readingHandler, borrowHandler)
+	r := router.New(cfg, jwtManager, authHandler, authorHandler, bookHandler, readingHandler, borrowHandler, userHandler)
 
 	// ── Server ────────────────────────────────
 	srv := &http.Server{

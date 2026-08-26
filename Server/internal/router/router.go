@@ -10,6 +10,7 @@ import (
 	"github.com/dprince-03/Bibliotheca/internal/modules/borrow"
 	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
 	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
+	"github.com/dprince-03/Bibliotheca/internal/modules/user"
 	"github.com/dprince-03/Bibliotheca/pkg/jwt"
 )
 
@@ -21,6 +22,7 @@ func New(
 	bookHandler *catalog.BookHandler,
 	readingHandler *reading.Handler,
 	borrowHandler *borrow.Handler,
+	userHandler *user.Handler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -138,16 +140,21 @@ func New(
 	mux.Handle("PATCH /api/v1/borrows/{id}/return",
 		requireMember(borrowHandler.Return)) // ownership enforced in the service (self, or librarian/admin)
 
-	// ── Future route groups (added each step) ──
-	//
-	// Users (Step 17):
-	//   GET    /api/v1/users/me           → requireMember
-	//   PATCH  /api/v1/users/me          → requireMember
-	//   GET    /api/v1/users/me/library   → requireMember
-	//   PATCH  /api/v1/users/me/library/:bookId → requireMember
-	//   GET    /api/v1/users/me/history   → requireMember
-	//   GET    /api/v1/users             → requireAdmin
-	//   PATCH  /api/v1/users/:id/status  → requireAdmin
+	// ── Users (Step 17) ────────────────────────
+	mux.Handle("GET /api/v1/users/me",
+		requireMember(userHandler.GetMe))
+	mux.Handle("PATCH /api/v1/users/me",
+		requireMember(userHandler.UpdateMe))
+	mux.Handle("GET /api/v1/users/me/library",
+		requireMember(userHandler.GetLibrary))
+	mux.Handle("PATCH /api/v1/users/me/library/{bookId}",
+		requireMember(userHandler.UpdateLibraryStatus))
+	mux.Handle("GET /api/v1/users/me/history",
+		requireMember(userHandler.GetHistory))
+	mux.Handle("GET /api/v1/users",
+		requireAdmin(userHandler.GetAll))
+	mux.Handle("PATCH /api/v1/users/{id}/status",
+		requireAdmin(userHandler.UpdateStatus))
 
 	// ── Global middleware (wraps everything) ──
 	// Global rate limiter is part of the chain here
