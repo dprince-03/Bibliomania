@@ -1,10 +1,10 @@
-> Status as of 2026-08-25: Steps 1-17 (every feature step) are done and
-> `go build ./...` / `go vet ./...` succeed — see "Build history" at the
-> bottom of this file for how it got there. `internal/modules/` is
-> organized **by feature** (`auth/`, `user/`, `catalog/`, `borrow/`,
-> `reading/`), not by layer — see `docs/ARCHITECTURE.md` for the package
-> map. Steps 18-20 are tooling/polish (Swagger docs, Makefile/Docker,
-> final hardening), not new features, and have no code yet.
+> Status as of 2026-08-26: Steps 1-19 are done (every feature step, plus
+> Swagger/OpenAPI docs and the Makefile) and `go build ./...` /
+> `go vet ./...` succeed — see "Build history" at the bottom of this file
+> for how it got there. `internal/modules/` is organized **by feature**
+> (`auth/`, `user/`, `catalog/`, `borrow/`, `reading/`), not by layer — see
+> `docs/ARCHITECTURE.md` for the package map. Step 20 (final hardening) is
+> the only step with no code yet.
 
 ```
 ✅ Step 1  — Scaffold: folder structure, go.mod, git init
@@ -289,12 +289,9 @@
              The generated internal/swaggerdocs/ (docs.go + swagger.json +
              swagger.yaml) is committed, not gitignored — cmd/api/main.go
              blank-imports docs.go for its init() side effect (registering
-             the spec), so `go build`/`go run` need it present; there's no
-             Makefile yet (Step 19) to regenerate it as part of a build step.
-             Whenever a handler's annotations change, regenerate by hand:
-             `cd Server && swag init -g cmd/api/main.go --output
-             internal/swaggerdocs --parseInternal --parseDependency`, then
-             `swag fmt -g cmd/api/main.go` to keep comment columns aligned.
+             the spec), so `go build`/`go run` need it present. Whenever a
+             handler's annotations change, regenerate with `make swagger`
+             (Step 19 added the Makefile after this step landed).
              Served at GET /swagger/* via github.com/swaggo/http-swagger —
              registered as a single "GET /swagger/" prefix route; the
              handler parses r.RequestURI itself to find index.html/doc.json/
@@ -306,16 +303,37 @@
              param on /books/{id}/upload, per-route security requirements)
              all matched the actual handler behavior.
 
-⏳ Step 19 — Makefile + Docker Polish
-             make run          → go run cmd/api/main.go
-             make build        → go build -o bibliotheca
-             make migrate-up   → run all pending migrations
-             make migrate-down → rollback last migration
-             make docker-up    → docker compose up --build -d
-             make docker-down  → docker compose down
-             make swagger      → swag init
-             make seed         → run seed data (dev only)
-             docker-compose.prod.yml → production overrides
+✅ Step 19 — Makefile + Docker Polish
+             Server/Makefile: run, build (→ bin/bibliotheca, gitignored),
+             vet, fmt, migrate-up, migrate-down, docker-up, docker-down,
+             swagger, seed.
+             migrate-up/migrate-down deliberately do NOT use Make's own
+             `include .env` — Make's comment character is `#`, and this
+             repo's real DB_PASSWORD/REDIS_PASSWORD values contain a literal
+             `#` (e.g. "@Dev_prince#2003"), which `include` would silently
+             truncate. Instead each recipe sources .env as a shell script
+             (`. ./.env` inside the recipe's shell), where `#` only starts a
+             comment at the beginning of a word — confirmed this actually
+             matters by testing against the real .env, not a sanitized one.
+             docker-up/docker-down wrap the existing dev compose command
+             from infra/README.md with paths relative to Server/ (`../.env`,
+             `../infra/docker/...`) — docker-compose.prod.yml (already built
+             during the infra branch) is intentionally not wrapped here,
+             since prod is a deploy-host concern, not a local dev
+             convenience.
+             cmd/seed/main.go (new): seeds one admin user
+             (admin@bibliotheca.local) and 3 sample author+book pairs.
+             Coarse-grained idempotency (skip admin seeding if that email
+             exists; skip catalog seeding if any author exists at all)
+             rather than per-row upserts — meant for a fresh dev database,
+             not repeated runs against one already in use.
+             Verified end-to-end: `make migrate-up` against the real Server/.env
+             (proving the `#`-in-password handling actually works, not just
+             in theory), `make seed` twice (second run correctly skipped
+             both admin and catalog), seeded books/login visible via the
+             live API, `make build` produces a real binary, `make swagger`
+             regenerates without diffing, and both docker-compose
+             (dev + prod) configs resolve cleanly with Server/-relative paths.
 
 ⏳ Step 20 — Final Polish
              Global error handler (single point for all errors)

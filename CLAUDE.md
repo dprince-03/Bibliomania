@@ -19,11 +19,14 @@ Bibliotheca is a Library Management & E-Library System, now a multi-app monorepo
 
 ## Commands (all run from `Server/`)
 
+`Server/Makefile` (Step 19) wraps the common ones — `make run`/`build`/`vet`/`fmt`/`migrate-up`/`migrate-down`/`docker-up`/`docker-down`/`swagger`/`seed`. `migrate-up`/`migrate-down` source `Server/.env` at the shell level rather than via Make's `include`, deliberately — Make's own comment character is `#`, and this repo's `DB_PASSWORD`/`REDIS_PASSWORD` values contain a literal `#`, which `include` would silently truncate.
+
 ```bash
 go build ./...
 go vet ./...
 go run ./cmd/api             # start the API (loads Server/.env via godotenv)
 go run ./cmd/key              # generate a JWT secret
+go run ./cmd/seed             # insert sample authors/books + an admin user (make seed) — skips if data already looks present
 air                            # hot reload during dev (config: Server/.air.toml)
 
 migrate create -ext sql -dir migrations -seq <name>   # new migration pair
@@ -34,7 +37,7 @@ swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --par
 swag fmt -g cmd/api/main.go
 ```
 
-There are no tests in the repo yet and no Makefile — don't assume `make test`/`make run` work.
+There are no tests in the repo yet. `Server/Makefile` has `run`/`build`/`vet`/`fmt`/`migrate-up`/`migrate-down`/`docker-up`/`docker-down`/`swagger`/`seed` — no `make test` (nothing to test yet).
 
 Each `Client/` Node app (`web/app`, `web/main`, `admin/web`, `admin/api`) has its own `package.json` and standard scripts (`npm run dev`/`build`/`lint`) but no product code beyond its framework's default template. `Client/mobile` is a standard Flutter project (`flutter run`/`flutter build`). `Client/desktop` needs Maven (`mvn javafx:run`) — not installed in every environment, don't assume it's there.
 
@@ -66,8 +69,8 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docke
 
 ### Roadmap and current state
 
-`Server/docs/Steps.md` is the authoritative step-by-step build roadmap (Steps 1-20) and tracks what's actually implemented vs. planned — check it before assuming a module exists. `Server/docs/project_setup.md` documents `.env` vars and the migration/schema layout. As of the last audit: Steps 1-18 are done (every feature step, plus Swagger/OpenAPI docs at `GET /swagger/*`) and `go build ./...`/`go vet ./...` succeed. Steps 19-20 are tooling/polish (Makefile/Docker, final hardening), not new features, and have no code yet.
+`Server/docs/Steps.md` is the authoritative step-by-step build roadmap (Steps 1-20) and tracks what's actually implemented vs. planned — check it before assuming a module exists. `Server/docs/project_setup.md` documents `.env` vars and the migration/schema layout. As of the last audit: Steps 1-19 are done (every feature step, Swagger/OpenAPI docs at `GET /swagger/*`, and the Makefile) and `go build ./...`/`go vet ./...` succeed. Step 20 (final hardening) has no code yet.
 
 ## Git workflow for this repo
 
-Each roadmap step (currently Steps 19-20 remain) is implemented on its own branch — one step per branch, not bundled. Branch naming: `feat/step-<N>-<short-slug>` (e.g. `feat/step-18-swagger-docs`). After a step lands, update the corresponding entry in `Server/docs/Steps.md` (status marker + notes) as part of that same branch/PR. Non-roadmap work (infra, refactors) gets its own descriptively-named branch outside this numbering, e.g. `feat/infra-docker-stack`, `refactor/server-feature-structure`.
+Each roadmap step (currently Step 20 remains) is implemented on its own branch — one step per branch, not bundled. Branch naming: `feat/step-<N>-<short-slug>` (e.g. `feat/step-19-makefile-docker-polish`). After a step lands, update the corresponding entry in `Server/docs/Steps.md` (status marker + notes) as part of that same branch/PR. Non-roadmap work (infra, refactors) gets its own descriptively-named branch outside this numbering, e.g. `feat/infra-docker-stack`, `refactor/server-feature-structure`.
