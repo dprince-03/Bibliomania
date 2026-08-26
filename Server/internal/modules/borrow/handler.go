@@ -38,7 +38,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetAll(r.Context(), pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) GetMyBorrows(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetMyBorrows(r.Context(), userID, pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *Handler) Borrow(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Borrow(r.Context(), userID, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -133,17 +133,9 @@ func (h *Handler) Return(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.Return(r.Context(), userID, role, borrowID); err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
 	utils.Success(w, http.StatusOK, "book returned", nil)
-}
-
-func (h *Handler) handleError(w http.ResponseWriter, err error) {
-	if appErr, ok := err.(*apperrors.AppError); ok {
-		utils.Error(w, appErr)
-		return
-	}
-	utils.Error(w, apperrors.Internal(err))
 }

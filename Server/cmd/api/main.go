@@ -14,6 +14,7 @@ import (
 	"github.com/dprince-03/Bibliotheca/internal/cache"
 	"github.com/dprince-03/Bibliotheca/internal/config"
 	"github.com/dprince-03/Bibliotheca/internal/database"
+	"github.com/dprince-03/Bibliotheca/internal/health"
 	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
 	"github.com/dprince-03/Bibliotheca/internal/modules/borrow"
 	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
@@ -105,8 +106,11 @@ func main() {
 	borrowHandler := borrow.NewHandler(borrowService, validate)
 	userHandler := user.NewHandler(userService, validate)
 
+	// ── Health ────────────────────────────────
+	healthChecker := health.NewChecker(db, redisClient)
+
 	// ── Router ────────────────────────────────
-	r := router.New(cfg, jwtManager, authHandler, authorHandler, bookHandler, readingHandler, borrowHandler, userHandler)
+	r := router.New(cfg, jwtManager, authHandler, authorHandler, bookHandler, readingHandler, borrowHandler, userHandler, healthChecker)
 
 	// ── Server ────────────────────────────────
 	srv := &http.Server{

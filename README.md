@@ -64,11 +64,10 @@ Server/
 
 ### Implemented so far
 
-Every feature step in the roadmap (Steps 1-19 — see `Server/docs/Steps.md`): config, MySQL + Redis, JWT auth with refresh-token rotation, the author/book catalog (search, full-text + author-name matching, Redis-cached), e-library upload/download, reading sessions (offline sync with last-write-wins conflict resolution, plain online progress updates, bookmarks), the borrowing system (atomic copy reservation, read-time overdue detection), member management (profile, personal library shelf, reading history, admin user management), and generated Swagger/OpenAPI docs at `GET /swagger/*`. `go build ./...`/`go vet ./...` succeed and the server boots and serves real requests — every one of the above was verified against a live server + MySQL + Redis, not just compiled.
+All 20 roadmap steps (see `Server/docs/Steps.md`): config, MySQL + Redis, JWT auth with refresh-token rotation, the author/book catalog (search, full-text + author-name matching, Redis-cached), e-library upload/download, reading sessions (offline sync with last-write-wins conflict resolution, plain online progress updates, bookmarks), the borrowing system (atomic copy reservation, read-time overdue detection), member management (profile, personal library shelf, reading history, admin user management), generated Swagger/OpenAPI docs at `GET /swagger/*`, a single consolidated global error handler, and a real `/health` endpoint that checks DB + Redis liveness. `go build ./...`/`go vet ./...` succeed and the server boots and serves real requests — every one of the above was verified against a live server + MySQL + Redis, not just compiled.
 
 ### Not yet implemented
 
-- Step 20 (final polish — a real `/health` DB/Redis liveness check, a single global error-handling pass) has no code yet.
 - All five `Client/` apps (`web/app`, `web/main`, `admin/web`, `admin/api`, `mobile`) are bare framework scaffolds — no product code written yet. `Client/desktop` (JavaFX) is hand-written scaffolding, not generated, since Maven isn't installed in the environment it was created in — see [Client/desktop/README.md](Client/desktop/README.md).
 
 ## Client

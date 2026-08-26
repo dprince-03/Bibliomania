@@ -1,10 +1,10 @@
-> Status as of 2026-08-26: Steps 1-19 are done (every feature step, plus
-> Swagger/OpenAPI docs and the Makefile) and `go build ./...` /
+> Status as of 2026-08-26: **all 20 roadmap steps are done.** `go build ./...` /
 > `go vet ./...` succeed — see "Build history" at the bottom of this file
 > for how it got there. `internal/modules/` is organized **by feature**
 > (`auth/`, `user/`, `catalog/`, `borrow/`, `reading/`), not by layer — see
-> `docs/ARCHITECTURE.md` for the package map. Step 20 (final hardening) is
-> the only step with no code yet.
+> `docs/ARCHITECTURE.md` for the package map. Step 20 (final hardening —
+> consolidated global error handler, real DB+Redis `/health` check) was the
+> last one to land, closing out the Server roadmap.
 
 ```
 ✅ Step 1  — Scaffold: folder structure, go.mod, git init
@@ -335,13 +335,45 @@
              regenerates without diffing, and both docker-compose
              (dev + prod) configs resolve cleanly with Server/-relative paths.
 
-⏳ Step 20 — Final Polish
-             Global error handler (single point for all errors)
-             Input validation via go-playground/validator
-             Security headers middleware (HSTS, XSS, CSP, etc.)
-             Graceful shutdown (drain connections on SIGTERM)
-             Request ID middleware (trace requests across logs)  ← done early, Step 8
-             /health endpoint (checks DB + Redis liveness)       ← endpoint exists, no Redis/DB check yet
+✅ Step 20 — Final Polish
+             Of the six items originally listed here, four were already done
+             by earlier steps (input validation, security headers middleware,
+             graceful shutdown, request ID middleware — done early at Step 8).
+             This step did the two genuinely remaining ones:
+             1. Global error handler: every handler
+             (auth/catalog[author,book]/reading/borrow/user) had its own
+             private `handleError(w, err)` method — five were byte-for-byte
+             identical copies, and auth/handler.go had the same
+             type-switch-on-*apperrors.AppError logic inlined 4 times instead
+             of even a local helper. Replaced all of it with one exported
+             `utils.HandleError(w, err)` in utils/response.utils.go; deleted
+             the six now-redundant call sites' worth of duplicated logic.
+             2. /health now actually checks liveness instead of returning a
+             static `{"status":"ok"}`: new internal/health package
+             (health.Checker, wrapping *sqlx.DB + *redis.Client) pings both
+             with a 2s timeout and returns 200 `{"status":"ok","database":"ok","cache":"ok"}`
+             when both are reachable, or 503
+             `{"status":"degraded","database":"...","cache":"..."}` naming
+             which one failed otherwise. Wired into main.go (constructed
+             alongside db/redisClient, which were already in scope) and
+             router.go (one new `healthChecker *health.Checker` param,
+             replacing the static closure) — router.New is now at 9 params,
+             judged acceptable since this is the final roadmap step and no
+             more handlers get added after this.
+             Verified end-to-end against the live server (MySQL + Redis both
+             running locally): `/health` returned 200/ok with both checks ok;
+             stopped the Redis container (`docker stop nexus_redis`) and
+             confirmed `/health` returned 503 with `"cache":"unreachable"`
+             while `"database":"ok"` stayed correct; restarted Redis and
+             confirmed it recovered to 200/ok. Also re-verified the
+             consolidated error handler on real request paths: a 404 from
+             `GET /api/v1/books/999999` and a 422 from an invalid
+             `/auth/register` body both still returned the correct shared
+             envelope shape. `go build ./...`, `go vet ./...`, and `gofmt -l .`
+             are all clean, and `make swagger` regenerated
+             internal/swaggerdocs/ with the new `/health` annotation
+             (confirmed present in swagger.json) without needing any other
+             handler's annotations touched.
 ```
 
 ## Build history

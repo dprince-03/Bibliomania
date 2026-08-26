@@ -57,7 +57,7 @@ func (h *Handler) Sync(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Sync(r.Context(), userID, bookID, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *Handler) GetSession(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetSession(r.Context(), userID, bookID)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *Handler) UpdateProgress(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.UpdateProgress(r.Context(), userID, bookID, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -160,7 +160,7 @@ func (h *Handler) GetBookmarks(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetBookmarks(r.Context(), userID, bookID)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *Handler) CreateBookmark(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.CreateBookmark(r.Context(), userID, bookID, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -235,17 +235,9 @@ func (h *Handler) DeleteBookmark(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.DeleteBookmark(r.Context(), userID, bookID, bookmarkID); err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
 	utils.Success(w, http.StatusOK, "bookmark deleted", nil)
-}
-
-func (h *Handler) handleError(w http.ResponseWriter, err error) {
-	if appErr, ok := err.(*apperrors.AppError); ok {
-		utils.Error(w, appErr)
-		return
-	}
-	utils.Error(w, apperrors.Internal(err))
 }

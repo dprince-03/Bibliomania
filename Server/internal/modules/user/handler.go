@@ -37,7 +37,7 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetMe(r.Context(), userID)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.UpdateMe(r.Context(), userID, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *Handler) GetLibrary(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetLibrary(r.Context(), userID, status, pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (h *Handler) UpdateLibraryStatus(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.UpdateLibraryStatus(r.Context(), userID, bookID, req)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -173,7 +173,7 @@ func (h *Handler) GetHistory(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetHistory(r.Context(), userID, pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -200,7 +200,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.GetAllUsers(r.Context(), pg)
 	if err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
@@ -236,17 +236,9 @@ func (h *Handler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.service.UpdateUserStatus(r.Context(), targetID, req); err != nil {
-		h.handleError(w, err)
+		utils.HandleError(w, err)
 		return
 	}
 
 	utils.Success(w, http.StatusOK, "user status updated", nil)
-}
-
-func (h *Handler) handleError(w http.ResponseWriter, err error) {
-	if appErr, ok := err.(*apperrors.AppError); ok {
-		utils.Error(w, appErr)
-		return
-	}
-	utils.Error(w, apperrors.Internal(err))
 }

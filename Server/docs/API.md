@@ -22,7 +22,7 @@ cd Server && make swagger
 
 ## Conventions
 
-All routes are prefixed `/api/v1` except `/health` and `/swagger/*`. All responses are JSON with the shared envelope:
+All routes are prefixed `/api/v1` except `/health` and `/swagger/*`. `GET /health` pings the database and Redis with a 2s timeout and returns `200 {"status":"ok","database":"ok","cache":"ok"}` when both are reachable, or `503 {"status":"degraded",...}` naming whichever one failed. All other responses are JSON with the shared envelope:
 
 ```json
 // success
