@@ -1,5 +1,11 @@
 # API Reference
 
+Covers the API as it exists today (Steps 1-20). Planned additions from the
+platform-vision repositioning — libraries/branches, payments/subscriptions,
+curation, translation, audiobooks, etc. — aren't part of the API yet; see
+[`Server/docs/plan.md`](plan.md) for what's planned and root
+[`docs/plan.md`](../../docs/plan.md) for the business context.
+
 **The authoritative, up-to-date endpoint reference is the generated Swagger UI**, not this file:
 
 ```bash

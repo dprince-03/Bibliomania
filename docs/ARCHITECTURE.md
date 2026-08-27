@@ -80,3 +80,14 @@ assumes one will exist, not this development machine.
 
 Every Client app above is a bare framework scaffold with no product code.
 See `docs/TODO.md` for the current punch list.
+
+## Planned: platform-vision repositioning
+
+A separate, larger change is planned but not started: multi-branch library
+tenancy, a payments/billing module (subscriptions + one-time purchases +
+library licensing), curation, and several AI-assisted features (moderation,
+translation, audiobooks, a reading companion). This will add new Server
+modules and reshape parts of the data model described above (e.g. physical
+book copies moving from a global pool to per-branch ownership). See
+[`docs/plan.md`](plan.md) → "Platform vision" for the full context and
+[`Server/docs/plan.md`](../Server/docs/plan.md) for the technical plan.

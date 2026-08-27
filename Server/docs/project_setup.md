@@ -1,3 +1,8 @@
+> Covers the env vars and schema as they exist today (the 10-table schema
+> from Steps 1-20). New tables/modules planned under the platform-vision
+> repositioning (`Library`/`Branch`, billing, curation, categories, etc.)
+> aren't reflected below yet — see [`Server/docs/plan.md`](plan.md).
+
 # .env :
 ```
 # Server

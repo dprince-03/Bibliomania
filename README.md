@@ -56,7 +56,7 @@ Server/
 │   └── refreshToken/   # Refresh token generate/hash/verify
 │
 ├── migrations/         # 11 golang-migrate SQL files (see docs/project_setup.md)
-├── docs/               # project_setup.md, Steps.md, API.md (see "Docs" below)
+├── docs/               # project_setup.md, Steps.md, API.md, plan.md (see "Docs" below)
 ├── Makefile            # run/build/vet/fmt/migrate-up/migrate-down/docker-up/docker-down/swagger/seed
 ├── .air.toml           # Hot reload (air)
 └── .env.example        # Config template
@@ -105,6 +105,7 @@ See [Server/docs/project_setup.md](Server/docs/project_setup.md) for env vars an
 - [docs/API.md](docs/API.md) — where to find API docs (points at the two below)
 - [Server/docs/API.md](Server/docs/API.md) — the actual endpoint reference
 - [Client/docs/API.md](Client/docs/API.md) — which client app calls what, base URLs per environment
-- [docs/plan.md](docs/plan.md) — the infra branch's plan, as agreed and as actually implemented
+- [docs/plan.md](docs/plan.md) — running log of major initiative plans (infra branch, platform vision), as agreed and (where implemented) as actually built
+- [Server/docs/plan.md](Server/docs/plan.md) — the Server-side technical plan for the platform vision (Steps 21+, not yet started)
 - [docs/TODO.md](docs/TODO.md) — living task list, kept current
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — branching, commit, and docs conventions
