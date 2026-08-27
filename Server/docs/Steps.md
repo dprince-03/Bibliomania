@@ -4,7 +4,17 @@
 > (`auth/`, `user/`, `catalog/`, `borrow/`, `reading/`), not by layer — see
 > `docs/ARCHITECTURE.md` for the package map. Step 20 (final hardening —
 > consolidated global error handler, real DB+Redis `/health` check) was the
-> last one to land, closing out the Server roadmap.
+> last one to land, closing out this original roadmap.
+>
+> **This isn't the end of Server work** — a platform-vision repositioning
+> (multi-branch libraries, payments/commissions, curation, AI features,
+> security/observability, and reader/community features) was agreed after
+> Step 20 landed. **Steps 21-45 are listed below, ⏳ not started**, in the
+> same dependency order as `Server/docs/plan.md`'s fuller technical writeup
+> (start with Step 21 — everything from Step 22 onward depends on it; Step
+> 38 is a hard launch-blocker on Step 27, not a strict build-order
+> dependency). Root [`docs/plan.md`](../../docs/plan.md) has the full
+> business/product context these steps implement.
 
 ```
 ✅ Step 1  — Scaffold: folder structure, go.mod, git init
@@ -374,6 +384,179 @@
              internal/swaggerdocs/ with the new `/health` annotation
              (confirmed present in swagger.json) without needing any other
              handler's annotations touched.
+
+---------------------------------------------------------------------
+Steps 21+ — platform-vision repositioning (not started; see plan.md)
+---------------------------------------------------------------------
+
+⏳ Step 21 — Library/Branch module (multi-tenant foundation)
+             New internal/modules/library/ package.
+             model.go   → Library, Branch (address, delivery radius)
+             Everything from Step 22 onward depends on this landing first —
+             physical copies, holds, and librarian scoping all become
+             per-branch instead of global once this exists.
+             See Server/docs/plan.md → "New library module".
+
+⏳ Step 22 — Scope librarian role to one library
+             middleware/rbac.go: librarian gains a library_id scope —
+             a librarian account manages exactly one library's
+             branches/inventory/holds, never another's.
+             Touches AuthGuard/RoleRequired's context plumbing.
+
+⏳ Step 23 — Redesign borrow: Hold + Fulfillment
+             internal/modules/borrow/model.go: Status expands to
+             reserved → ready_for_pickup/out_for_delivery → active →
+             returned; new FulfillmentMethod (pickup/locker/delivery/mail).
+             catalog.Book's global TotalCopies/AvailableCopies moves to
+             per-Branch ownership. Delivery eligibility = distance check
+             against the branch's radius; outside it, fall back to mail.
+
+⏳ Step 24 — Library signup, verification, admin approval
+             Collect legal name, branch address(es), registration/license
+             number, a supporting document, and an official-domain admin
+             email at signup; gate live status behind manual admin
+             approval before a library can receive holds or payments.
+
+⏳ Step 25 — Curation: "Library Selected" badging
+             New join table in catalog: library_id, book_id, badged_by,
+             badged_at. Librarians badge indie titles without the library
+             ever owning/hosting them — addresses libraries' real stated
+             obstacle (judging quality without professional reviews).
+
+⏳ Step 26 — Category model: adopt BISAC Subject Headings
+             catalog.Book.Genre (single string) superseded by a
+             many-to-many BookCategory relation against BISAC codes
+             (industry norm: up to ~3 per book), replacing the bespoke
+             genre string.
+
+⏳ Step 27 — Payments/billing module
+             New internal/modules/billing/ package.
+             LibraryLicense   → flat $2,000/yr, platform-to-library
+             ReaderSubscription → recurring monthly, tiered, 85/15 split
+             BookPurchase     → one-time, 85/15 split, PERMANENT entitlement
+             (must outlive a lapsed ReaderSubscription — "buy once, read
+             for life" cannot be keyed through the subscription record)
+             Depends on an external payment-processor SDK decision not
+             yet made (Stripe Connect or regional equivalent) — see
+             plan.md's open questions before starting this step.
+             LAUNCH GATE: must not accept real payments in production
+             until Step 38's third-party penetration test passes — may
+             still be built/tested in dev before then.
+
+⏳ Step 28 — Reader subscription tiers
+             Regular / Scholar / Premium Scholar — concrete feature gates
+             (borrow limits, priority holds, cross-library access, etc.)
+             to be finalized against billing.ReaderSubscription from
+             Step 27.
+
+⏳ Step 29 — Content-moderation pipeline
+             Content-score + AI-disclosure field on Book, populated by an
+             external plagiarism/AI-detection API call at upload. Score
+             feeds the Step 25 curation queue and discovery ranking —
+             never an automatic reject, human judgment stays final.
+
+⏳ Step 30 — Author analytics dashboard
+             Aggregation endpoint(s) over existing reading_sessions data
+             (completion rate, drop-off page, avg reading time) — no new
+             tracking needed, the raw signal already exists.
+
+⏳ Step 31 — Translation marketplace + Audiobook Studio
+             Translation  → Book has-many translated editions (file,
+             language, tier: ai/ai_plus_human_edit/human, status)
+             AudiobookAsset → Book has-many audio editions (one per
+             voice/language), delivered like the existing e-library file.
+
+⏳ Step 32 — Reader-side Read Aloud + accessibility
+             On-demand TTS playback for any book the reader has access
+             to (distinct from Step 31's produced Audiobook Studio
+             editions) + dyslexia-friendly font and adjustable
+             size/spacing in the reading UI. Mostly Client-side; Server's
+             role is the access-check endpoint (see Step 33).
+
+⏳ Step 33 — AI reading companion
+             Spoiler-safe chat scoped strictly to a book the reader
+             already has legitimate access to, up to their current page.
+             Server exposes a thin authorization check (purchase/
+             subscription/free) — the chat logic itself is likely a
+             thin proxy to an LLM API, not new domain logic.
+
+⏳ Step 34 — Social/engagement layer
+             New internal/modules/social/ package.
+             Follow (reader → author), Comment, Rating — sits naturally
+             alongside reading.SessionRepository for new-release
+             notifications.
+
+⏳ Step 35 — Data collection & privacy policy
+             Foundational, not code-first: define what's collected, why,
+             and the GDPR-aligned stance (data minimization, no
+             ad-tracking) that Steps 36+ and the billing module (Step 27)
+             need to already respect, not retrofit.
+
+⏳ Step 36 — Encryption baseline + MFA
+             AES-256 at rest, TLS 1.3 in transit, RSA-2048/ECC for key
+             exchange — applied across existing tables (esp. addresses
+             from Step 21/24, payment records from Step 27).
+             MFA required on library-admin and author-payout accounts —
+             the single most common 2026 compliance-audit failure point.
+
+⏳ Step 37 — Observability: OpenTelemetry + Prometheus + Grafana
+             Self-hosted for now. Threads trace_id/span_id alongside the
+             existing request_id (middleware/requestID.go, Step 8) rather
+             than replacing it. Metrics → Prometheus, dashboards → Grafana,
+             logs stay on the existing log/slog-based structured logger.
+
+⏳ Step 38 — Third-party penetration test (gates Step 27 going live)
+             Formal, paid, external pen test. Decided as a hard launch
+             blocker: Step 27 (payments) may be built and tested in dev
+             before this, but must not accept real payments in production
+             until this passes.
+
+⏳ Step 39 — Encrypted local storage (mobile + desktop)
+             Readium LCP-style: on-device cache encrypted at rest, keyed
+             to device+account, decrypted only in-memory inside the
+             reading app. Distinct from the DRM-free *entitlement* (Step
+             27's BookPurchase stays permanent/portable) — this is
+             offline-cache hygiene, not a licensing restriction. Covers
+             both purchased/borrowed books (readers) and authors'
+             unpublished drafts/manuscripts pre-release.
+
+⏳ Step 40 — Note-taking (highlights + notes)
+             New model alongside reading.Bookmark — Note/Highlight,
+             synced across devices the same way reading progress already
+             is.
+
+⏳ Step 41 — Virtual book club
+             Extends internal/modules/social/ (Step 34): scheduling +
+             reminders, live video/chat (external video-call integration,
+             like Step 27's payment processor — not hand-rolled), polls,
+             AI-generated discussion questions reusing Step 33's
+             reading-companion infra. Differentiator over existing book-
+             club apps: since authors are first-class accounts here, any
+             author can join a discussion of their own book natively, no
+             external outreach needed.
+
+⏳ Step 42 — Reading goals dashboard
+             New field(s) on user's profile: an annual goal (Goodreads-
+             Reading-Challenge-style) plus a daily streak counter (the
+             gap most existing reading-challenge tools, including
+             Goodreads itself, don't cover). Computed off existing
+             reading_sessions timestamps — no new tracking needed.
+
+⏳ Step 43 — Data export & account deletion
+             GDPR portability/erasure: export notes/highlights/history in
+             one flow, plus a real account-deletion path. Cheap now,
+             expensive to retrofit once an audit flags its absence.
+
+⏳ Step 44 — Public status page
+             Externally-visible uptime page off the existing /health
+             signal (Step 20) — libraries paying the Step 27 annual
+             license will want visible uptime, not just an internal check.
+
+⏳ Step 45 — Backup & disaster-recovery policy
+             Documented (and tested) DB backup/restore procedure — an
+             operational runbook as much as code, but now load-bearing
+             given real institutional and financial data lives in this
+             database, not just demo data.
 ```
 
 ## Build history

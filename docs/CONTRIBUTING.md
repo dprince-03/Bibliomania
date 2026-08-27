@@ -39,6 +39,13 @@ tradeoffs, not a restatement of the diff.
   misleading.
 - New apps, services, or major structural changes get a line in
   `docs/ARCHITECTURE.md`, not just a mention buried in a PR description.
+- Major initiative plans (an infra branch, the platform-vision repositioning,
+  etc.) live in `docs/plan.md` as a running log — add a new `##` section
+  there rather than a one-off file. Server-side technical plans that follow
+  from one of those live in `Server/docs/plan.md`. As each planned piece
+  actually lands, update the relevant section (or move it into
+  `Server/docs/Steps.md` once it's a real, numbered step) instead of leaving
+  the plan doc describing something already shipped.
 
 ## CI/CD
 
