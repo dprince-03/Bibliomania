@@ -68,16 +68,16 @@ All 20 roadmap steps (see `Server/docs/Steps.md`): config, MySQL + Redis, JWT au
 
 ### Not yet implemented
 
-- All five `Client/` apps (`web/app`, `web/main`, `admin/web`, `admin/api`, `mobile`) are bare framework scaffolds — no product code written yet. `Client/desktop` (JavaFX) is hand-written scaffolding, not generated, since Maven isn't installed in the environment it was created in — see [Client/desktop/README.md](Client/desktop/README.md).
+- `Client/web/app`, `admin/web`, `admin/api`, and `mobile` are still bare framework scaffolds — no product code written yet. `Client/desktop` (JavaFX) is hand-written scaffolding, not generated, since Maven isn't installed in the environment it was created in — see [Client/desktop/README.md](Client/desktop/README.md).
+- `Client/web/main` (the marketing site) is the first `Client/` app with real content — see below.
 
 ## Client
 
-Five apps, all bare scaffolds — no product code yet:
-- **`web/app`** and **`admin/web`** — Next.js, `output: "standalone"` (SSR-capable)
-- **`web/main`** — Next.js, `output: "export"` (static marketing site)
-- **`admin/api`** — NestJS in plain-JavaScript mode (no compiled build step; runs via `babel-node`)
-- **`mobile`** — Flutter (Android + iOS targets)
-- **`desktop`** — JavaFX (Maven), hand-written scaffold — see its own README for build requirements
+- **`web/main`** — Next.js, `output: "export"` (static marketing site). **Built**: Home/Features/About/Contact, live book/author counts pulled from the API, and a clearly-labeled "coming soon" section previewing the platform-vision direction (see `docs/plan.md`) without claiming unbuilt features are live.
+- **`web/app`** and **`admin/web`** — Next.js, `output: "standalone"` (SSR-capable) — bare scaffolds, no product code yet.
+- **`admin/api`** — NestJS in plain-JavaScript mode (no compiled build step; runs via `babel-node`) — bare scaffold.
+- **`mobile`** — Flutter (Android + iOS targets) — bare scaffold.
+- **`desktop`** — JavaFX (Maven), hand-written scaffold — see its own README for build requirements.
 
 ## Infra
 
