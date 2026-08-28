@@ -8,6 +8,14 @@ RUN npm ci
 
 COPY . .
 
+# NEXT_PUBLIC_* vars are inlined into the static export at build time — the
+# final stage has no Node runtime to read them from, so they must arrive as
+# build args (see docker-compose.prod.yml), not container `environment:`.
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+
 # next.config.mjs sets output: "export" — `next build` produces ./out
 RUN npm run build
 

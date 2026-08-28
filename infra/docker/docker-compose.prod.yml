@@ -14,6 +14,9 @@ services:
   web-main:
     build:
       dockerfile: web-main/Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${WEB_MAIN_API_URL:-http://api.bibliotheca.local}
+        NEXT_PUBLIC_APP_URL: ${WEB_MAIN_APP_URL:-http://app.bibliotheca.local}
     restart: always
 
   admin-web:

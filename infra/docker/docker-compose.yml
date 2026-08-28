@@ -45,12 +45,19 @@ services:
       - bibliotheca_network
 
   # ── Web: marketing/main site ────────────────────────────
+  # NEXT_PUBLIC_* here covers dev's live `next dev` process. In prod this is
+  # a static export with no Node runtime at request time, so the same vars
+  # also need to reach `docker build` as build args — see
+  # docker-compose.prod.yml.
   web-main:
     image: bibliotheca-web-main
     container_name: bibliotheca-web-main
     build:
       context: ../../Client/web/main
     restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${WEB_MAIN_API_URL:-http://api.bibliotheca.local}
+      - NEXT_PUBLIC_APP_URL=${WEB_MAIN_APP_URL:-http://app.bibliotheca.local}
     networks:
       - bibliotheca_network
 

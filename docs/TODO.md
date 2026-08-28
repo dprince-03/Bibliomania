@@ -78,8 +78,10 @@ feature roadmap (Steps 13-20).
       `/health` DB/Redis liveness check). See `Server/docs/Steps.md`.
 - [ ] `Client/web/app` — the actual library product app (currently the bare
       Next.js template).
-- [ ] `Client/web/main` — the marketing site (currently the bare Next.js
-      template).
+- [x] `Client/web/main` — the marketing site: Home/Features/About/Contact,
+      live book/author counts from the API, "warm & literary" design, and a
+      clearly-labeled "coming soon" section on About previewing the
+      platform-vision direction without claiming unbuilt features are live.
 - [ ] `Client/admin/web` + `Client/admin/api` — the admin dashboard
       (currently bare templates on both sides).
 - [ ] `Client/mobile` — the mobile app (currently `flutter create`'s default
