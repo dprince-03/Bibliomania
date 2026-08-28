@@ -52,7 +52,7 @@ export default function Features() {
             Everything you can do with Bibliotheca
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-muted">
-            One app for finding, borrowing, and reading books — here's what's
+            One app for finding, borrowing, and reading books — here&apos;s what&apos;s
             waiting for you inside.
           </p>
         </Container>

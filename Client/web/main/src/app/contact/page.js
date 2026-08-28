@@ -9,10 +9,10 @@ export default function Contact() {
           Get in touch
         </h1>
         <p className="mt-6 leading-relaxed text-muted">
-          Found something that isn't working, have a question, or just want
-          to tell us what you think? We'd love to hear it. The button below
+          Found something that isn&apos;t working, have a question, or just want
+          to tell us what you think? We&apos;d love to hear it. The button below
           takes you to our public inbox on GitHub — leave a message there and
-          we'll see it.
+          we&apos;ll see it.
         </p>
         <div className="mt-8">
           <Button href="https://github.com/dprince-03/Bibliotheca/issues">

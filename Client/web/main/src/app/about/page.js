@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Container from "@/components/Container";
 
 export default function About() {
@@ -10,15 +11,15 @@ export default function About() {
           </h1>
           <p className="mt-6 leading-relaxed text-muted">
             Finding a book, borrowing it, and actually sitting down to read it
-            shouldn't mean juggling three different apps — and a library card
+            shouldn&apos;t mean juggling three different apps — and a library card
             you can never find when you need it. Bibliotheca puts all of it
             in one place: search the catalog, reserve a copy or grab the
             e-book, and keep reading right where you left off, on whatever
             device you happen to have on you.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            It's for anyone who just wants an easier way to read — students,
-            lifelong readers, and everyone who's ever shown up to the library
+            It&apos;s for anyone who just wants an easier way to read — students,
+            lifelong readers, and everyone who&apos;s ever shown up to the library
             only to find the book they wanted was already checked out.
           </p>
         </Container>
@@ -34,12 +35,18 @@ export default function About() {
               A place for authors too
             </h2>
             <p className="mt-4 leading-relaxed text-muted">
-              We're also building a way for authors to bring their books
+              We&apos;re also building a way for authors to bring their books
               straight to readers — no print run to pay for, no gatekeeper to
               get past — and for libraries to discover independent writers
-              worth sharing with the people who'll love them. It isn't here
-              yet, but it's exactly where we're headed.
+              worth sharing with the people who&apos;ll love them. It isn&apos;t here
+              yet, but it&apos;s exactly where we&apos;re headed.
             </p>
+            <Link
+              href="/coming-soon/"
+              className="mt-4 inline-block text-sm font-medium text-accent hover:text-accent-strong"
+            >
+              Learn more about what&apos;s next →
+            </Link>
           </div>
         </Container>
       </section>

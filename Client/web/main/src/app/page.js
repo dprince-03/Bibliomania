@@ -49,7 +49,7 @@ export default function Home() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button href={appUrl}>Open the App</Button>
             <Button href="/features/" variant="ghost">
-              See what's inside
+              See what&apos;s inside
             </Button>
           </div>
         </Container>
@@ -68,7 +68,7 @@ export default function Home() {
               Everything you need, already here
             </h2>
             <p className="mt-3 text-muted">
-              No waitlist, no "coming soon" — just open the app and use it.
+              No waitlist, no &ldquo;coming soon&rdquo; — just open the app and use it.
             </p>
           </div>
 
