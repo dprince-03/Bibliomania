@@ -1,7 +1,11 @@
 services:
   app:
     build:
-      dockerfile: app/Dockerfile.dev
+      # dockerfile: is resolved relative to build.context (../../Server/app,
+      # from the base compose file), NOT to this file's own directory — it
+      # needs to walk back out to infra/docker/ where Dockerfiles actually
+      # live (see CLAUDE.md's "Docker images" note).
+      dockerfile: ../../infra/docker/app/Dockerfile.dev
     command: air
     ports:
       # Host side is deliberately its own var (SERVER_HOST_PORT), separate
@@ -18,7 +22,7 @@ services:
 
   web-app:
     build:
-      dockerfile: web-app/Dockerfile.dev
+      dockerfile: ../../../infra/docker/web-app/Dockerfile.dev
     ports:
       - "${WEB_APP_HOST_PORT:-9083}:3000"
     volumes:
@@ -27,7 +31,7 @@ services:
 
   web-main:
     build:
-      dockerfile: web-main/Dockerfile.dev
+      dockerfile: ../../../infra/docker/web-main/Dockerfile.dev
     ports:
       - "${WEB_MAIN_HOST_PORT:-9082}:3000"
     volumes:
@@ -36,7 +40,7 @@ services:
 
   admin-web:
     build:
-      dockerfile: admin-web/Dockerfile.dev
+      dockerfile: ../../infra/docker/admin-web/Dockerfile.dev
     ports:
       - "${ADMIN_WEB_HOST_PORT:-9084}:3000"
     volumes:
@@ -45,7 +49,7 @@ services:
 
   admin:
     build:
-      dockerfile: admin/Dockerfile.dev
+      dockerfile: ../../infra/docker/admin/Dockerfile.dev
     ports:
       - "${ADMIN_API_HOST_PORT:-9085}:4000"
     volumes:

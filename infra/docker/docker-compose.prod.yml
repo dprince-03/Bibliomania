@@ -1,19 +1,23 @@
 services:
+  # dockerfile: is resolved relative to build.context (declared in the base
+  # compose file as each app's own source dir), NOT to this file's own
+  # directory — every path below walks back out to infra/docker/ where
+  # Dockerfiles actually live (see CLAUDE.md's "Docker images" note).
   app:
     build:
-      dockerfile: app/Dockerfile.prod
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
     restart: always
     environment:
       - APP_ENV=production
 
   web-app:
     build:
-      dockerfile: web-app/Dockerfile.prod
+      dockerfile: ../../../infra/docker/web-app/Dockerfile.prod
     restart: always
 
   web-main:
     build:
-      dockerfile: web-main/Dockerfile.prod
+      dockerfile: ../../../infra/docker/web-main/Dockerfile.prod
       args:
         NEXT_PUBLIC_API_URL: ${WEB_MAIN_API_URL:-http://api.bibliotheca.local}
         NEXT_PUBLIC_APP_URL: ${WEB_MAIN_APP_URL:-http://app.bibliotheca.local}
@@ -21,12 +25,12 @@ services:
 
   admin-web:
     build:
-      dockerfile: admin-web/Dockerfile.prod
+      dockerfile: ../../infra/docker/admin-web/Dockerfile.prod
     restart: always
 
   admin:
     build:
-      dockerfile: admin/Dockerfile.prod
+      dockerfile: ../../infra/docker/admin/Dockerfile.prod
     restart: always
 
   mysql:

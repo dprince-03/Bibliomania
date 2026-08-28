@@ -5,15 +5,15 @@ follow the links rather than duplicating it here.
 
 ## Apps
 
-| App | Path | Tech | Role |
-|---|---|---|---|
-| app | `Server/app/` | Go, `net/http`, MySQL, Redis | The one API every client talks to. See [`CLAUDE.md`](../CLAUDE.md) for its internal architecture. |
-| web/app | `Client/web/app/` | Next.js (JS) | The product — the library app end-users browse/borrow/read from. |
-| web/main | `Client/web/main/` | Next.js (JS), static export | Marketing/advertising site. No server-side logic — pure static HTML/CSS/JS. |
-| admin | `Client/admin/` | Next.js (JS) | Admin dashboard UI. |
-| admin (backend) | `Server/admin/` | NestJS (JS) | Admin-only backend — separate from the Go app; talks to the same MySQL database. Lives under `Server/`, not `Client/`, because it's a real backend — see `docs/plan.md`. |
-| mobile | `Client/mobile/` | Flutter | Mobile app, talks to the Go app directly. |
-| desktop | `Client/desktop/` | JavaFX | Native desktop app, talks to the Go app directly. Not containerized — see [`infra/README.md`](../infra/README.md). |
+| App             | Path                 | Tech                          | Role                                                                                                                                                                            |
+| --------------- | -------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| app             | `Server/app/`      | Go,`net/http`, MySQL, Redis | The one API every client talks to. See[`CLAUDE.md`](../CLAUDE.md) for its internal architecture.                                                                               |
+| web/app         | `Client/web/app/`  | Next.js (JS)                  | The product — the library app end-users browse/borrow/read from.                                                                                                               |
+| web/main        | `Client/web/main/` | Next.js (JS), static export   | Marketing/advertising site. No server-side logic — pure static HTML/CSS/JS.                                                                                                    |
+| admin           | `Client/admin/`    | Next.js (JS)                  | Admin dashboard UI.                                                                                                                                                             |
+| admin (backend) | `Server/admin/`    | NestJS (JS)                   | Admin-only backend — separate from the Go app; talks to the same MySQL database. Lives under`Server/`, not `Client/`, because it's a real backend — see `docs/plan.md`. |
+| mobile          | `Client/mobile/`   | Flutter                       | Mobile app, talks to the Go app directly.                                                                                                                                       |
+| desktop         | `Client/desktop/`  | JavaFX                        | Native desktop app, talks to the Go app directly. Not containerized — see[`infra/README.md`](../infra/README.md).                                                             |
 
 All JS/TS apps are plain JavaScript (no TypeScript), each with an independent
 `package.json` — no shared workspace/monorepo tool.
