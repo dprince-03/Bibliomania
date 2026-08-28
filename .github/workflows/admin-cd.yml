@@ -1,12 +1,12 @@
-name: admin/api CD
+name: admin CD
 
 on:
   push:
     branches: [main]
     paths:
-      - "Client/admin/api/**"
-      - "infra/docker/admin-api/**"
-      - ".github/workflows/admin-api-cd.yml"
+      - "Server/admin/**"
+      - "infra/docker/admin/**"
+      - ".github/workflows/admin-cd.yml"
 
 jobs:
   publish:
@@ -25,9 +25,9 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: Client/admin/api
-          file: infra/docker/admin-api/Dockerfile.prod
+          context: Server/admin
+          file: infra/docker/admin/Dockerfile.prod
           push: true
           tags: |
-            ghcr.io/dprince-03/bibliotheca-admin-api:latest
-            ghcr.io/dprince-03/bibliotheca-admin-api:${{ github.sha }}
+            ghcr.io/dprince-03/bibliotheca-admin:latest
+            ghcr.io/dprince-03/bibliotheca-admin:${{ github.sha }}

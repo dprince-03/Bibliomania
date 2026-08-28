@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: gomod
-    directory: /Server
+    directory: /Server/app
     schedule:
       interval: weekly
 
@@ -16,12 +16,12 @@ updates:
       interval: weekly
 
   - package-ecosystem: npm
-    directory: /Client/admin/web
+    directory: /Client/admin
     schedule:
       interval: weekly
 
   - package-ecosystem: npm
-    directory: /Client/admin/api
+    directory: /Server/admin
     schedule:
       interval: weekly
 
@@ -37,11 +37,11 @@ updates:
 
   - package-ecosystem: docker
     directories:
-      - /infra/docker/server
+      - /infra/docker/app
       - /infra/docker/web-app
       - /infra/docker/web-main
       - /infra/docker/admin-web
-      - /infra/docker/admin-api
+      - /infra/docker/admin
       - /infra/nginx
     schedule:
       interval: weekly

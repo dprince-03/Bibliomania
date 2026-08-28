@@ -3,8 +3,8 @@
 Covers the API as it exists today (Steps 1-20). Planned additions from the
 platform-vision repositioning — libraries/branches, payments/subscriptions,
 curation, translation, audiobooks, etc. — aren't part of the API yet; see
-[`Server/docs/plan.md`](plan.md) for what's planned and root
-[`docs/plan.md`](../../docs/plan.md) for the business context.
+[`Server/app/docs/plan.md`](plan.md) for what's planned and root
+[`docs/plan.md`](../../../docs/plan.md) for the business context.
 
 **The authoritative, up-to-date endpoint reference is the generated Swagger UI**, not this file:
 
@@ -13,12 +13,12 @@ go run ./cmd/api
 # then open http://localhost:8080/swagger/index.html
 ```
 
-Every route, request/response shape, and auth requirement lives there, generated directly from the handler annotations (see `Server/docs/Steps.md` → Step 18) — it can't drift out of sync with the code the way a hand-written list eventually would. This file only covers the cross-cutting conventions that don't belong on any single endpoint.
+Every route, request/response shape, and auth requirement lives there, generated directly from the handler annotations (see `Server/app/docs/Steps.md` → Step 18) — it can't drift out of sync with the code the way a hand-written list eventually would. This file only covers the cross-cutting conventions that don't belong on any single endpoint.
 
 **Regenerating** after changing a handler's annotations:
 
 ```bash
-cd Server && make swagger
+cd Server/app && make swagger
 # equivalent to:
 #   swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
 #   swag fmt -g cmd/api/main.go

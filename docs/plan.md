@@ -16,7 +16,7 @@ bottom for what actually changed and why.
 
 Bibliotheca is expanding from "Go API + one React scaffold" into a real monorepo: a product web app, a marketing site, an admin dashboard (its own frontend + backend), and a mobile app, all fronted by nginx and backed by MySQL/Redis/Umami. The user had already carved out the target directory skeleton (`Client/web/{app,main}`, `Client/admin`, `Client/mobile`, `infra/nginx`) but left them empty except for a leftover Vite scaffold in `Client/web/main`. The existing `infra/docker/` compose setup was written back when the Go server was the only service and had since bit-rotted (paths assumed `Server/` as CWD, a corrupted env line, apk-on-Debian mismatch) — this branch both scaffolds the new apps and rebuilds the Docker orchestration to actually run everything together, in dev and prod, with a consistent `bibliotheca-<service>` image naming scheme.
 
-CI pipelines were originally scoped out (later brought back in — see deviations). The Go server's existing build-break (import path / method-name mismatches, tracked in `Server/docs/Steps.md`) is a separate concern — this branch's Docker setup is correct, but the `server` container won't actually boot until that's fixed elsewhere.
+CI pipelines were originally scoped out (later brought back in — see deviations). The Go server's existing build-break (import path / method-name mismatches, tracked in `Server/app/docs/Steps.md`) is a separate concern — this branch's Docker setup is correct, but the `server` container won't actually boot until that's fixed elsewhere.
 
 **Language decision across every new JS/TS app: plain JavaScript, no TypeScript** — applies to `web/app`, `web/main`, `admin/web`, and `admin/api` alike.
 
@@ -96,7 +96,7 @@ These happened after the plan above was approved, in response to follow-up instr
 
 ## Platform vision: authors, libraries, readers (in progress)
 
-**Status: vision agreed, implementation not started.** See [`Server/docs/plan.md`](../Server/docs/plan.md) for the Server-side technical plan this implies, and [`docs/TODO.md`](TODO.md) for the step-by-step build checklist. This section is the business/product-facing record of a long research and decision conversation, kept here so it isn't lost to chat history.
+**Status: vision agreed, implementation not started.** See [`Server/app/docs/plan.md`](../Server/app/docs/plan.md) for the Server-side technical plan this implies, and [`docs/TODO.md`](TODO.md) for the step-by-step build checklist. This section is the business/product-facing record of a long research and decision conversation, kept here so it isn't lost to chat history.
 
 ### Context
 

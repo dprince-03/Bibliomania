@@ -1,6 +1,6 @@
-# Run from Server/ (matches every other command documented in CLAUDE.md).
+# Run from Server/app/ (matches every other command documented in CLAUDE.md).
 #
-# migrate-up/migrate-down source Server/.env at the shell level (not via
+# migrate-up/migrate-down source Server/app/.env at the shell level (not via
 # Make's `include`) — Make's own comment character is '#', and this repo's
 # DB_PASSWORD/REDIS_PASSWORD values contain a literal '#' (e.g.
 # "@Dev_prince#2003"). `include .env` would silently truncate that value at
@@ -34,13 +34,13 @@ migrate-down:
 # (docker-compose.prod.yml; not wrapped here since it's a deploy-host
 # concern, not a local dev convenience).
 docker-up:
-	docker compose --env-file ../.env -f ../infra/docker/docker-compose.yml -f ../infra/docker/docker-compose.dev.yml up --build -d
+	docker compose --env-file ../../.env -f ../../infra/docker/docker-compose.yml -f ../../infra/docker/docker-compose.dev.yml up --build -d
 
 docker-down:
-	docker compose --env-file ../.env -f ../infra/docker/docker-compose.yml -f ../infra/docker/docker-compose.dev.yml down
+	docker compose --env-file ../../.env -f ../../infra/docker/docker-compose.yml -f ../../infra/docker/docker-compose.dev.yml down
 
 # Regenerate internal/swaggerdocs/ after changing a handler's swaggo
-# comments (Step 18) — see Server/docs/API.md.
+# comments (Step 18) — see Server/app/docs/API.md.
 swagger:
 	swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
 	swag fmt -g cmd/api/main.go

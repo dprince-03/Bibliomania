@@ -47,7 +47,7 @@ dist/
 coverage/
 
 # Uploaded e-library files (Step 14) — user-uploaded content, never committed
-Server/storage/
+Server/app/storage/
 
 # `make build` output (Step 19) — a compiled binary, never committed
-Server/bin/
+Server/app/bin/

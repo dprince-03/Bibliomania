@@ -1,7 +1,7 @@
 > Covers the env vars and schema as they exist today (the 10-table schema
 > from Steps 1-20). New tables/modules planned under the platform-vision
 > repositioning (`Library`/`Branch`, billing, curation, categories, etc.)
-> aren't reflected below yet — see [`Server/docs/plan.md`](plan.md).
+> aren't reflected below yet — see [`Server/app/docs/plan.md`](plan.md).
 
 # .env :
 ```
@@ -83,7 +83,7 @@ migrations/
 
 > Note: an earlier draft of this doc numbered these 003=profile, 004=books,
 > 005=borrows, 006=refresh_tokens. The files actually on disk use the order
-> above — trust the filenames in `Server/migrations/`, not the numbers in
+> above — trust the filenames in `Server/app/migrations/`, not the numbers in
 > old notes.
 
 ## Complete Database Schema (10 tables)

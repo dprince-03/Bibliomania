@@ -2,7 +2,7 @@
 
 Living task list — update this as work lands or priorities change. Don't let
 it go stale; a wrong TODO is worse than none. See `docs/plan.md` for how the
-infra branch got here, and `Server/docs/Steps.md` for the Server-side
+infra branch got here, and `Server/app/docs/Steps.md` for the Server-side
 feature roadmap (Steps 13-20).
 
 ## Known repo hygiene issue
@@ -38,20 +38,26 @@ feature roadmap (Steps 13-20).
       verifies the build; that's sufficient. Revisit only if a concrete need
       for a headless/VNC demo mode comes up.
 - [x] **Server "Structure by Feature" refactor** — done, on
-      `refactor/server-feature-structure`. `Server/internal/` now groups by
+      `refactor/server-feature-structure`. `Server/app/internal/` now groups by
       domain (`auth/`, `user/`, `catalog/`, `borrow/`, `reading/`) instead of
       by layer — see `docs/ARCHITECTURE.md` and `CLAUDE.md` for the package
-      map, `Server/docs/Steps.md` → "Build history" for what got fixed along
+      map, `Server/app/docs/Steps.md` → "Build history" for what got fixed along
       the way. As an inherent side effect (not separate work), this also
       fixed the Go server build break that used to block everything below —
       `go build ./...`/`go vet ./...` succeed and the server boots and
       serves real requests now.
-- [x] **Hand-written API docs added**: `Server/docs/API.md` (endpoint
+- [x] **Hand-written API docs added**: `Server/app/docs/API.md` (endpoint
       reference), `Client/docs/API.md` (which client app calls what, base
       URLs per environment), `docs/API.md` (pointer to both). Deliberately
       not the full swaggo/OpenAPI pipeline — that stays Step 18's own
-      branch, see `Server/docs/Steps.md`. Keep `Server/docs/API.md` in sync
+      branch, see `Server/app/docs/Steps.md`. Keep `Server/app/docs/API.md` in sync
       by hand until Step 18 replaces it with something generated.
+- [x] **Server split into `Server/app` (Go) + `Server/admin` (NestJS)** —
+      done, on `refactor/server-app-admin-split`. `Client/admin/api` moved to
+      `Server/admin` since it's a real backend, not a frontend; `Client/admin/web`
+      collapsed to `Client/admin` now that there's no sibling `api` to
+      disambiguate from. Docker Compose services renamed to match
+      (`server`→`app`, `admin-api`→`admin`). See `docs/plan.md`.
 
 ## Infra follow-ups (see `infra/README.md` → "Known caveats")
 
@@ -71,18 +77,18 @@ feature roadmap (Steps 13-20).
 
 ## Product code
 
-- [x] `Server`: all 20 roadmap steps done (config/DB/Redis, auth, authors,
+- [x] `Server/app`: all 20 roadmap steps done (config/DB/Redis, auth, authors,
       books, search, e-library upload/download, reading sessions/sync/
       bookmarks, borrowing, user/member management, Swagger docs, Makefile +
       `make seed`, final polish — consolidated global error handler, real
-      `/health` DB/Redis liveness check). See `Server/docs/Steps.md`.
+      `/health` DB/Redis liveness check). See `Server/app/docs/Steps.md`.
 - [ ] `Client/web/app` — the actual library product app (currently the bare
       Next.js template).
 - [x] `Client/web/main` — the marketing site: Home/Features/About/Contact,
       live book/author counts from the API, "warm & literary" design, and a
       clearly-labeled "coming soon" section on About previewing the
       platform-vision direction without claiming unbuilt features are live.
-- [ ] `Client/admin/web` + `Client/admin/api` — the admin dashboard
+- [ ] `Client/admin` + `Server/admin` — the admin dashboard
       (currently bare templates on both sides).
 - [ ] `Client/mobile` — the mobile app (currently `flutter create`'s default
       counter demo).
@@ -91,9 +97,9 @@ feature roadmap (Steps 13-20).
 
 ## Platform vision — step-by-step build plan
 
-Not started yet. Step numbers below match `Server/docs/Steps.md` exactly
+Not started yet. Step numbers below match `Server/app/docs/Steps.md` exactly
 (Steps 21-45 are listed there in this same order, with more implementation
-detail per step) — this list is the cross-app view, since `Server/docs/Steps.md`
+detail per step) — this list is the cross-app view, since `Server/app/docs/Steps.md`
 only covers the Server. See `docs/plan.md` → "Platform vision: authors,
 libraries, readers" for the full business/product context. Dependency-ordered —
 later items build on the schema/tenancy work earlier ones establish.
