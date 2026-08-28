@@ -4,11 +4,12 @@
 
 ## Scope
 
-<!-- Which app(s)/area does this touch? Server, web/app, web/main, admin/web,
-     admin/api, mobile, desktop, infra, docs — this repo's convention is one
-     concern per branch/PR (see CLAUDE.md), so this should usually be short. -->
+<!-- Which app(s)/area does this touch? Server/app, Server/admin, web/app,
+     web/main, admin, mobile, desktop, infra, docs — this repo's convention
+     is one concern per branch/PR (see CLAUDE.md), so this should usually be
+     short. -->
 
-- [ ] If this closes a roadmap step, `Server/docs/Steps.md` is updated (status marker + notes)
+- [ ] If this closes a roadmap step, `Server/app/docs/Steps.md` is updated (status marker + notes)
 
 ## Test plan
 

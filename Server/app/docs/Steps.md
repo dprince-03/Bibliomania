@@ -10,10 +10,10 @@
 > (multi-branch libraries, payments/commissions, curation, AI features,
 > security/observability, and reader/community features) was agreed after
 > Step 20 landed. **Steps 21-45 are listed below, ⏳ not started**, in the
-> same dependency order as `Server/docs/plan.md`'s fuller technical writeup
+> same dependency order as `Server/app/docs/plan.md`'s fuller technical writeup
 > (start with Step 21 — everything from Step 22 onward depends on it; Step
 > 38 is a hard launch-blocker on Step 27, not a strict build-order
-> dependency). Root [`docs/plan.md`](../../docs/plan.md) has the full
+> dependency). Root [`docs/plan.md`](../../../docs/plan.md) has the full
 > business/product context these steps implement.
 
 ```
@@ -165,7 +165,7 @@
              with correct headers, and — the important one — sync's
              last-write-wins actually works (a stale update with an older
              client_updated_at is correctly discarded, not applied).
-             `Server/storage/` added to root .gitignore (uploaded content,
+             `Server/app/storage/` added to root .gitignore (uploaded content,
              never committed).
 
 ✅ Step 15 — Reading Sessions + Progress + Bookmarks
@@ -286,7 +286,7 @@
 ✅ Step 18 — Swagger / OpenAPI Docs
              All 37 handler methods annotated with swaggo comments (auth 4,
              catalog/author 6, catalog/book 10, reading 6, borrow 4, user 7)
-             — every route in Server/docs/API.md now also has a live,
+             — every route in Server/app/docs/API.md now also has a live,
              interactive counterpart. General API info (title, BasePath
              /api/v1, BearerAuth security scheme) lives in cmd/api/main.go
              above func main().
@@ -314,7 +314,7 @@
              all matched the actual handler behavior.
 
 ✅ Step 19 — Makefile + Docker Polish
-             Server/Makefile: run, build (→ bin/bibliotheca, gitignored),
+             Server/app/Makefile: run, build (→ bin/bibliotheca, gitignored),
              vet, fmt, migrate-up, migrate-down, docker-up, docker-down,
              swagger, seed.
              migrate-up/migrate-down deliberately do NOT use Make's own
@@ -326,8 +326,8 @@
              comment at the beginning of a word — confirmed this actually
              matters by testing against the real .env, not a sanitized one.
              docker-up/docker-down wrap the existing dev compose command
-             from infra/README.md with paths relative to Server/ (`../.env`,
-             `../infra/docker/...`) — docker-compose.prod.yml (already built
+             from infra/README.md with paths relative to Server/app/
+             (`../../.env`, `../../infra/docker/...`) — docker-compose.prod.yml (already built
              during the infra branch) is intentionally not wrapped here,
              since prod is a deploy-host concern, not a local dev
              convenience.
@@ -337,13 +337,13 @@
              exists; skip catalog seeding if any author exists at all)
              rather than per-row upserts — meant for a fresh dev database,
              not repeated runs against one already in use.
-             Verified end-to-end: `make migrate-up` against the real Server/.env
+             Verified end-to-end: `make migrate-up` against the real Server/app/.env
              (proving the `#`-in-password handling actually works, not just
              in theory), `make seed` twice (second run correctly skipped
              both admin and catalog), seeded books/login visible via the
              live API, `make build` produces a real binary, `make swagger`
              regenerates without diffing, and both docker-compose
-             (dev + prod) configs resolve cleanly with Server/-relative paths.
+             (dev + prod) configs resolve cleanly with Server/app/-relative paths.
 
 ✅ Step 20 — Final Polish
              Of the six items originally listed here, four were already done
@@ -395,7 +395,7 @@ Steps 21+ — platform-vision repositioning (not started; see plan.md)
              Everything from Step 22 onward depends on this landing first —
              physical copies, holds, and librarian scoping all become
              per-branch instead of global once this exists.
-             See Server/docs/plan.md → "New library module".
+             See Server/app/docs/plan.md → "New library module".
 
 ⏳ Step 22 — Scope librarian role to one library
              middleware/rbac.go: librarian gains a library_id scope —

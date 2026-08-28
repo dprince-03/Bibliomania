@@ -7,33 +7,33 @@ follow the links rather than duplicating it here.
 
 | App | Path | Tech | Role |
 |---|---|---|---|
-| Server | `Server/` | Go, `net/http`, MySQL, Redis | The one API every client talks to. See [`CLAUDE.md`](../CLAUDE.md) for its internal architecture. |
+| app | `Server/app/` | Go, `net/http`, MySQL, Redis | The one API every client talks to. See [`CLAUDE.md`](../CLAUDE.md) for its internal architecture. |
 | web/app | `Client/web/app/` | Next.js (JS) | The product — the library app end-users browse/borrow/read from. |
 | web/main | `Client/web/main/` | Next.js (JS), static export | Marketing/advertising site. No server-side logic — pure static HTML/CSS/JS. |
-| admin/web | `Client/admin/web/` | Next.js (JS) | Admin dashboard UI. |
-| admin/api | `Client/admin/api/` | NestJS (JS) | Admin-only backend — separate from Server; talks to the same MySQL database. |
-| mobile | `Client/mobile/` | Flutter | Mobile app, talks to Server directly. |
-| desktop | `Client/desktop/` | JavaFX | Native desktop app, talks to Server directly. Not containerized — see [`infra/README.md`](../infra/README.md). |
+| admin | `Client/admin/` | Next.js (JS) | Admin dashboard UI. |
+| admin (backend) | `Server/admin/` | NestJS (JS) | Admin-only backend — separate from the Go app; talks to the same MySQL database. Lives under `Server/`, not `Client/`, because it's a real backend — see `docs/plan.md`. |
+| mobile | `Client/mobile/` | Flutter | Mobile app, talks to the Go app directly. |
+| desktop | `Client/desktop/` | JavaFX | Native desktop app, talks to the Go app directly. Not containerized — see [`infra/README.md`](../infra/README.md). |
 
 All JS/TS apps are plain JavaScript (no TypeScript), each with an independent
 `package.json` — no shared workspace/monorepo tool.
 
-## Why a separate `admin/api` instead of extending Server
+## Why a separate admin backend instead of extending the Go app
 
-The admin dashboard has its own NestJS backend rather than new endpoints on
-the Go `Server`. This means two backends share one MySQL database — `admin/api`
-should treat the schema Server's `Server/migrations/` owns as read-mostly
-where possible, and any schema change needs to work for both. There's no
-formal contract enforcing this yet (see `docs/TODO.md`); be deliberate about
-what `admin/api` writes directly versus what it should instead call `Server`'s
-API for.
+The admin dashboard has its own NestJS backend (`Server/admin/`) rather than
+new endpoints on the Go app (`Server/app/`). This means two backends share
+one MySQL database — the admin backend should treat the schema
+`Server/app/migrations/` owns as read-mostly where possible, and any schema
+change needs to work for both. There's no formal contract enforcing this yet
+(see `docs/TODO.md`); be deliberate about what the admin backend writes
+directly versus what it should instead call the Go app's API for.
 
 ## Data stores
 
 - **MySQL** (`mysql` container) — the application's primary database.
-  Migrations live in `Server/migrations/`, run automatically by `Server` on
-  boot (`database.RunMigration`), not by a MySQL init-script mount.
-- **Redis** (`redis` container) — caching only (see `Server/internal/cache/`),
+  Migrations live in `Server/app/migrations/`, run automatically by the Go
+  app on boot (`database.RunMigration`), not by a MySQL init-script mount.
+- **Redis** (`redis` container) — caching only (see `Server/app/internal/cache/`),
   not a source of truth. Nothing should read from Redis as its only copy of
   data.
 - **Umami's Postgres** (`umami-postgres` container) — belongs entirely to
@@ -49,7 +49,7 @@ API for.
                           └────┬─────┘
               ┌────────────────┼────────────────┬──────────────┬───────────┐
               ▼                ▼                 ▼              ▼           ▼
-         web-main          web-app          admin-web      admin-api     server
+         web-main          web-app          admin-web        admin         app
       (static export)   (Next.js SSR)     (Next.js SSR)    (NestJS)     (Go API)
                                                  │               │           │
                                                  └───────────────┴─────┬─────┘
@@ -59,13 +59,13 @@ API for.
                                                                     redis
                                                                   (cache only)
 
-   mobile / desktop ──────────────────────────────────────────────▶ server
+   mobile / desktop ──────────────────────────────────────────────▶  app
    (bypass nginx entirely — no browser, hit the API directly)
 ```
 
-`mobile` and `desktop` are native apps, not browser clients — they call
-`server` directly rather than going through nginx's subdomain routing (which
-exists for browser-based hostname resolution).
+`mobile` and `desktop` are native apps, not browser clients — they call the
+`app` service directly rather than going through nginx's subdomain routing
+(which exists for browser-based hostname resolution).
 
 ## Deployment topology
 
@@ -90,4 +90,4 @@ translation, audiobooks, a reading companion). This will add new Server
 modules and reshape parts of the data model described above (e.g. physical
 book copies moving from a global pool to per-branch ownership). See
 [`docs/plan.md`](plan.md) → "Platform vision" for the full context and
-[`Server/docs/plan.md`](../Server/docs/plan.md) for the technical plan.
+[`Server/app/docs/plan.md`](../Server/app/docs/plan.md) for the technical plan.

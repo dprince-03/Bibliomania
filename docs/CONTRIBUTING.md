@@ -4,13 +4,13 @@
 
 One concern per branch — a roadmap step, an infra change, a refactor — not
 bundled together. Two naming patterns:
-- Roadmap steps (`Server/docs/Steps.md`, currently Steps 13-20):
+- Roadmap steps (`Server/app/docs/Steps.md`, currently Steps 13-20):
   `feat/step-<N>-<short-slug>` (e.g. `feat/step-13-search-filtering`).
 - Everything else (infra, refactors, cross-cutting work):
   a descriptive name in the same spirit (e.g. `feat/infra-docker-stack`,
   `refactor/server-feature-structure`).
 
-After a roadmap step lands, update its entry in `Server/docs/Steps.md`
+After a roadmap step lands, update its entry in `Server/app/docs/Steps.md`
 (status marker + notes) as part of that same branch/PR.
 
 ## Before opening a PR
@@ -42,9 +42,9 @@ tradeoffs, not a restatement of the diff.
 - Major initiative plans (an infra branch, the platform-vision repositioning,
   etc.) live in `docs/plan.md` as a running log — add a new `##` section
   there rather than a one-off file. Server-side technical plans that follow
-  from one of those live in `Server/docs/plan.md`. As each planned piece
+  from one of those live in `Server/app/docs/plan.md`. As each planned piece
   actually lands, update the relevant section (or move it into
-  `Server/docs/Steps.md` once it's a real, numbered step) instead of leaving
+  `Server/app/docs/Steps.md` once it's a real, numbered step) instead of leaving
   the plan doc describing something already shipped.
 
 ## CI/CD

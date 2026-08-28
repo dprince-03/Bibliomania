@@ -1,7 +1,7 @@
 services:
-  server:
+  app:
     build:
-      dockerfile: server/Dockerfile.prod
+      dockerfile: app/Dockerfile.prod
     restart: always
     environment:
       - APP_ENV=production
@@ -24,9 +24,9 @@ services:
       dockerfile: admin-web/Dockerfile.prod
     restart: always
 
-  admin-api:
+  admin:
     build:
-      dockerfile: admin-api/Dockerfile.prod
+      dockerfile: admin/Dockerfile.prod
     restart: always
 
   mysql:

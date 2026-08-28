@@ -2,17 +2,17 @@ name: bibliotheca
 
 services:
   # ── Go API ──────────────────────────────────────────────
-  server:
-    image: bibliotheca-server
-    container_name: bibliotheca-server
+  app:
+    image: bibliotheca-app
+    container_name: bibliotheca-app
     build:
-      context: ../../Server
+      context: ../../Server/app
     restart: unless-stopped
     env_file:
-      - ../../Server/.env
+      - ../../Server/app/.env
     environment:
-      # These override whatever Server/.env sets for the same keys, so the
-      # `server` container always agrees with `mysql`'s init credentials
+      # These override whatever Server/app/.env sets for the same keys, so
+      # the `app` container always agrees with `mysql`'s init credentials
       # below — both come from the root .env, not two files that have to be
       # kept in sync by hand.
       - APP_ENV=development
@@ -40,7 +40,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=${WEB_APP_API_URL:-http://api.bibliotheca.local}
     depends_on:
-      - server
+      - app
     networks:
       - bibliotheca_network
 
@@ -66,21 +66,21 @@ services:
     image: bibliotheca-admin-web
     container_name: bibliotheca-admin-web
     build:
-      context: ../../Client/admin/web
+      context: ../../Client/admin
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=${ADMIN_WEB_API_URL:-http://admin.bibliotheca.local/api}
     depends_on:
-      - admin-api
+      - admin
     networks:
       - bibliotheca_network
 
   # ── Admin: backend API ───────────────────────────────────
-  admin-api:
-    image: bibliotheca-admin-api
-    container_name: bibliotheca-admin-api
+  admin:
+    image: bibliotheca-admin
+    container_name: bibliotheca-admin
     build:
-      context: ../../Client/admin/api
+      context: ../../Server/admin
     restart: unless-stopped
     depends_on:
       mysql:
@@ -180,11 +180,11 @@ services:
       context: ../nginx
     restart: unless-stopped
     depends_on:
-      - server
+      - app
       - web-app
       - web-main
       - admin-web
-      - admin-api
+      - admin
       - umami
     networks:
       - bibliotheca_network

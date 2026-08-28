@@ -1,7 +1,7 @@
 services:
-  server:
+  app:
     build:
-      dockerfile: server/Dockerfile.dev
+      dockerfile: app/Dockerfile.dev
     command: air
     ports:
       # Host side is deliberately its own var (SERVER_HOST_PORT), separate
@@ -13,7 +13,7 @@ services:
       # here after a conflict, just override in your local .env.
       - "${SERVER_HOST_PORT:-9081}:${SERVER_PORT:-8080}"
     volumes:
-      - ../../Server:/app
+      - ../../Server/app:/app
       - go_modules:/root/go/pkg/mod
 
   web-app:
@@ -40,16 +40,16 @@ services:
     ports:
       - "${ADMIN_WEB_HOST_PORT:-9084}:3000"
     volumes:
-      - ../../Client/admin/web:/app
+      - ../../Client/admin:/app
       - admin_web_node_modules:/app/node_modules
 
-  admin-api:
+  admin:
     build:
-      dockerfile: admin-api/Dockerfile.dev
+      dockerfile: admin/Dockerfile.dev
     ports:
       - "${ADMIN_API_HOST_PORT:-9085}:4000"
     volumes:
-      - ../../Client/admin/api:/app
+      - ../../Server/admin:/app
       - admin_api_node_modules:/app/node_modules
 
   mysql:

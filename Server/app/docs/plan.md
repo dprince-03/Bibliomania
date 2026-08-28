@@ -1,14 +1,14 @@
 # Server plan: platform vision → Server implications (Steps 21+)
 
-`Server/docs/Steps.md` covers the original roadmap — Steps 1-20, all complete.
+`Server/app/docs/Steps.md` covers the original roadmap — Steps 1-20, all complete.
 This file is its technical companion for what comes next: the Server-side
 consequences of the platform-vision decisions recorded in the root
-[`docs/plan.md`](../../docs/plan.md) → "Platform vision: authors, libraries,
+[`docs/plan.md`](../../../docs/plan.md) → "Platform vision: authors, libraries,
 readers". Read that section first for the *why*; this file is scoped to the
 *what* — which Server modules and schema changes each decision implies.
 
 **Nothing here is implemented yet.** Section numbers below match
-`Server/docs/Steps.md`'s Step 21-45 entries exactly (same order, same
+`Server/app/docs/Steps.md`'s Step 21-45 entries exactly (same order, same
 scope) — that file has the terser step-by-step summary; this one has the
 fuller reasoning behind each. Each section becomes its own
 `feat/step-<N>-<slug>` branch later, one at a time, per the existing
@@ -47,7 +47,7 @@ convention in `CLAUDE.md` / `docs/CONTRIBUTING.md`.
   the branch's service radius; readers outside it fall back to `mail`
   fulfillment rather than being blocked.
 - The existing atomic `WHERE available_copies > 0` reservation pattern
-  (`Server/internal/modules/borrow`, see `CLAUDE.md`) still applies — just
+  (`Server/app/internal/modules/borrow`, see `CLAUDE.md`) still applies — just
   scoped to a branch's copy count instead of a global one.
 
 ## Step 24 — Library signup, verification, admin approval
@@ -258,7 +258,7 @@ convention in `CLAUDE.md` / `docs/CONTRIBUTING.md`.
 
 Each step above gets designed and verified individually as its own roadmap
 step when it's actually built — this file states intent and shape, not a
-tested implementation. Update `Server/docs/Steps.md`'s matching entry (⏳ → ✅
+tested implementation. Update `Server/app/docs/Steps.md`'s matching entry (⏳ → ✅
 with real verification notes, mirroring how Steps 1-20 are documented) as
 each step actually ships, and trim or update this file's corresponding
 section rather than leaving it describing something already shipped.

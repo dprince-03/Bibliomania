@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "Client/admin/web/**"
+      - "Client/admin/**"
       - "infra/docker/admin-web/**"
       - ".github/workflows/admin-web-cd.yml"
 
@@ -25,7 +25,7 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: Client/admin/web
+          context: Client/admin
           file: infra/docker/admin-web/Dockerfile.prod
           push: true
           tags: |
