@@ -31,6 +31,11 @@ services:
       - bibliotheca_network
 
   # ── Web: product app ────────────────────────────────────
+  # API_INTERNAL_URL is server-only (no NEXT_PUBLIC_ prefix) — used by
+  # src/lib/api.js's server-side calls, reaching the app service directly
+  # inside bibliotheca_network instead of round-tripping through nginx.
+  # NEXT_PUBLIC_API_URL stays for any direct client-side calls a later step
+  # adds. See Client/docs/web-app-plan.md's "Two API base URLs, not one".
   web-app:
     image: bibliotheca-web-app
     container_name: bibliotheca-web-app
@@ -39,6 +44,7 @@ services:
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=${WEB_APP_API_URL:-http://api.bibliotheca.local}
+      - API_INTERNAL_URL=${WEB_APP_API_INTERNAL_URL:-http://app:8080}
     depends_on:
       - app
     networks:
