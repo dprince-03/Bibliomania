@@ -1,4 +1,4 @@
-package com.bibliotheca.mobile
+package com.bibliomania.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

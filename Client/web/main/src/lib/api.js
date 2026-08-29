@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://api.bibliotheca.local";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://api.bibliomania.local";
 
 /**
  * Fetches a paginated list endpoint and returns its total_count, or null

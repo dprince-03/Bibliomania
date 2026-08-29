@@ -3,9 +3,9 @@ package user
 import (
 	"context"
 
-	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
-	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
+	"github.com/dprince-03/Bibliomania/internal/modules/catalog"
+	"github.com/dprince-03/Bibliomania/internal/modules/reading"
+	"github.com/dprince-03/Bibliomania/internal/utils"
 )
 
 type Service struct {

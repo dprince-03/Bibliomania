@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Bibliotheca is a Library Management & E-Library System, now a multi-app monorepo:
-- **`Server/app`** — Go REST API. Module path `github.com/dprince-03/Bibliotheca` (matches the GitHub repo exactly, case included — that's what makes `go get`/module-proxy resolution work if this module is ever imported elsewhere), Go 1.25, MySQL via `sqlx`, Redis for caching, JWT for auth, `net/http` (stdlib router, no framework).
+Bibliomania is a Library Management & E-Library System, now a multi-app monorepo:
+- **`Server/app`** — Go REST API. Module path `github.com/dprince-03/Bibliomania` (matches the GitHub repo exactly, case included — that's what makes `go get`/module-proxy resolution work if this module is ever imported elsewhere), Go 1.25, MySQL via `sqlx`, Redis for caching, JWT for auth, `net/http` (stdlib router, no framework).
 - **`Server/admin`** — NestJS, admin dashboard backend, scaffolded in **plain-JavaScript mode** (`nest new --language javascript`) — no compiled build step, runs via `babel-node` even in prod. Lives under `Server/` (not `Client/`) because it's a real backend, not a frontend — moved out of `Client/admin/api` for exactly that reason; see `docs/plan.md` for when/why.
 - **`Client/web/app`** — Next.js, the product app end-users browse (`output: "standalone"`).
 - **`Client/web/main`** — Next.js, the marketing/advertising site (`output: "export"`, static).
@@ -13,7 +13,7 @@ Bibliotheca is a Library Management & E-Library System, now a multi-app monorepo
 - **`Client/mobile`** — Flutter (Android + iOS).
 - **`Client/desktop`** — JavaFX (Maven), hand-written scaffold (Maven wasn't installed when this was created, so it wasn't generated via `mvn archetype:generate` — verify it still builds before trusting the pom.xml blindly).
 - **`infra/docker/`** + **`infra/nginx/`** — Docker Compose orchestration (base + dev/prod overrides) for the whole stack, plus MySQL, Redis, Umami analytics (+ its own Postgres), nginx, and dev-only Adminer/Mailpit. See `infra/README.md`.
-- **`.github/workflows/`** — separate `<app>-ci.yml` + `<app>-cd.yml` per app, path-filtered; CD (push to `main` only) builds+pushes to `ghcr.io/dprince-03/bibliotheca-<service>`. See `infra/README.md`'s "CI/CD" section.
+- **`.github/workflows/`** — separate `<app>-ci.yml` + `<app>-cd.yml` per app, path-filtered; CD (push to `main` only) builds+pushes to `ghcr.io/dprince-03/bibliomania-<service>`. See `infra/README.md`'s "CI/CD" section.
 
 **Every JS/TS app is plain JavaScript, no TypeScript**, each with its own independent `package.json` (npm, no shared workspace) — this was an explicit, deliberate choice; don't introduce TypeScript or a monorepo tool (pnpm workspaces, etc.) without checking first.
 
@@ -30,7 +30,7 @@ go run ./cmd/seed             # insert sample authors/books + an admin user (mak
 air                            # hot reload during dev (config: Server/app/.air.toml)
 
 migrate create -ext sql -dir migrations -seq <name>   # new migration pair
-migrate -path ./migrations -database "mysql://user:pass@tcp(localhost:3306)/bibliotheca" up
+migrate -path ./migrations -database "mysql://user:pass@tcp(localhost:3306)/bibliomania" up
 
 # After changing a handler's swaggo comments, regenerate internal/swaggerdocs/ (committed, see Server/app/docs/API.md):
 swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
@@ -65,7 +65,7 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docke
 - **Rate limiting** is per-IP token-bucket (`golang.org/x/time/rate`) with two separate `RateLimiterStore` instances: a loose global one and a strict one applied individually to each `/api/v1/auth/*` route to blunt brute-force attempts.
 - **Pagination** goes through `utils.GetPagination(r)` → `utils.Pagination{Page, Limit, Offset}` → `utils.NewPaginatedResponse(items, total, page, limit)`; keep new list endpoints consistent with this rather than inventing ad hoc paging.
 - **Config** (`internal/config`) loads `.env` via godotenv (skipped when `APP_ENV=production`) with typed getters and fallback defaults; `Config.validate()` is the only place required-field checks belong. The server port env var is `SERVER_PORT` (default `8080`) — it used to incorrectly read `PORT`, silently ignoring the documented `.env` setting; fixed, don't reintroduce that mismatch.
-- **Docker images** are named `bibliotheca-<service>` (e.g. `bibliotheca-app`, `bibliotheca-web-app`), declared in `infra/docker/docker-compose.yml`'s base file. Dockerfiles live centralized under `infra/docker/<service>/Dockerfile.{dev,prod}` (nginx is the one exception, keeping its Dockerfiles in `infra/nginx/` alongside its conf files) — the base compose file declares `build.context` only; `docker-compose.dev.yml`/`docker-compose.prod.yml` each add the matching `build.dockerfile`. The Go API's Compose service is named `app` (not `server`) and the admin backend's is `admin` (not `admin-api`) — both renamed to match their `Server/app`/`Server/admin` source directories; don't reintroduce the old names.
+- **Docker images** are named `bibliomania-<service>` (e.g. `bibliomania-app`, `bibliomania-web-app`), declared in `infra/docker/docker-compose.yml`'s base file. Dockerfiles live centralized under `infra/docker/<service>/Dockerfile.{dev,prod}` (nginx is the one exception, keeping its Dockerfiles in `infra/nginx/` alongside its conf files) — the base compose file declares `build.context` only; `docker-compose.dev.yml`/`docker-compose.prod.yml` each add the matching `build.dockerfile`. The Go API's Compose service is named `app` (not `server`) and the admin backend's is `admin` (not `admin-api`) — both renamed to match their `Server/app`/`Server/admin` source directories; don't reintroduce the old names.
 
 ### Roadmap and current state
 

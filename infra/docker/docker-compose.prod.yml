@@ -19,8 +19,8 @@ services:
     build:
       dockerfile: ../../../infra/docker/web-main/Dockerfile.prod
       args:
-        NEXT_PUBLIC_API_URL: ${WEB_MAIN_API_URL:-http://api.bibliotheca.local}
-        NEXT_PUBLIC_APP_URL: ${WEB_MAIN_APP_URL:-http://app.bibliotheca.local}
+        NEXT_PUBLIC_API_URL: ${WEB_MAIN_API_URL:-http://api.bibliomania.local}
+        NEXT_PUBLIC_APP_URL: ${WEB_MAIN_APP_URL:-http://app.bibliomania.local}
     restart: always
 
   admin-web:
@@ -35,11 +35,11 @@ services:
 
   mysql:
     restart: always
-    # No host port publishing in prod — reachable only inside bibliotheca_network.
+    # No host port publishing in prod — reachable only inside bibliomania_network.
 
   redis:
     restart: always
-    # No host port publishing in prod — reachable only inside bibliotheca_network.
+    # No host port publishing in prod — reachable only inside bibliomania_network.
 
   umami:
     restart: always

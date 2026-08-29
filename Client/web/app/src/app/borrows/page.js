@@ -5,7 +5,7 @@ import ReturnForm from "@/components/ReturnForm";
 import { apiGet, ApiError } from "@/lib/api";
 
 export const metadata = {
-  title: "My borrows — Bibliotheca",
+  title: "My borrows — Bibliomania",
 };
 
 const statusStyles = {

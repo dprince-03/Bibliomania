@@ -1,4 +1,4 @@
-module github.com/dprince-03/Bibliotheca
+module github.com/dprince-03/Bibliomania
 
 go 1.25.5
 

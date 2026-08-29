@@ -13,7 +13,7 @@ const links = [
   { href: "/contact/", label: "Contact" },
 ];
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://app.bibliotheca.local";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://app.bibliomania.local";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);

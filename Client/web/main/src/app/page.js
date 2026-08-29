@@ -4,7 +4,7 @@ import FeatureCard from "@/components/FeatureCard";
 import StatsStrip from "@/components/StatsStrip";
 import { CatalogIcon, CloudIcon, ClockIcon, BookmarkIcon } from "@/components/icons";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://app.bibliotheca.local";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://app.bibliomania.local";
 
 const teasers = [
   {

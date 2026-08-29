@@ -43,7 +43,7 @@ func (c *Checker) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), pingTimeout)
 	defer cancel()
 
-	resp := status{Status: "ok", Service: "bibliotheca", Database: "ok", Cache: "ok"}
+	resp := status{Status: "ok", Service: "bibliomania", Database: "ok", Cache: "ok"}
 	healthy := true
 
 	if err := c.db.PingContext(ctx); err != nil {

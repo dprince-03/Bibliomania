@@ -3,7 +3,7 @@ package user
 import (
 	"time"
 
-	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
+	"github.com/dprince-03/Bibliomania/internal/modules/catalog"
 )
 
 type User struct {

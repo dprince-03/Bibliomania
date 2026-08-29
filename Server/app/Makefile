@@ -13,7 +13,7 @@ run:
 	go run ./cmd/api
 
 build:
-	go build -o bin/bibliotheca ./cmd/api
+	go build -o bin/bibliomania ./cmd/api
 
 vet:
 	go vet ./...

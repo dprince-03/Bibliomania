@@ -18,7 +18,7 @@ COPY . .
 # CGO_ENABLED=0: static binary, no C dependencies
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
-    -o bibliotheca \
+    -o bibliomania \
     ./cmd/api/main.go
 
 
@@ -34,7 +34,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 # Copy only the compiled binary from builder
-COPY --from=builder /app/bibliotheca .
+COPY --from=builder /app/bibliomania .
 
 # Copy storage directory (for E-Library uploads)
 RUN mkdir -p ./storage && chown -R appuser:appgroup ./storage
@@ -50,4 +50,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD wget -qO- http://localhost:8080/health || exit 1
 
 # Run the binary
-CMD ["./bibliotheca"]
+CMD ["./bibliomania"]

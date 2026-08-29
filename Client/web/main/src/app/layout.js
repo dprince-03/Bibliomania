@@ -19,9 +19,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  title: "Bibliotheca — A Library, Wherever You Are",
+  title: "Bibliomania — A Library, Wherever You Are",
   description:
-    "Search for a book, borrow it, and start reading — on your phone, your laptop, online or off. Bibliotheca brings your library into one simple app.",
+    "Search for a book, borrow it, and start reading — on your phone, your laptop, online or off. Bibliomania brings your library into one simple app.",
 };
 
 export default function RootLayout({ children }) {

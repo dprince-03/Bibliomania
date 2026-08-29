@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dprince-03/Bibliotheca/internal/config"
+	"github.com/dprince-03/Bibliomania/internal/config"
 
 	"github.com/redis/go-redis/v9"
 )

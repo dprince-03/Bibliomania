@@ -29,5 +29,5 @@ jobs:
           file: infra/docker/admin/Dockerfile.prod
           push: true
           tags: |
-            ghcr.io/dprince-03/bibliotheca-admin:latest
-            ghcr.io/dprince-03/bibliotheca-admin:${{ github.sha }}
+            ghcr.io/dprince-03/bibliomania-admin:latest
+            ghcr.io/dprince-03/bibliomania-admin:${{ github.sha }}

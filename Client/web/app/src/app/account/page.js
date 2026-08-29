@@ -6,7 +6,7 @@ import { apiGet, ApiError } from "@/lib/api";
 import { logoutAction } from "@/app/actions/auth";
 
 export const metadata = {
-  title: "Your account — Bibliotheca",
+  title: "Your account — Bibliomania",
 };
 
 const quickLinks = [

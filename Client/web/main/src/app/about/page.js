@@ -7,12 +7,12 @@ export default function About() {
       <section className="border-b border-border py-20">
         <Container className="max-w-2xl">
           <h1 className="font-serif text-4xl font-semibold text-foreground">
-            Why we built Bibliotheca
+            Why we built Bibliomania
           </h1>
           <p className="mt-6 leading-relaxed text-muted">
             Finding a book, borrowing it, and actually sitting down to read it
             shouldn&apos;t mean juggling three different apps — and a library card
-            you can never find when you need it. Bibliotheca puts all of it
+            you can never find when you need it. Bibliomania puts all of it
             in one place: search the catalog, reserve a copy or grab the
             e-book, and keep reading right where you left off, on whatever
             device you happen to have on you.

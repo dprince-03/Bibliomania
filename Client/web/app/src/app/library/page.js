@@ -5,7 +5,7 @@ import LibraryStatusForm from "@/components/LibraryStatusForm";
 import { apiGet, ApiError } from "@/lib/api";
 
 export const metadata = {
-  title: "My library — Bibliotheca",
+  title: "My library — Bibliomania",
 };
 
 const filters = [

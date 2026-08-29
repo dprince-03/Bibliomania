@@ -28,5 +28,5 @@ jobs:
           file: infra/nginx/Dockerfile.prod
           push: true
           tags: |
-            ghcr.io/dprince-03/bibliotheca-nginx:latest
-            ghcr.io/dprince-03/bibliotheca-nginx:${{ github.sha }}
+            ghcr.io/dprince-03/bibliomania-nginx:latest
+            ghcr.io/dprince-03/bibliomania-nginx:${{ github.sha }}

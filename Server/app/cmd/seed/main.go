@@ -10,14 +10,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/dprince-03/Bibliotheca/internal/config"
-	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
-	"github.com/dprince-03/Bibliotheca/internal/modules/user"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
-	"github.com/dprince-03/Bibliotheca/pkg/mysqlclient"
+	"github.com/dprince-03/Bibliomania/internal/config"
+	"github.com/dprince-03/Bibliomania/internal/modules/catalog"
+	"github.com/dprince-03/Bibliomania/internal/modules/user"
+	"github.com/dprince-03/Bibliomania/internal/utils"
+	"github.com/dprince-03/Bibliomania/pkg/mysqlclient"
 )
 
-const seedAdminEmail = "admin@bibliotheca.local"
+const seedAdminEmail = "admin@bibliomania.local"
 const seedAdminPassword = "ChangeMe123!"
 
 func main() {

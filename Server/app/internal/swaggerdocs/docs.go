@@ -10,8 +10,8 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "Bibliotheca",
-            "url": "https://github.com/dprince-03/Bibliotheca"
+            "name": "Bibliomania",
+            "url": "https://github.com/dprince-03/Bibliomania"
         },
         "license": {
             "name": "MIT"
@@ -51,7 +51,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -67,19 +67,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "wrong credentials or deactivated account",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -113,19 +113,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -161,7 +161,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -177,19 +177,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "invalid, expired, or already-used refresh token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -225,7 +225,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -241,19 +241,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "409": {
                         "description": "email already registered",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -290,7 +290,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -298,7 +298,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -353,7 +353,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -369,25 +369,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -417,7 +417,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -433,13 +433,13 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "author not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -484,7 +484,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -500,31 +500,31 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "author not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -555,31 +555,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "author not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -623,7 +623,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -631,7 +631,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -654,13 +654,13 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "author not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -697,7 +697,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -705,7 +705,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -761,7 +761,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -777,25 +777,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body, or an author_id doesn't exist",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -825,7 +825,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -841,13 +841,13 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -893,7 +893,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -909,31 +909,31 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -964,31 +964,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1033,37 +1033,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book or author not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1104,25 +1104,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid ids, or would leave zero authors",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1162,19 +1162,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found, or no file uploaded",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1220,7 +1220,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1236,25 +1236,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid id, unsupported format, too large, or missing file",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1297,7 +1297,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1305,7 +1305,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -1328,13 +1328,13 @@ const docTemplate = `{
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "librarian/admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1373,7 +1373,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1389,31 +1389,31 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body, or no available copies",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "409": {
                         "description": "already have an active borrow for this book",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1455,7 +1455,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1463,7 +1463,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -1486,7 +1486,7 @@ const docTemplate = `{
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1520,37 +1520,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "not your borrow, and not librarian/admin",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "borrow not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "409": {
                         "description": "already returned",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1612,7 +1612,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1631,19 +1631,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid book id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1688,7 +1688,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1704,25 +1704,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid book id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1763,31 +1763,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid ids",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "not your bookmark",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "bookmark not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1835,7 +1835,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1851,25 +1851,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid book id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1904,7 +1904,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1920,19 +1920,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid book id",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found, or no session started yet",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1980,7 +1980,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1996,25 +1996,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid book id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2086,7 +2086,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2094,7 +2094,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -2117,7 +2117,7 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid format/author/year parameter",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2160,7 +2160,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2168,7 +2168,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -2191,13 +2191,13 @@ const docTemplate = `{
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2223,7 +2223,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2239,13 +2239,13 @@ const docTemplate = `{
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "account deactivated",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2284,7 +2284,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2300,19 +2300,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2355,7 +2355,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2363,7 +2363,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -2386,7 +2386,7 @@ const docTemplate = `{
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2441,7 +2441,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2449,7 +2449,7 @@ const docTemplate = `{
                                         "data": {
                                             "allOf": [
                                                 {
-                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse"
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
                                                 },
                                                 {
                                                     "type": "object",
@@ -2472,7 +2472,7 @@ const docTemplate = `{
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2520,7 +2520,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2536,25 +2536,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid book id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "404": {
                         "description": "book not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "422": {
                         "description": "validation failed",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2600,25 +2600,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
                         }
                     },
                     "400": {
                         "description": "invalid id/body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "401": {
                         "description": "missing/invalid token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     },
                     "403": {
                         "description": "admin only",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError"
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -2626,7 +2626,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse": {
+        "github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2649,7 +2649,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dprince-03_Bibliotheca_internal_utils.APIError": {
+        "github_com_dprince-03_Bibliomania_internal_utils.APIError": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2663,7 +2663,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dprince-03_Bibliotheca_internal_utils.APIResponse": {
+        "github_com_dprince-03_Bibliomania_internal_utils.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2675,7 +2675,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse": {
+        "github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse": {
             "type": "object",
             "properties": {
                 "has_next_page": {
@@ -2723,7 +2723,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/internal_modules_auth.TokenResponse"
                 },
                 "user": {
-                    "$ref": "#/definitions/github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse"
+                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse"
                 }
             }
         },
@@ -3388,7 +3388,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Bibliotheca API",
+	Title:            "Bibliomania API",
 	Description:      "Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.\nAll endpoints except /health and /auth/* return the shared JSON envelope: {\"success\", \"message\"|\"error\", \"data\"|\"code\"}.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

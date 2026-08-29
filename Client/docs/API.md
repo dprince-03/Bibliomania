@@ -34,12 +34,12 @@ Next.js apps).
 
 | Environment | Go API base URL |
 |---|---|
-| Dev (via `infra/docker/docker-compose.dev.yml` + nginx) | `http://api.bibliotheca.local` |
+| Dev (via `infra/docker/docker-compose.dev.yml` + nginx) | `http://api.bibliomania.local` |
 | Dev (Go API run directly, no Docker) | `http://localhost:8080` (or `$SERVER_HOST_PORT` if you changed it — see `infra/README.md`) |
 | Prod | Not yet deployed anywhere — no real domain assigned yet. |
 
 `admin`'s equivalent (its own backend, `Server/admin`, not the Go app) is
-`http://admin.bibliotheca.local/api` in dev — see `ADMIN_WEB_API_URL` in the
+`http://admin.bibliomania.local/api` in dev — see `ADMIN_WEB_API_URL` in the
 root `.env.example`.
 
 ## Auth

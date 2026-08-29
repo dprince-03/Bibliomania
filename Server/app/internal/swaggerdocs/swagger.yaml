@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse:
+  github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse:
     properties:
       email:
         type: string
@@ -15,7 +15,7 @@ definitions:
       role:
         type: string
     type: object
-  github_com_dprince-03_Bibliotheca_internal_utils.APIError:
+  github_com_dprince-03_Bibliomania_internal_utils.APIError:
     properties:
       code:
         type: integer
@@ -24,7 +24,7 @@ definitions:
       success:
         type: boolean
     type: object
-  github_com_dprince-03_Bibliotheca_internal_utils.APIResponse:
+  github_com_dprince-03_Bibliomania_internal_utils.APIResponse:
     properties:
       data: {}
       message:
@@ -32,7 +32,7 @@ definitions:
       success:
         type: boolean
     type: object
-  github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse:
+  github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse:
     properties:
       has_next_page:
         type: boolean
@@ -64,7 +64,7 @@ definitions:
       token:
         $ref: '#/definitions/internal_modules_auth.TokenResponse'
       user:
-        $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_modules_user.UserResponse'
+        $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse'
     type: object
   internal_modules_auth.LoginRequest:
     properties:
@@ -517,14 +517,14 @@ definitions:
 host: localhost:8080
 info:
   contact:
-    name: Bibliotheca
-    url: https://github.com/dprince-03/Bibliotheca
+    name: Bibliomania
+    url: https://github.com/dprince-03/Bibliomania
   description: |-
     Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.
     All endpoints except /health and /auth/* return the shared JSON envelope: {"success", "message"|"error", "data"|"code"}.
   license:
     name: MIT
-  title: Bibliotheca API
+  title: Bibliomania API
   version: "1.0"
 paths:
   /auth/login:
@@ -546,7 +546,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_auth.AuthResponse'
@@ -554,15 +554,15 @@ paths:
         "400":
           description: invalid body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: wrong credentials or deactivated account
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Log in
       tags:
       - auth
@@ -585,15 +585,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Log out
       tags:
       - auth
@@ -617,7 +617,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_auth.AuthResponse'
@@ -625,15 +625,15 @@ paths:
         "400":
           description: invalid body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: invalid, expired, or already-used refresh token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Refresh tokens
       tags:
       - auth
@@ -657,7 +657,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_auth.AuthResponse'
@@ -665,15 +665,15 @@ paths:
         "400":
           description: invalid body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "409":
           description: email already registered
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Register a new member
       tags:
       - auth
@@ -697,11 +697,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -729,7 +729,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
@@ -737,19 +737,19 @@ paths:
         "400":
           description: invalid body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Create an author
@@ -769,23 +769,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: author not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Delete an author
@@ -805,7 +805,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
@@ -813,11 +813,11 @@ paths:
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: author not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Get an author
       tags:
       - authors
@@ -843,7 +843,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
@@ -851,23 +851,23 @@ paths:
         "400":
           description: invalid id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: author not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Update an author
@@ -898,11 +898,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -913,11 +913,11 @@ paths:
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: author not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: List an author's books
       tags:
       - authors
@@ -941,11 +941,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -976,7 +976,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.BookResponse'
@@ -984,19 +984,19 @@ paths:
         "400":
           description: invalid body, or an author_id doesn't exist
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Create a book
@@ -1016,23 +1016,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Delete a book
@@ -1052,7 +1052,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.BookResponse'
@@ -1060,11 +1060,11 @@ paths:
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Get a book
       tags:
       - books
@@ -1092,7 +1092,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.BookResponse'
@@ -1100,23 +1100,23 @@ paths:
         "400":
           description: invalid id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Update a book
@@ -1144,27 +1144,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book or author not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Assign an author to a book
@@ -1190,19 +1190,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid ids, or would leave zero authors
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Remove an author from a book
@@ -1228,15 +1228,15 @@ paths:
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found, or no file uploaded
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Download a book's digital file
@@ -1267,7 +1267,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_catalog.BookResponse'
@@ -1275,19 +1275,19 @@ paths:
         "400":
           description: invalid id, unsupported format, too large, or missing file
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Upload a book's digital file
@@ -1315,11 +1315,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -1330,11 +1330,11 @@ paths:
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: librarian/admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: List every borrow record
@@ -1359,7 +1359,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
@@ -1367,23 +1367,23 @@ paths:
         "400":
           description: invalid body, or no available copies
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "409":
           description: already have an active borrow for this book
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Borrow a book
@@ -1405,27 +1405,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: not your borrow, and not librarian/admin
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: borrow not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "409":
           description: already returned
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Return a borrowed book
@@ -1451,11 +1451,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -1466,7 +1466,7 @@ paths:
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: List my borrow records
@@ -1507,7 +1507,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   items:
@@ -1517,15 +1517,15 @@ paths:
         "400":
           description: invalid book id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: List my bookmarks for a book
@@ -1553,7 +1553,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_reading.BookmarkResponse'
@@ -1561,19 +1561,19 @@ paths:
         "400":
           description: invalid book id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Create a bookmark
@@ -1600,23 +1600,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid ids
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: not your bookmark
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: bookmark not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Delete a bookmark
@@ -1648,7 +1648,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
@@ -1656,19 +1656,19 @@ paths:
         "400":
           description: invalid book id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Update reading progress (online)
@@ -1689,7 +1689,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
@@ -1697,15 +1697,15 @@ paths:
         "400":
           description: invalid book id
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found, or no session started yet
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Get my reading session for a book
@@ -1738,7 +1738,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
@@ -1746,19 +1746,19 @@ paths:
         "400":
           description: invalid book id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Sync offline reading progress
@@ -1809,11 +1809,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -1824,7 +1824,7 @@ paths:
         "400":
           description: invalid format/author/year parameter
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       summary: Search books
       tags:
       - books
@@ -1850,11 +1850,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -1865,11 +1865,11 @@ paths:
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: List every user
@@ -1900,19 +1900,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
         "400":
           description: invalid id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "403":
           description: admin only
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Activate or deactivate a user
@@ -1927,7 +1927,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_user.UserProfileResponse'
@@ -1935,11 +1935,11 @@ paths:
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: account deactivated
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Get my profile
@@ -1964,7 +1964,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_user.UserProfileResponse'
@@ -1972,15 +1972,15 @@ paths:
         "400":
           description: invalid body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Update my profile
@@ -2008,11 +2008,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -2023,7 +2023,7 @@ paths:
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Get my reading history
@@ -2059,11 +2059,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   allOf:
-                  - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.PaginatedResponse'
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
                   - properties:
                       items:
                         items:
@@ -2074,7 +2074,7 @@ paths:
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Get my library
@@ -2105,7 +2105,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIResponse'
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/internal_modules_user.LibraryEntryResponse'
@@ -2113,19 +2113,19 @@ paths:
         "400":
           description: invalid book id/body
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
           description: book not found
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
           description: validation failed
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliotheca_internal_utils.APIError'
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Set a book's status on my library shelf

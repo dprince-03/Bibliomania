@@ -29,5 +29,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: bibliotheca-desktop-${{ github.sha }}
+          name: bibliomania-desktop-${{ github.sha }}
           path: Client/desktop/target/*.jar

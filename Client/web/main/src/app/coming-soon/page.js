@@ -2,9 +2,9 @@ import Container from "@/components/Container";
 import Button from "@/components/Button";
 
 export const metadata = {
-  title: "Coming Soon — Bibliotheca",
+  title: "Coming Soon — Bibliomania",
   description:
-    "This part of Bibliotheca isn't live yet — here's what we're building toward.",
+    "This part of Bibliomania isn't live yet — here's what we're building toward.",
 };
 
 export default function ComingSoon() {
@@ -18,7 +18,7 @@ export default function ComingSoon() {
           We&apos;re not there yet — but we&apos;re headed there.
         </h1>
         <p className="mt-6 leading-relaxed text-muted">
-          This part of Bibliotheca is still being built. Today, the app is
+          This part of Bibliomania is still being built. Today, the app is
           for finding, borrowing, and reading books. What&apos;s next is a
           way for authors to bring their books straight to readers — no
           print run to pay for, no gatekeeper to get past — and for real

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
-	"github.com/dprince-03/Bibliotheca/pkg/jwt"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
+	"github.com/dprince-03/Bibliomania/internal/utils"
+	"github.com/dprince-03/Bibliomania/pkg/jwt"
 )
 
 func AuthGuard(jwtManager *jwt.Manager) func(http.Handler) http.Handler {

@@ -16,11 +16,11 @@ const columns = [
     title: "Project",
     links: [
       {
-        href: "https://github.com/dprince-03/Bibliotheca",
+        href: "https://github.com/dprince-03/Bibliomania",
         label: "GitHub",
       },
       {
-        href: "https://github.com/dprince-03/Bibliotheca/issues",
+        href: "https://github.com/dprince-03/Bibliomania/issues",
         label: "Report an issue",
       },
     ],
@@ -69,7 +69,7 @@ export default function Footer() {
       <div className="border-t border-border py-6">
         <Container>
           <p className="text-xs text-muted">
-            © {new Date().getFullYear()} Bibliotheca. Built with Go, MySQL,
+            © {new Date().getFullYear()} Bibliomania. Built with Go, MySQL,
             Redis, and Next.js.
           </p>
         </Container>

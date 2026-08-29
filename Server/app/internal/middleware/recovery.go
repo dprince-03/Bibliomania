@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
+	"github.com/dprince-03/Bibliomania/internal/utils"
 )
 
 func Recovery(next http.Handler) http.Handler {

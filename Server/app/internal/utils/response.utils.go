@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
 )
 
 type APIResponse struct {
