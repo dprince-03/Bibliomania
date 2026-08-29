@@ -69,6 +69,20 @@
                POST /api/v1/auth/logout
                POST /api/v1/auth/refresh
 
+             Bug fix (found while building Client/web/app's Step 2 — see
+             Client/docs/web-app-Steps.md): issueTokens() in
+             auth/service.go returned TokenResponse.ExpiresIn using the
+             *refresh* token's TTL (604800s) for every register/login/
+             refresh response, not the access token's (900s) — the JWT
+             itself was always correctly minted with a 15-minute expiry
+             via jwt.Manager, only the reported expires_in was wrong.
+             Fixed by adding jwt.Manager.AccessTokenTTL() and using it in
+             issueTokens instead of s.refreshTTL. Caught by a frontend
+             client testing the real response shape, not by re-reading
+             this code — a reminder that "the API works" isn't fully
+             verified until something outside the Server actually
+             consumes every field it returns.
+
 ✅ Step 8  — Core Middleware
              middleware/logger.go      → structured request/response logging
              middleware/cors.go        → allowed origins, headers, methods

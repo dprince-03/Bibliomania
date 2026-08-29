@@ -2,6 +2,12 @@
 // Server Components, Server Actions, and Route Handlers. Never import this
 // from a Client Component.
 import { cookies } from "next/headers";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  setSession,
+  clearSession,
+} from "./session";
 
 // Reachable by container name on bibliotheca_network in Docker; falls back
 // to the Go API's default local port for bare `npm run dev`. Deliberately
@@ -19,12 +25,57 @@ export class ApiError extends Error {
   }
 }
 
-// Token attachment is a no-op until Step 2 adds the access_token cookie —
-// this wrapper's shape already accounts for it so Step 2 doesn't have to
-// touch every call site.
-async function request(path, { method = "GET", body, headers } = {}) {
+// The Go API's refresh tokens are one-time-use and rotate on every refresh
+// (Server/app/internal/modules/auth) — if two requests both hit a 401 at
+// once and each independently calls /auth/refresh, the second call arrives
+// with an already-invalidated token and fails. Sharing one in-flight
+// promise across concurrent callers in this process avoids that race.
+let refreshPromise = null;
+
+function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = performRefresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+async function performRefresh() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value;
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
+  if (!refreshToken) return false;
+
+  const res = await fetch(`${API_INTERNAL_URL}/api/v1/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    await clearSession();
+    return false;
+  }
+
+  const payload = await res.json().catch(() => null);
+  const token = payload?.data?.token;
+  if (!token) {
+    await clearSession();
+    return false;
+  }
+
+  await setSession({
+    accessToken: token.access_token,
+    refreshToken: token.refresh_token,
+    expiresIn: token.expires_in,
+  });
+  return true;
+}
+
+async function request(path, { method = "GET", body, headers, _retried = false } = {}) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
 
   const res = await fetch(`${API_INTERNAL_URL}${path}`, {
     method,
@@ -36,6 +87,14 @@ async function request(path, { method = "GET", body, headers } = {}) {
     body: body !== undefined ? JSON.stringify(body) : undefined,
     cache: "no-store",
   });
+
+  // A 401 on a request that already carried a token means it expired —
+  // try one transparent refresh-and-retry before giving up. A 401 with no
+  // token to begin with just means "not logged in," not an expired one, so
+  // there's nothing to refresh.
+  if (res.status === 401 && accessToken && !_retried && (await refreshSession())) {
+    return request(path, { method, body, headers, _retried: true });
+  }
 
   const payload = await res.json().catch(() => null);
 

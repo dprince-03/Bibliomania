@@ -26,6 +26,13 @@ func NewManager(secret string, accessTokenTTL time.Duration) *Manager {
 	}
 }
 
+// AccessTokenTTL returns the configured access-token lifetime, so callers
+// building a token response can report an accurate expires_in without
+// duplicating this duration in their own config.
+func (m *Manager) AccessTokenTTL() time.Duration {
+	return m.accessTokenTTL
+}
+
 // GenerateAccessToken creates a signed JWT access token.
 func (m *Manager) GenerateAccessToken(userID uint64, email, role string) (string, error) {
 	claims := Claims{
