@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Container from "@/components/Container";
 import BorrowForm from "@/components/BorrowForm";
+import LibraryStatusForm from "@/components/LibraryStatusForm";
 import { apiGet, ApiError } from "@/lib/api";
 import { getRefreshToken } from "@/lib/session";
 
@@ -90,6 +91,12 @@ export default async function BookDetailPage({ params }) {
             </Link>{" "}
             to borrow this book.
           </p>
+        )}
+
+        {hasSession && (
+          <div className="mt-6">
+            <LibraryStatusForm bookId={book.id} label="Add" />
+          </div>
         )}
 
         <p className="mt-4 text-sm text-muted">

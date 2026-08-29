@@ -1,4 +1,4 @@
-> Status as of 2026-08-29: **Steps 1-4 done, Steps 5-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
+> Status as of 2026-08-29: **Steps 1-5 done, Steps 6-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
 
 ```
 ✅ Step 1 — Foundations
@@ -179,12 +179,57 @@
              (proxy.js) and that the signed-out book detail page rendered
              the sign-in prompt instead of the borrow form.
 
-⏳ Step 5 — Profile & personal library
-             Profile view/edit (GET /api/v1/users/me,
-             PATCH /api/v1/users/me).
-             Personal library shelf (GET /api/v1/users/me/library,
-             PATCH /api/v1/users/me/library/{bookId} for status updates).
-             Reading history (GET /api/v1/users/me/history).
+✅ Step 5 — Profile & personal library
+             src/app/account/page.js rebuilt from Step 2's placeholder into
+             a real profile hub: read-only name/email/role/reading-stats
+             (total_books_read/total_pages_read from GET /api/v1/users/me),
+             plus a new ProfileForm (src/components/ProfileForm.js, a
+             client component) editing the only three fields the API
+             allows (phone_number, bio, profile_picture) via a new
+             src/app/actions/profile.js Server Action
+             (PATCH /api/v1/users/me). Deliberately sends "" rather than
+             omitting an untouched-but-cleared field, since the API treats
+             a present empty string as "clear this field" and a
+             missing/null one as "leave it alone" — since the form is
+             always pre-filled with current values, this only matters when
+             a field is intentionally cleared, which is exactly when
+             clearing it server-side is correct.
+             New src/app/library/page.js ("My library"): paginated
+             GET /api/v1/users/me/library with a status filter
+             (wishlist/to_read/reading/completed/dropped, via the
+             endpoint's own ?status= query param) rendered as plain link
+             pills (no client JS). Each row's status is editable through a
+             new src/components/LibraryStatusForm.js (client component,
+             useActionState) calling a new src/app/actions/library.js
+             Server Action (PATCH /api/v1/users/me/library/{bookId}) — an
+             upsert per the API's own doc comment, so the same form/action
+             both changes an existing entry's status and adds a book that
+             isn't on the shelf yet. That same LibraryStatusForm is now
+             also embedded on src/app/books/[id]/page.js (shown whenever a
+             session is present) as the "add this book to my library"
+             entry point, since there's no separate add endpoint.
+             New src/app/history/page.js ("Reading history"): paginated
+             GET /api/v1/users/me/history, read-only — book title, current/
+             total page, a progress bar sized directly from the API's own
+             progress_pct (no client-side percentage math), last-read date,
+             and a "Completed" badge when is_completed is true. No actions
+             yet — Step 6 owns actually updating reading progress.
+             proxy.js's protectedRoutes gained /library and /history
+             (member-only, same as /account and /borrows).
+             Verified end-to-end against the real Go API (via the same
+             curl-driven progressive-enhancement Server Action flow used in
+             Steps 2 and 4): registered a fresh user, submitted the real
+             profile form (phone/bio/profile_picture) and confirmed both
+             the re-rendered page and a direct GET /api/v1/users/me showed
+             the saved values; added Harry Potter to the library as
+             "reading" from its book detail page and confirmed it appeared
+             under /library and under the "reading" filter but not under
+             "completed"; updated its status to "completed" directly from
+             /library and confirmed the upsert (same book, no duplicate
+             row); created a real reading-progress record via
+             PATCH /api/v1/reading/{bookId}/progress and confirmed
+             /history rendered the exact current_page/total_pages,
+             progress_pct-sized bar, and last_read_at the API returned.
 
 ⏳ Step 6 — E-library reading experience
              Download flow (GET /api/v1/books/{id}/download — any
