@@ -5,7 +5,7 @@ import { REFRESH_TOKEN_COOKIE } from "@/lib/session";
 // authorization still happens on every Go API call (a missing/expired
 // access token gets a real 401 there, refreshed transparently by
 // lib/api.js). This just avoids flashing a protected page before redirecting.
-const protectedRoutes = ["/account"];
+const protectedRoutes = ["/account", "/borrows"];
 const authRoutes = ["/login", "/register"];
 
 export default function proxy(request) {

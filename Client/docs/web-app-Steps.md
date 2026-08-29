@@ -1,4 +1,4 @@
-> Status as of 2026-08-29: **Steps 1-3 done, Steps 4-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
+> Status as of 2026-08-29: **Steps 1-4 done, Steps 5-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
 
 ```
 ✅ Step 1 — Foundations
@@ -135,16 +135,49 @@
              author listing and author detail (with their books,
              paginated) both showed real seeded data.
 
-⏳ Step 4 — Borrowing
-             "My borrows" list (GET /api/v1/borrows/my).
-             Borrow a book from its detail page
-             (POST /api/v1/borrows) — reflects the real available_copies
-             count from Step 3's book detail fetch, not a client-side
-             guess.
-             Return a book (PATCH /api/v1/borrows/{id}/return).
-             Due-date and overdue display sourced directly from the
-             borrow record the API returns (no client-side date math
-             duplicating the server's overdue sweep).
+✅ Step 4 — Borrowing
+             New src/app/actions/borrow.js Server Actions (borrowAction,
+             returnAction), routed through lib/api.js (unlike auth.js's raw
+             fetch — these endpoints are auth-required and benefit from its
+             Authorization header + transparent refresh-and-retry):
+               POST /api/v1/borrows
+               PATCH /api/v1/borrows/{id}/return
+             src/app/books/[id]/page.js's placeholder text replaced with a
+             real BorrowForm (new src/components/BorrowForm.js, a client
+             component using useActionState): shown only when a session
+             cookie is present (getRefreshToken(), same check Navbar
+             already uses), disabled with an inline message when
+             book.available_copies is 0 for a physical book — reflects the
+             real availability from Step 3's book detail fetch, not a
+             client-side guess. A signed-out visitor sees a "Sign in to
+             borrow this book" prompt instead of the form.
+             New src/app/borrows/page.js ("My borrows"): paginated
+             GET /api/v1/borrows/my, listing each borrow's book title
+             (linked to its detail page), borrowed/due/returned dates, and
+             a status badge (active/overdue/returned — colors keyed
+             directly off the API's own status string, no client-side
+             overdue math). New src/components/ReturnForm.js (client
+             component) renders a Return button per row, hidden once
+             status is "returned".
+             proxy.js's protectedRoutes gained /borrows (member-only,
+             same as /account). Navbar gained a "My Borrows" link, shown
+             next to the Account button whenever a session is present.
+             Verified end-to-end against the real Go API (not mocked, via
+             the same curl-driven progressive-enhancement Server Action
+             flow used in Step 2): registered a fresh user, borrowed The
+             Hobbit (id 7, 3 copies) from its real rendered detail page —
+             confirmed the redirect to /borrows, confirmed available_copies
+             dropped to 2/3 via a direct API call, confirmed the borrows
+             list showed the correct due date (borrowed_at + 14 days) and
+             an "active" badge. Attempted to borrow the same book again and
+             confirmed the API's 409 ("you already have an active borrow
+             for this book") rendered inline via useActionState instead of
+             crashing or redirecting. Submitted the real Return form and
+             confirmed the badge flipped to "returned", the Return button
+             disappeared, and available_copies restored to 3/3. Confirmed
+             an unauthenticated request to /borrows redirected to /login
+             (proxy.js) and that the signed-out book detail page rendered
+             the sign-in prompt instead of the borrow form.
 
 ⏳ Step 5 — Profile & personal library
              Profile view/edit (GET /api/v1/users/me,

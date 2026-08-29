@@ -32,9 +32,17 @@ export default async function Navbar() {
         </nav>
 
         {hasSession ? (
-          <Button href="/account" variant="ghost">
-            Account
-          </Button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/borrows"
+              className="hidden text-sm font-medium text-muted transition-colors hover:text-accent sm:inline"
+            >
+              My borrows
+            </Link>
+            <Button href="/account" variant="ghost">
+              Account
+            </Button>
+          </div>
         ) : (
           <Button href="/login" variant="ghost">
             Sign in
