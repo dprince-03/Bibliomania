@@ -1,4 +1,4 @@
-> Status as of 2026-08-29: **Steps 1-2 done, Steps 3-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
+> Status as of 2026-08-29: **Steps 1-3 done, Steps 4-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
 
 ```
 ✅ Step 1 — Foundations
@@ -90,17 +90,50 @@
              subsequent /account requests redirected to /login again, and
              confirmed a fresh login after logout worked.
 
-⏳ Step 3 — Catalog browsing
-             Home/catalog page: paginated book listing
-             (GET /api/v1/books, utils.Pagination-shaped response),
-             search (GET /api/v1/search).
-             Book detail page (GET /api/v1/books/{id}): title, authors,
-             genre, format (physical/digital via is_digital), copy
-             availability.
-             Author browsing (GET /api/v1/authors) and author detail page
-             (GET /api/v1/authors/{id}, GET /api/v1/authors/{id}/books).
-             Public/unauthenticated where the API allows it (these are
-             the catalog's public GET routes) — no proxy.js gating here.
+✅ Step 3 — Catalog browsing
+             Home page (src/app/page.js) rebuilt as the real catalog: a
+             plain GET search form (no client JS — SearchForm.js submits
+             to / with q/genre/format query params, always resetting to
+             page 1), paginated book listing (GET /api/v1/books when no
+             filters, GET /api/v1/search when any are present), rendered
+             via new BookCard/Pagination components.
+             Book detail page (src/app/books/[id], GET /api/v1/books/{id}):
+             title, linked authors, genre, format (physical/digital via
+             is_digital), copy availability; 404s via next/navigation's
+             notFound() on a real 404 from the API, caught by checking
+             ApiError.status. No borrow/read actions yet — those are
+             Steps 4/6.
+             Author browsing (src/app/authors, GET /api/v1/authors) and
+             author detail page (src/app/authors/[id], GET
+             /api/v1/authors/{id} + GET /api/v1/authors/{id}/books, its
+             own pagination) via new AuthorCard component.
+             New src/app/not-found.js styled to match the app (blackletter
+             logo/palette) instead of Next's generic 404, since notFound()
+             is now actually used.
+             Navbar gained real links (Catalog, Authors) now that these
+             pages exist — no proxy.js gating on any of this, matching the
+             API's own public GET routes.
+
+             Found and fixed a real bug while verifying search: MySQL's
+             InnoDB FULLTEXT index caches newly-inserted rows in memory
+             (innodb_ft_cache_size) and only merges them into the on-disk
+             index on a size threshold or an explicit OPTIMIZE TABLE, not
+             immediately on insert — so GET /api/v1/search found nothing
+             for books that had just been seeded, even searching their
+             exact title. Confirmed directly in MySQL (MATCH/AGAINST
+             scored 0 for every row until OPTIMIZE TABLE books; scored
+             correctly after). Fixed in Server/app/cmd/seed/main.go:
+             seedCatalog now reports whether it actually inserted new
+             rows, and main() runs OPTIMIZE TABLE books once after a real
+             seed (skipped entirely on an already-seeded database).
+             Verified end-to-end against the real Go API: catalog listing
+             showed all 3 seeded books; title search ("Hobbit"), author-
+             name search ("Herbert" → Dune), and genre filter (Fantasy
+             correctly excluding Dune) all returned correct results after
+             the fix; book detail page showed real author/genre/
+             availability data and a nonexistent book id correctly 404'd;
+             author listing and author detail (with their books,
+             paginated) both showed real seeded data.
 
 ⏳ Step 4 — Borrowing
              "My borrows" list (GET /api/v1/borrows/my).

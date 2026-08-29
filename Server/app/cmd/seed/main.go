@@ -41,7 +41,19 @@ func main() {
 	bookAuthorRepo := catalog.NewBookAuthorRepository(db)
 
 	seedAdmin(ctx, userRepo, profileRepo)
-	seedCatalog(ctx, authorRepo, bookRepo, bookAuthorRepo)
+	seededCatalog := seedCatalog(ctx, authorRepo, bookRepo, bookAuthorRepo)
+
+	// InnoDB FULLTEXT indexes cache newly-inserted rows in memory
+	// (innodb_ft_cache_size) and only merge them into the on-disk index on
+	// a size threshold or an explicit OPTIMIZE TABLE — not immediately on
+	// insert. Without this, GET /api/v1/search finds nothing for the books
+	// just seeded above until something else happens to trigger a flush.
+	// Found by testing search against a freshly-seeded local database.
+	if seededCatalog {
+		if _, err := db.ExecContext(ctx, "OPTIMIZE TABLE books"); err != nil {
+			log.Printf("warning: failed to optimize books table's fulltext index: %v", err)
+		}
+	}
 
 	log.Println("seed complete")
 }
@@ -78,14 +90,16 @@ func seedAdmin(ctx context.Context, userRepo user.Repository, profileRepo user.P
 	log.Printf("seeded admin user: %s / %s (change this password)", seedAdminEmail, seedAdminPassword)
 }
 
-func seedCatalog(ctx context.Context, authorRepo catalog.AuthorRepository, bookRepo catalog.BookRepository, bookAuthorRepo catalog.BookAuthorRepository) {
+// seedCatalog returns whether it actually inserted new books, so the
+// caller knows whether the fulltext index needs an OPTIMIZE TABLE pass.
+func seedCatalog(ctx context.Context, authorRepo catalog.AuthorRepository, bookRepo catalog.BookRepository, bookAuthorRepo catalog.BookAuthorRepository) bool {
 	_, total, err := authorRepo.GetAll(ctx, 1, 0)
 	if err != nil {
 		log.Fatalf("failed to check existing authors: %v", err)
 	}
 	if total > 0 {
 		log.Println("catalog already has authors, skipping author/book seed")
-		return
+		return false
 	}
 
 	dob := func(s string) *time.Time {
@@ -148,4 +162,6 @@ func seedCatalog(ctx context.Context, authorRepo catalog.AuthorRepository, bookR
 
 		log.Printf("seeded book: %q by %s %s", s.book.title, s.author.FirstName, s.author.LastName)
 	}
+
+	return true
 }
