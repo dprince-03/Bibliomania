@@ -43,7 +43,7 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   try {
     const book = await apiGet(`/api/v1/books/${id}`);
-    return { title: `Reading: ${book.title} — Bibliotheca` };
+    return { title: `Reading: ${book.title} — Bibliomania` };
   } catch {
     return {};
   }

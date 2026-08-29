@@ -42,7 +42,7 @@ func (m *Manager) GenerateAccessToken(userID uint64, email, role string) (string
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "Bibliotheca",
+			Issuer:    "Bibliomania",
 		},
 	}
 

@@ -29,5 +29,5 @@ jobs:
           file: infra/docker/web-app/Dockerfile.prod
           push: true
           tags: |
-            ghcr.io/dprince-03/bibliotheca-web-app:latest
-            ghcr.io/dprince-03/bibliotheca-web-app:${{ github.sha }}
+            ghcr.io/dprince-03/bibliomania-web-app:latest
+            ghcr.io/dprince-03/bibliomania-web-app:${{ github.sha }}

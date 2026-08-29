@@ -2,7 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "bibliotheca:reading-theme";
+const STORAGE_KEY = "bibliomania:reading-theme";
 const themes = [
   { value: "light", label: "Light" },
   { value: "sepia", label: "Sepia" },

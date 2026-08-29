@@ -34,10 +34,10 @@ One module (`lib/api.js`) is responsible for: attaching `Authorization: Bearer <
 
 ### Two API base URLs, not one
 
-- `API_INTERNAL_URL` (server-only, no `NEXT_PUBLIC_` prefix so it's never shipped to the browser) — used by the API client wrapper above. Defaults to `http://app:8080` inside Docker (the Go API's Compose service, reachable by container name on `bibliotheca_network`), falls back to `http://localhost:8080` for bare `npm run dev` outside Docker.
+- `API_INTERNAL_URL` (server-only, no `NEXT_PUBLIC_` prefix so it's never shipped to the browser) — used by the API client wrapper above. Defaults to `http://app:8080` inside Docker (the Go API's Compose service, reachable by container name on `bibliomania_network`), falls back to `http://localhost:8080` for bare `npm run dev` outside Docker.
 - `NEXT_PUBLIC_API_URL` (already wired in `infra/docker/docker-compose.yml` as `WEB_APP_API_URL`) — stays available for any direct, unauthenticated client-side calls a later step might want (e.g. anonymous catalog browsing before login, mirroring the pattern `web-main` already uses for its live stats strip).
 
-These need to stay distinct: browsers can't resolve Docker-internal service names like `app`, so client-side code needs the public `api.bibliotheca.local` hostname, while server-side code run *inside* the Docker network can (and should, for reliability) skip the extra nginx hop.
+These need to stay distinct: browsers can't resolve Docker-internal service names like `app`, so client-side code needs the public `api.bibliomania.local` hostname, while server-side code run *inside* the Docker network can (and should, for reliability) skip the extra nginx hop.
 
 ### No shared workspace
 
@@ -68,7 +68,7 @@ White and Dark Blue anchor the two modes; Gold is the one primary accent tying e
 
 True old-English/blackletter type is illegible at body-text size, and this app exists for extended reading — so it's scoped to exactly one place:
 
-- **Logo only**: `UnifrakturMaguntia` (real blackletter) — the "Bibliotheca" wordmark, nowhere else.
+- **Logo only**: `UnifrakturMaguntia` (real blackletter) — the "Bibliomania" wordmark, nowhere else.
 - **Headings**: `Cinzel` — an engraved, Roman-capital display serif. Regal, still fully legible at heading sizes.
 - **Body/UI text**: `EB Garamond` — a genuinely old but comfortably readable-at-length serif, for both UI chrome and (later) actual book-reading content.
 

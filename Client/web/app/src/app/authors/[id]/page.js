@@ -37,7 +37,7 @@ export async function generateMetadata({ params }) {
     const name = [author.first_name, author.middle_name, author.last_name]
       .filter(Boolean)
       .join(" ");
-    return { title: `${name} — Bibliotheca` };
+    return { title: `${name} — Bibliomania` };
   } catch {
     return {};
   }

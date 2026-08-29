@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/modules/user"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
-	"github.com/dprince-03/Bibliotheca/pkg/jwt"
-	refreshtoken "github.com/dprince-03/Bibliotheca/pkg/refreshToken"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
+	"github.com/dprince-03/Bibliomania/internal/modules/user"
+	"github.com/dprince-03/Bibliomania/internal/utils"
+	"github.com/dprince-03/Bibliomania/pkg/jwt"
+	refreshtoken "github.com/dprince-03/Bibliomania/pkg/refreshToken"
 )
 
 type Service struct {

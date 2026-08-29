@@ -1,4 +1,4 @@
-# Bibliotheca Desktop
+# Bibliomania Desktop
 
 Native desktop client (JavaFX), talking to the same Go API as the other clients.
 

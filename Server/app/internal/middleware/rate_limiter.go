@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
+	"github.com/dprince-03/Bibliomania/internal/utils"
 	"golang.org/x/time/rate"
 )
 

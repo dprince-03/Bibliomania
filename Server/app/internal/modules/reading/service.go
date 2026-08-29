@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
+	"github.com/dprince-03/Bibliomania/internal/modules/catalog"
 )
 
 type Service struct {

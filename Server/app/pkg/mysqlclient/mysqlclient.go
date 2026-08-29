@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dprince-03/Bibliotheca/internal/config"
+	"github.com/dprince-03/Bibliomania/internal/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"

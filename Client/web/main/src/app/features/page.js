@@ -8,7 +8,7 @@ import {
   ShieldIcon,
 } from "@/components/icons";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://app.bibliotheca.local";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://app.bibliomania.local";
 
 const sections = [
   {
@@ -49,7 +49,7 @@ export default function Features() {
       <section className="border-b border-border py-20 text-center">
         <Container>
           <h1 className="font-serif text-4xl font-semibold text-foreground">
-            Everything you can do with Bibliotheca
+            Everything you can do with Bibliomania
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-muted">
             One app for finding, borrowing, and reading books — here&apos;s what&apos;s

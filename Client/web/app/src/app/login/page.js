@@ -4,7 +4,7 @@ import LoginForm from "@/components/LoginForm";
 // Component wrapper exists mainly so the browser tab/title reads "Sign in"
 // instead of every route sharing the root layout's title.
 export const metadata = {
-  title: "Sign in — Bibliotheca",
+  title: "Sign in — Bibliomania",
 };
 
 export default function LoginPage() {

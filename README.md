@@ -1,13 +1,13 @@
-# Bibliotheca
+# Bibliomania
 
-📚 Bibliotheca
+📚 Bibliomania
 - A Library Management & E-Library System
 - Built with Go, MySQL, Redis, Next.js, NestJS, Flutter, and JavaFX
 
 ## Monorepo layout
 
 ```
-Bibliotheca/
+Bibliomania/
 ├── Server/
 │   ├── app/                # Go REST API (net/http, MySQL, Redis)
 │   └── admin/              # NestJS — admin dashboard backend
@@ -99,7 +99,7 @@ cd Server/app
 cp .env.example .env      # fill in DB/Redis/JWT values
 go run ./cmd/key           # optional: generate a JWT secret
 make run                   # or: go run ./cmd/api — needs MySQL + Redis reachable per your .env
-make seed                  # optional: sample authors/books + an admin user (admin@bibliotheca.local)
+make seed                  # optional: sample authors/books + an admin user (admin@bibliomania.local)
 ```
 Then open `http://localhost:8080/swagger/index.html` for the full, interactive API reference.
 

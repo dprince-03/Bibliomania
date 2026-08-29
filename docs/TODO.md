@@ -26,7 +26,7 @@ feature roadmap (Steps 13-20).
 ## Blocking / high priority
 
 - [ ] **Confirm GHCR push permissions.** The `*-cd.yml` workflows push to
-      `ghcr.io/dprince-03/bibliotheca-<service>` using the default
+      `ghcr.io/dprince-03/bibliomania-<service>` using the default
       `GITHUB_TOKEN` — this requires the repo's Settings → Actions → General
       → Workflow permissions to allow "Read and write permissions" (not the
       read-only default). Untested — verify on first real push to `main`.

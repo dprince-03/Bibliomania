@@ -1,10 +1,10 @@
-name: bibliotheca
+name: bibliomania
 
 services:
   # ── Go API ──────────────────────────────────────────────
   app:
-    image: bibliotheca-app
-    container_name: bibliotheca-app
+    image: bibliomania-app
+    container_name: bibliomania-app
     build:
       context: ../../Server/app
     restart: unless-stopped
@@ -28,27 +28,27 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Web: product app ────────────────────────────────────
   # API_INTERNAL_URL is server-only (no NEXT_PUBLIC_ prefix) — used by
   # src/lib/api.js's server-side calls, reaching the app service directly
-  # inside bibliotheca_network instead of round-tripping through nginx.
+  # inside bibliomania_network instead of round-tripping through nginx.
   # NEXT_PUBLIC_API_URL stays for any direct client-side calls a later step
   # adds. See Client/docs/web-app-plan.md's "Two API base URLs, not one".
   web-app:
-    image: bibliotheca-web-app
-    container_name: bibliotheca-web-app
+    image: bibliomania-web-app
+    container_name: bibliomania-web-app
     build:
       context: ../../Client/web/app
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=${WEB_APP_API_URL:-http://api.bibliotheca.local}
+      - NEXT_PUBLIC_API_URL=${WEB_APP_API_URL:-http://api.bibliomania.local}
       - API_INTERNAL_URL=${WEB_APP_API_INTERNAL_URL:-http://app:8080}
     depends_on:
       - app
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Web: marketing/main site ────────────────────────────
   # NEXT_PUBLIC_* here covers dev's live `next dev` process. In prod this is
@@ -56,35 +56,35 @@ services:
   # also need to reach `docker build` as build args — see
   # docker-compose.prod.yml.
   web-main:
-    image: bibliotheca-web-main
-    container_name: bibliotheca-web-main
+    image: bibliomania-web-main
+    container_name: bibliomania-web-main
     build:
       context: ../../Client/web/main
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=${WEB_MAIN_API_URL:-http://api.bibliotheca.local}
-      - NEXT_PUBLIC_APP_URL=${WEB_MAIN_APP_URL:-http://app.bibliotheca.local}
+      - NEXT_PUBLIC_API_URL=${WEB_MAIN_API_URL:-http://api.bibliomania.local}
+      - NEXT_PUBLIC_APP_URL=${WEB_MAIN_APP_URL:-http://app.bibliomania.local}
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Admin: dashboard frontend ────────────────────────────
   admin-web:
-    image: bibliotheca-admin-web
-    container_name: bibliotheca-admin-web
+    image: bibliomania-admin-web
+    container_name: bibliomania-admin-web
     build:
       context: ../../Client/admin
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=${ADMIN_WEB_API_URL:-http://admin.bibliotheca.local/api}
+      - NEXT_PUBLIC_API_URL=${ADMIN_WEB_API_URL:-http://admin.bibliomania.local/api}
     depends_on:
       - admin
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Admin: backend API ───────────────────────────────────
   admin:
-    image: bibliotheca-admin
-    container_name: bibliotheca-admin
+    image: bibliomania-admin
+    container_name: bibliomania-admin
     build:
       context: ../../Server/admin
     restart: unless-stopped
@@ -92,12 +92,12 @@ services:
       mysql:
         condition: service_healthy
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── MySQL (app database) ─────────────────────────────────
   mysql:
     image: mysql:8.4
-    container_name: bibliotheca-mysql
+    container_name: bibliomania-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -118,12 +118,12 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Redis (app cache) ─────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: bibliotheca-redis
+    container_name: bibliomania-redis
     restart: unless-stopped
     command: >
       redis-server
@@ -140,12 +140,12 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Umami analytics ───────────────────────────────────────
   umami:
     image: ghcr.io/umami-software/umami:postgresql-latest
-    container_name: bibliotheca-umami
+    container_name: bibliomania-umami
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${UMAMI_POSTGRES_USER}:${UMAMI_POSTGRES_PASSWORD}@umami-postgres:5432/${UMAMI_POSTGRES_DB}
@@ -154,14 +154,14 @@ services:
       umami-postgres:
         condition: service_healthy
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # Umami's own Postgres — deliberately separate from `mysql` above, which is
   # the application's database. Different engine, different creds, different
   # volume: never point umami at the app's MySQL instance.
   umami-postgres:
     image: postgres:16-alpine
-    container_name: bibliotheca-umami-postgres
+    container_name: bibliomania-umami-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${UMAMI_POSTGRES_USER}
@@ -176,12 +176,12 @@ services:
       retries: 5
       start_period: 15s
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
   # ── Reverse proxy ─────────────────────────────────────────
   nginx:
-    image: bibliotheca-nginx
-    container_name: bibliotheca-nginx
+    image: bibliomania-nginx
+    container_name: bibliomania-nginx
     build:
       context: ../nginx
     restart: unless-stopped
@@ -193,7 +193,7 @@ services:
       - admin
       - umami
     networks:
-      - bibliotheca_network
+      - bibliomania_network
 
 volumes:
   mysql_data:
@@ -214,5 +214,5 @@ volumes:
     driver: local
 
 networks:
-  bibliotheca_network:
+  bibliomania_network:
     driver: bridge

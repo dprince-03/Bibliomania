@@ -11,30 +11,30 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	"github.com/dprince-03/Bibliotheca/internal/cache"
-	"github.com/dprince-03/Bibliotheca/internal/config"
-	"github.com/dprince-03/Bibliotheca/internal/database"
-	"github.com/dprince-03/Bibliotheca/internal/health"
-	"github.com/dprince-03/Bibliotheca/internal/modules/auth"
-	"github.com/dprince-03/Bibliotheca/internal/modules/borrow"
-	"github.com/dprince-03/Bibliotheca/internal/modules/catalog"
-	"github.com/dprince-03/Bibliotheca/internal/modules/reading"
-	"github.com/dprince-03/Bibliotheca/internal/modules/user"
-	"github.com/dprince-03/Bibliotheca/internal/router"
-	"github.com/dprince-03/Bibliotheca/pkg/jwt"
-	"github.com/dprince-03/Bibliotheca/pkg/mysqlclient"
-	"github.com/dprince-03/Bibliotheca/pkg/redisclient"
+	"github.com/dprince-03/Bibliomania/internal/cache"
+	"github.com/dprince-03/Bibliomania/internal/config"
+	"github.com/dprince-03/Bibliomania/internal/database"
+	"github.com/dprince-03/Bibliomania/internal/health"
+	"github.com/dprince-03/Bibliomania/internal/modules/auth"
+	"github.com/dprince-03/Bibliomania/internal/modules/borrow"
+	"github.com/dprince-03/Bibliomania/internal/modules/catalog"
+	"github.com/dprince-03/Bibliomania/internal/modules/reading"
+	"github.com/dprince-03/Bibliomania/internal/modules/user"
+	"github.com/dprince-03/Bibliomania/internal/router"
+	"github.com/dprince-03/Bibliomania/pkg/jwt"
+	"github.com/dprince-03/Bibliomania/pkg/mysqlclient"
+	"github.com/dprince-03/Bibliomania/pkg/redisclient"
 
-	_ "github.com/dprince-03/Bibliotheca/internal/swaggerdocs"
+	_ "github.com/dprince-03/Bibliomania/internal/swaggerdocs"
 )
 
-//	@title			Bibliotheca API
+//	@title			Bibliomania API
 //	@version		1.0
 //	@description	Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.
 //	@description	All endpoints except /health and /auth/* return the shared JSON envelope: {"success", "message"|"error", "data"|"code"}.
 
-//	@contact.name	Bibliotheca
-//	@contact.url	https://github.com/dprince-03/Bibliotheca
+//	@contact.name	Bibliomania
+//	@contact.url	https://github.com/dprince-03/Bibliomania
 
 //	@license.name	MIT
 
@@ -52,7 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Config error: %v", err)
 	}
-	log.Printf("Bibliotheca starting on port %s [%s mode]\n", cfg.ServerPort, cfg.AppEnv)
+	log.Printf("Bibliomania starting on port %s [%s mode]\n", cfg.ServerPort, cfg.AppEnv)
 
 	// ── Database ──────────────────────────────
 	db, err := mysqlclient.ConnectMySqlClient(cfg)
@@ -72,7 +72,7 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	appCache := cache.NewRedisCache(redisClient, "bibliotheca")
+	appCache := cache.NewRedisCache(redisClient, "bibliomania")
 
 	// ── Shared ────────────────────────────────
 	validate := validator.New()

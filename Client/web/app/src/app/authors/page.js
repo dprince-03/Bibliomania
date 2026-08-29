@@ -4,7 +4,7 @@ import Pagination from "@/components/Pagination";
 import { apiGet, ApiError } from "@/lib/api";
 
 export const metadata = {
-  title: "Authors — Bibliotheca",
+  title: "Authors — Bibliomania",
 };
 
 async function getAuthors(page) {

@@ -2,7 +2,7 @@ import Container from "@/components/Container";
 import Button from "@/components/Button";
 
 export const metadata = {
-  title: "Not found — Bibliotheca",
+  title: "Not found — Bibliomania",
 };
 
 export default function NotFound() {

@@ -385,7 +385,7 @@
                  aria-pressed on each button, per the linter's own
                  semantic-HTML suggestion over a raw role="group".
                - Per-page <title>s: every route inherited the root
-                 layout's "Bibliotheca — Your Library" regardless of which
+                 layout's "Bibliomania — Your Library" regardless of which
                  page you were on (WCAG 2.4.2, and just confusing with
                  multiple tabs open). Added static metadata to authors/
                  borrows/library/history/account/login/register/not-found,

@@ -20,9 +20,9 @@ const blackletter = UnifrakturMaguntia({
 });
 
 export const metadata = {
-  title: "Bibliotheca — Your Library",
+  title: "Bibliomania — Your Library",
   description:
-    "Search the catalog, borrow a book, and read online or offline — the Bibliotheca product app.",
+    "Search the catalog, borrow a book, and read online or offline — the Bibliomania product app.",
 };
 
 export default function RootLayout({ children }) {

@@ -328,7 +328,7 @@
              all matched the actual handler behavior.
 
 ✅ Step 19 — Makefile + Docker Polish
-             Server/app/Makefile: run, build (→ bin/bibliotheca, gitignored),
+             Server/app/Makefile: run, build (→ bin/bibliomania, gitignored),
              vet, fmt, migrate-up, migrate-down, docker-up, docker-down,
              swagger, seed.
              migrate-up/migrate-down deliberately do NOT use Make's own
@@ -346,7 +346,7 @@
              since prod is a deploy-host concern, not a local dev
              convenience.
              cmd/seed/main.go (new): seeds one admin user
-             (admin@bibliotheca.local) and 3 sample author+book pairs.
+             (admin@bibliomania.local) and 3 sample author+book pairs.
              Coarse-grained idempotency (skip admin seeding if that email
              exists; skip catalog seeding if any author exists at all)
              rather than per-row upserts — meant for a fresh dev database,
@@ -596,14 +596,14 @@ as a side effect of the `refactor/server-feature-structure` branch (see
 targeted bug-fixing — the bugs below all lived in files that branch rewrote
 anyway. For posterity, everything that was actually wrong:
 
-1. **Import path split** — `go.mod` module was the bare `bibliotheca`, but
-   several files imported via the old `github.com/yourusername/bibliotheca/...`
-   path. Fixed at the time: every file used the bare `bibliotheca/...`.
+1. **Import path split** — `go.mod` module was the bare `bibliomania`, but
+   several files imported via the old `github.com/yourusername/bibliomania/...`
+   path. Fixed at the time: every file used the bare `bibliomania/...`.
    **Since updated again**: the module path is now
-   `github.com/dprince-03/Bibliotheca` (matching the actual GitHub repo,
+   `github.com/dprince-03/Bibliomania` (matching the actual GitHub repo,
    case included), so `go get`/module-proxy resolution works correctly if
    this module is ever imported from elsewhere — every internal import uses
-   that full path now, not the bare `bibliotheca/...` shown above.
+   that full path now, not the bare `bibliomania/...` shown above.
 2. **Repository/service method-name mismatch** — the old
    `internal/repository/repository.go` defined `GetAuthorByID`,
    `GetAllAuthors`, `CreateAuthor`, `GetBookByID`, etc., but the services

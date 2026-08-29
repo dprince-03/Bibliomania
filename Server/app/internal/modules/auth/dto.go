@@ -1,6 +1,6 @@
 package auth
 
-import "github.com/dprince-03/Bibliotheca/internal/modules/user"
+import "github.com/dprince-03/Bibliomania/internal/modules/user"
 
 type RegisterRequest struct {
 	FirstName string `json:"first_name" validate:"required,min=2,max=100"`

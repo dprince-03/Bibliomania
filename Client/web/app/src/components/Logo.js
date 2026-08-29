@@ -23,7 +23,7 @@ export default function Logo({ className = "" }) {
         />
       </svg>
       <span className="font-blackletter text-2xl leading-none text-foreground">
-        Bibliotheca
+        Bibliomania
       </span>
     </span>
   );

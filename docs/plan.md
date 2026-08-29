@@ -1,6 +1,6 @@
 # Project Plans
 
-A running log of major initiative plans for Bibliotheca, kept for reference —
+A running log of major initiative plans for Bibliomania, kept for reference —
 each as agreed on and, where implementation has happened, as actually
 implemented. Newest/most relevant entries are added as new `##` sections;
 older ones stay put as historical record rather than getting overwritten.
@@ -14,7 +14,7 @@ bottom for what actually changed and why.
 
 ### Context
 
-Bibliotheca is expanding from "Go API + one React scaffold" into a real monorepo: a product web app, a marketing site, an admin dashboard (its own frontend + backend), and a mobile app, all fronted by nginx and backed by MySQL/Redis/Umami. The user had already carved out the target directory skeleton (`Client/web/{app,main}`, `Client/admin`, `Client/mobile`, `infra/nginx`) but left them empty except for a leftover Vite scaffold in `Client/web/main`. The existing `infra/docker/` compose setup was written back when the Go server was the only service and had since bit-rotted (paths assumed `Server/` as CWD, a corrupted env line, apk-on-Debian mismatch) — this branch both scaffolds the new apps and rebuilds the Docker orchestration to actually run everything together, in dev and prod, with a consistent `bibliotheca-<service>` image naming scheme.
+Bibliomania is expanding from "Go API + one React scaffold" into a real monorepo: a product web app, a marketing site, an admin dashboard (its own frontend + backend), and a mobile app, all fronted by nginx and backed by MySQL/Redis/Umami. The user had already carved out the target directory skeleton (`Client/web/{app,main}`, `Client/admin`, `Client/mobile`, `infra/nginx`) but left them empty except for a leftover Vite scaffold in `Client/web/main`. The existing `infra/docker/` compose setup was written back when the Go server was the only service and had since bit-rotted (paths assumed `Server/` as CWD, a corrupted env line, apk-on-Debian mismatch) — this branch both scaffolds the new apps and rebuilds the Docker orchestration to actually run everything together, in dev and prod, with a consistent `bibliomania-<service>` image naming scheme.
 
 CI pipelines were originally scoped out (later brought back in — see deviations). The Go server's existing build-break (import path / method-name mismatches, tracked in `Server/app/docs/Steps.md`) is a separate concern — this branch's Docker setup is correct, but the `server` container won't actually boot until that's fixed elsewhere.
 
@@ -36,7 +36,7 @@ CI pipelines were originally scoped out (later brought back in — see deviation
 | `Client/web/app` | *(originally)* `npm create vite@latest . -- --template react` | Product app. **Changed mid-implementation to Next.js** — see deviations. |
 | `Client/admin/web` | `npx create-next-app@latest . --javascript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm` | Admin dashboard frontend. `output: 'standalone'` (SSR-capable). |
 | `Client/admin/api` | `npx @nestjs/cli new . --package-manager npm --skip-git --language javascript` | Admin backend, forced to plain JavaScript. |
-| `Client/mobile` | `flutter create --org com.bibliotheca --platforms=android,ios .` | Mobile app. |
+| `Client/mobile` | `flutter create --org com.bibliomania --platforms=android,ios .` | Mobile app. |
 | `Client/desktop` | Hand-written (Maven not installed locally) — `pom.xml` + `App.java`/`Launcher.java` matching the standard `javafx-archetype-simple` layout | Native desktop app, Java 21 LTS. |
 
 Each app keeps its own `package.json`/`package-lock.json` (npm, no workspaces).
@@ -61,7 +61,7 @@ Fixes applied to the pre-existing `server` Dockerfiles: `golang:X.Y-alpine` cons
 
 ### 3. Compose split — base + dev/prod overrides
 
-Base `docker-compose.yml`: networks, volumes, every service's static shape, images named `bibliotheca-<service>`. Fixed bugs: `context`/volume paths that assumed `Server/` as CWD, a corrupted `MYSQL_ROOT_PASSWORD` env line, and a migrations-into-`docker-entrypoint-initdb.d` mount that would have undone itself (MySQL runs `*.sql` files alphabetically once — golang-migrate's paired `up`/`down` files would run back-to-back).
+Base `docker-compose.yml`: networks, volumes, every service's static shape, images named `bibliomania-<service>`. Fixed bugs: `context`/volume paths that assumed `Server/` as CWD, a corrupted `MYSQL_ROOT_PASSWORD` env line, and a migrations-into-`docker-entrypoint-initdb.d` mount that would have undone itself (MySQL runs `*.sql` files alphabetically once — golang-migrate's paired `up`/`down` files would run back-to-back).
 
 `docker-compose.dev.yml`: dev Dockerfiles, bind mounts + node_modules volumes, dev-only `adminer` + `mailpit`.
 
@@ -71,7 +71,7 @@ Run from the repo root with `--env-file .env` (not `--project-directory .` — t
 
 ### 4. nginx — subdomain routing
 
-`bibliotheca.local`, `app.bibliotheca.local`, `admin.bibliotheca.local` (+`/api/`), `api.bibliotheca.local`, `analytics.bibliotheca.local`, plus dev-only `adminer.bibliotheca.local` / `mail.bibliotheca.local`. Uses Docker's embedded DNS resolver (`resolver 127.0.0.11`) with `set $upstream ...; proxy_pass $upstream;` for lazy per-request hostname resolution — found during implementation that nginx otherwise resolves upstreams once at startup and refuses to boot if one isn't resolvable yet.
+`bibliomania.local`, `app.bibliomania.local`, `admin.bibliomania.local` (+`/api/`), `api.bibliomania.local`, `analytics.bibliomania.local`, plus dev-only `adminer.bibliomania.local` / `mail.bibliomania.local`. Uses Docker's embedded DNS resolver (`resolver 127.0.0.11`) with `set $upstream ...; proxy_pass $upstream;` for lazy per-request hostname resolution — found during implementation that nginx otherwise resolves upstreams once at startup and refuses to boot if one isn't resolvable yet.
 
 ### 5. Env files
 
@@ -90,9 +90,9 @@ Root `README.md`, `CLAUDE.md`, new `infra/README.md` — layout, setup, run comm
 These happened after the plan above was approved, in response to follow-up instructions mid-implementation:
 
 1. **`Client/web/app` changed from Vite+React to Next.js.** After scaffolding it as Vite+React per the approved plan, the user said "every website is in next.js" — re-scaffolded as Next.js (`output: 'standalone'`), matching `admin/web`. This shifted its dev/prod Dockerfiles and dev host port to the same shape as the other two Next.js apps instead of a Vite-specific pattern.
-2. **`.github/` (CI/CD) added — not in the original plan's scope.** Added per an explicit follow-up ask: per-app CI (`<app>-ci.yml`, lint/build/test) and CD (`<app>-cd.yml`, push to `ghcr.io/dprince-03/bibliotheca-<service>` on merge to `main`; `mobile`/`desktop` upload build artifacts instead) for all 8 apps/services, a PR template, issue templates, and `dependabot.yml` covering every ecosystem in the repo.
+2. **`.github/` (CI/CD) added — not in the original plan's scope.** Added per an explicit follow-up ask: per-app CI (`<app>-ci.yml`, lint/build/test) and CD (`<app>-cd.yml`, push to `ghcr.io/dprince-03/bibliomania-<service>` on merge to `main`; `mobile`/`desktop` upload build artifacts instead) for all 8 apps/services, a PR template, issue templates, and `dependabot.yml` covering every ecosystem in the repo.
 3. **Dev host ports moved off their original defaults.** The plan's dev port choices (8080, 3000-3002, 4000, 3306, 6379, 80, 8081) turned out to collide with several other projects' Docker stacks already running on this machine (checked via `docker ps`). Reassigned every dev host-port to the `9080-9090` range via dedicated `*_HOST_PORT` env vars, decoupled from the containers' internal ports (which are unaffected and unchanged).
-4. **Container naming was already correct** — a follow-up question asked "is the container named after the project," and checking confirmed every service already used `bibliotheca-<service>` container names plus a `name: bibliotheca` compose project name; no change was needed.
+4. **Container naming was already correct** — a follow-up question asked "is the container named after the project," and checking confirmed every service already used `bibliomania-<service>` container names plus a `name: bibliomania` compose project name; no change was needed.
 
 ## Platform vision: authors, libraries, readers (in progress)
 
@@ -100,7 +100,7 @@ These happened after the plan above was approved, in response to follow-up instr
 
 ### Context
 
-Building `Client/web/main` (the marketing site) surfaced that it couldn't be written honestly without first knowing what Bibliotheca actually *is*. That question turned into a repositioning: from "a library circulation system" to a three-sided platform — authors, libraries, and readers — built to bridge authors and readers directly, eliminate printing cost as a barrier to publishing, and fix the #1 problem indie authors report (discoverability — 78% cite it as their single biggest challenge, per 2026 self-publishing survey data).
+Building `Client/web/main` (the marketing site) surfaced that it couldn't be written honestly without first knowing what Bibliomania actually *is*. That question turned into a repositioning: from "a library circulation system" to a three-sided platform — authors, libraries, and readers — built to bridge authors and readers directly, eliminate printing cost as a barrier to publishing, and fix the #1 problem indie authors report (discoverability — 78% cite it as their single biggest challenge, per 2026 self-publishing survey data).
 
 ### Mission
 
@@ -126,7 +126,7 @@ Bridge the gap between authors and their readers/fans, eliminate the cost of pri
 ### Monetization model
 
 - **Authors**: 15% platform commission per book sold. **"Buy once, read for life"** — a one-time purchase that survives even if the reader later cancels a library subscription; a perpetual entitlement, not a lease. (Consistent with real marketplace norms — Babelcube's translator-brokering fee is also 15%.)
-- **Libraries**: pay the platform a flat **$2,000/year license fee** to operate on Bibliotheca. Libraries then sell their own reader subscriptions in three tiers (**Regular / Scholar / Premium Scholar**) — the platform takes **15% of that subscription revenue, per subscribing reader, per month** (a separate, recurring cut, distinct from the flat annual license).
+- **Libraries**: pay the platform a flat **$2,000/year license fee** to operate on Bibliomania. Libraries then sell their own reader subscriptions in three tiers (**Regular / Scholar / Premium Scholar**) — the platform takes **15% of that subscription revenue, per subscribing reader, per month** (a separate, recurring cut, distinct from the flat annual license).
 - **Readers**: pay (a) a monthly subscription to whichever library they register under, at their chosen tier, and (b) one-time purchases for any author book that isn't free.
 - **Payments infrastructure**: recommend marketplace split-payment infrastructure (Stripe Connect, or a regional equivalent) over hand-rolled fund movement — it auto-splits each charge between platform/seller/library and handles payouts, built for exactly this three-party shape. Three distinct flows, not one generic "payment": the flat library license (platform-to-library direction), the recurring reader→library subscription (85/15 auto-split), and the one-time reader→author book purchase (85/15 auto-split, perpetual entitlement).
 - **DRM stance**: DRM-free, to make "read for life" real (perpetual, any-device ownership) — paired with **watermarking** (invisibly embedding the buyer's identity) instead of hard DRM, for forensic traceability against leaks without breaking the ownership promise.

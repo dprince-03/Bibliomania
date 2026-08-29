@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
 
 	"github.com/jmoiron/sqlx"
 )

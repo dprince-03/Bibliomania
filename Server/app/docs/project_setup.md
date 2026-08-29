@@ -16,7 +16,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=yourpassword
-DB_NAME=bibliotheca
+DB_NAME=bibliomania
 
 # Redis
 REDIS_HOST=localhost
@@ -107,4 +107,4 @@ authors
   └── book_authors          (many:many junction)
 ```
 
-migrate -path ./migrations -database "mysql://user:pass@tcp(localhost:3306)/bibliotheca" up
+migrate -path ./migrations -database "mysql://user:pass@tcp(localhost:3306)/bibliomania" up

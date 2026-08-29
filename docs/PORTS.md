@@ -1,6 +1,6 @@
 # Port assignments & conflict check
 
-Bibliotheca's dev host ports are defined in [`infra/README.md`](../infra/README.md)
+Bibliomania's dev host ports are defined in [`infra/README.md`](../infra/README.md)
 (the source of truth for the actual `*_HOST_PORT`/`DB_PORT`/`REDIS_PORT` env
 vars) and root `.env.example`. This file is a periodic audit log — a record
 of checking that assignment against every *other* project's
@@ -54,10 +54,10 @@ plus every bare (non-Docker) host process listening at the time.
 
 **Result: the entire 9080-9090 range was free.** Nearest neighbors were
 `8080`/`8081` (newshub, so-good-catering) and `9100` (unrelated, not
-Docker) — a clear gap on either side of Bibliotheca's range.
+Docker) — a clear gap on either side of Bibliomania's range.
 
 Noted but out of scope for this check: bare (non-Docker) processes were
 found listening on `3000`, `3004`, and `3005` — not part of any
-Bibliotheca compose service, possibly stray leftover dev-server processes
+Bibliomania compose service, possibly stray leftover dev-server processes
 from earlier work. Worth a manual look if `npm run dev` for another
 project unexpectedly fails to bind.

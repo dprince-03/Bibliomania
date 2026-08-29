@@ -1,4 +1,4 @@
-package com.bibliotheca.desktop;
+package com.bibliomania.desktop;
 
 /**
  * Separate launcher class with a plain main() — running the fat/shaded jar

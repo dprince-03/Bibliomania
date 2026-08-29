@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	apperrors "github.com/dprince-03/Bibliotheca/internal/errors"
-	"github.com/dprince-03/Bibliotheca/internal/middleware"
-	"github.com/dprince-03/Bibliotheca/internal/utils"
+	apperrors "github.com/dprince-03/Bibliomania/internal/errors"
+	"github.com/dprince-03/Bibliomania/internal/middleware"
+	"github.com/dprince-03/Bibliomania/internal/utils"
 
 	"github.com/go-playground/validator/v10"
 )

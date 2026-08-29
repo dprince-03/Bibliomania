@@ -15,7 +15,7 @@ export default function Contact() {
           we&apos;ll see it.
         </p>
         <div className="mt-8">
-          <Button href="https://github.com/dprince-03/Bibliotheca/issues">
+          <Button href="https://github.com/dprince-03/Bibliomania/issues">
             Send us a message
           </Button>
         </div>

@@ -9,7 +9,7 @@ import {
   clearSession,
 } from "./session";
 
-// Reachable by container name on bibliotheca_network in Docker; falls back
+// Reachable by container name on bibliomania_network in Docker; falls back
 // to the Go API's default local port for bare `npm run dev`. Deliberately
 // not NEXT_PUBLIC_* — this is never read in the browser, so it's never
 // shipped to client JS. See Client/docs/web-app-plan.md's "Two API base
