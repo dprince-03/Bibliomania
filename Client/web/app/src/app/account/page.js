@@ -5,6 +5,10 @@ import ProfileForm from "@/components/ProfileForm";
 import { apiGet, ApiError } from "@/lib/api";
 import { logoutAction } from "@/app/actions/auth";
 
+export const metadata = {
+  title: "Your account — Bibliotheca",
+};
+
 const quickLinks = [
   { href: "/borrows", label: "My borrows" },
   { href: "/library", label: "My library" },

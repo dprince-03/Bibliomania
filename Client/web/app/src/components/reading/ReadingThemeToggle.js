@@ -57,13 +57,15 @@ export default function ReadingThemeToggle() {
   }, [theme]);
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-border p-1">
+    <fieldset className="m-0 flex min-w-0 items-center gap-1 rounded-full border border-border p-1">
+      <legend className="sr-only">Reading theme</legend>
       {themes.map((t) => (
         <button
           key={t.value}
           type="button"
           onClick={() => setStoredTheme(t.value)}
-          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+          aria-pressed={theme === t.value}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             theme === t.value
               ? "bg-accent text-accent-foreground"
               : "text-muted hover:text-accent"
@@ -72,6 +74,6 @@ export default function ReadingThemeToggle() {
           {t.label}
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 }

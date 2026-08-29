@@ -39,6 +39,16 @@ async function getBookmarks(id) {
   }
 }
 
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  try {
+    const book = await apiGet(`/api/v1/books/${id}`);
+    return { title: `Reading: ${book.title} — Bibliotheca` };
+  } catch {
+    return {};
+  }
+}
+
 export default async function ReadBookPage({ params }) {
   const { id } = await params;
   const book = await getBook(id);

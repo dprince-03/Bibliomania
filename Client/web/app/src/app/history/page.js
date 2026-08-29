@@ -3,6 +3,10 @@ import Container from "@/components/Container";
 import Pagination from "@/components/Pagination";
 import { apiGet, ApiError } from "@/lib/api";
 
+export const metadata = {
+  title: "Reading history — Bibliotheca",
+};
+
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, {
     year: "numeric",

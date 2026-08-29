@@ -33,7 +33,11 @@ export default function BookmarkList({ bookId, bookmarks }) {
               )}
             </div>
           </div>
-          <DeleteBookmarkButton bookId={bookId} bookmarkId={bookmark.id} />
+          <DeleteBookmarkButton
+            bookId={bookId}
+            bookmarkId={bookmark.id}
+            page={bookmark.page}
+          />
         </li>
       ))}
     </ul>

@@ -30,6 +30,19 @@ async function getAuthorBooks(id, page) {
   }
 }
 
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  try {
+    const author = await apiGet(`/api/v1/authors/${id}`);
+    const name = [author.first_name, author.middle_name, author.last_name]
+      .filter(Boolean)
+      .join(" ");
+    return { title: `${name} — Bibliotheca` };
+  } catch {
+    return {};
+  }
+}
+
 export default async function AuthorDetailPage({ params, searchParams }) {
   const { id } = await params;
   const resolvedSearchParams = await searchParams;

@@ -1,4 +1,4 @@
-> Status as of 2026-08-29: **Steps 1-6 done, Step 7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
+> Status as of 2026-08-29: **All 7 steps done.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
 
 ```
 ✅ Step 1 — Foundations
@@ -338,15 +338,87 @@
              bump (0.4.2) left for a dedicated follow-up rather than folded
              into this step.
 
-⏳ Step 7 — Polish
-             Loading/error-state audit across Steps 1-6 (every
-             fetch/Server Action needs a real pending + error UI, not
-             just the happy path).
-             Responsive/accessibility pass.
-             Deliberately left lighter/open-ended until Steps 1-6 exist
-             to actually audit — mirrors how the Server's own Step 20
-             worked (most of it turned out already done by earlier
-             steps).
+✅ Step 7 — Polish
+             Loading/error-state audit: every Server Action-backed form
+             from Steps 2-6 already had real pending/error UI via
+             useActionState (checked one by one — no gaps found there).
+             The real gaps were at the route level:
+               - No loading.js anywhere, so a slow Server Component fetch
+                 (books/[id], authors/[id], the reader page's three
+                 parallel fetches, etc.) just hung with zero feedback
+                 until it resolved. New root src/app/loading.js adds a
+                 branded spinner as the route-level Suspense fallback.
+               - books/[id]/page.js and authors/[id]/page.js's getBook/
+                 getAuthor only handle a 404 specially and re-throw
+                 everything else (a real API/network failure) — every
+                 *list* page (home, authors, borrows, library, history)
+                 already wraps its fetch in try/catch and shows an inline
+                 message, but these two *detail* pages didn't have an
+                 equivalent safety net, so a re-thrown error crashed to
+                 Next's default unstyled error screen. New root
+                 src/app/error.js catches this class of failure app-wide
+                 with a branded "Something went wrong" + Try again/Back to
+                 catalog, without needing to rewrite each page's fetcher
+                 individually. New src/app/global-error.js covers the one
+                 place error.js itself can't reach — an error thrown from
+                 the root layout.
+             Responsive/accessibility pass — found and fixed real, not
+             cosmetic, issues:
+               - Navbar's Catalog/Authors/My borrows links were `hidden
+                 sm:flex`/`sm:inline` with no mobile equivalent — on a
+                 phone there was no way to reach them at all except
+                 Account/Sign-in. New src/components/MobileMenu.js adds a
+                 real hamburger + dropdown mirroring exactly what desktop
+                 already shows.
+               - Button.js had no visible focus state (Input.js did, but
+                 every submit/link button didn't) — added a visible
+                 focus-visible ring, real for keyboard users, not just a
+                 nice-to-have.
+               - No skip-to-content link — added one in layout.js (first
+                 Tab stop on any page) plus id="main-content" on <main>.
+               - LibraryStatusForm's <select> and DeleteBookmarkButton's
+                 "Remove" had no accessible name beyond ambiguous visible
+                 text repeated once per list row — added aria-label
+                 ("Library status", "Remove bookmark for page N").
+               - ReadingThemeToggle's button group used a bare <div>;
+                 switched to a <fieldset>/<legend> (sr-only) with
+                 aria-pressed on each button, per the linter's own
+                 semantic-HTML suggestion over a raw role="group".
+               - Per-page <title>s: every route inherited the root
+                 layout's "Bibliotheca — Your Library" regardless of which
+                 page you were on (WCAG 2.4.2, and just confusing with
+                 multiple tabs open). Added static metadata to authors/
+                 borrows/library/history/account/login/register/not-found,
+                 and generateMetadata (using the book/author's real name)
+                 to books/[id], authors/[id], and books/[id]/read.
+                 login/register were "use client" pages directly (metadata
+                 can't be exported from a Client Component), so they were
+                 split into thin Server Component pages (new
+                 src/components/LoginForm.js/RegisterForm.js hold the
+                 actual client-side form logic, unchanged otherwise).
+             Verified with a real headless-browser session (Playwright,
+             same approach as Step 6 — most of this is either client-side
+             JS or framework routing behavior curl can't exercise):
+             confirmed the mobile menu (375px viewport) hides the desktop
+             nav, shows a working hamburger with all four links, navigates
+             correctly, and closes itself afterward — screenshotted;
+             confirmed a real focus-visible ring renders on Tab (screen-
+             shotted) and that the skip-link is the very first Tab stop on
+             the page (screenshotted); confirmed loading.js actually fires
+             by temporarily adding a 2s delay to authors/page.js's fetch,
+             screenshotting the spinner mid-request, then reverting the
+             change; confirmed error.js actually fires the same way — a
+             temporary thrown error in books/[id]/page.js's getBook,
+             screenshotted the branded error page with a working
+             "Try again" button, then reverted; confirmed every per-page
+             <title> renders correctly (static and dynamic) via direct
+             HTML fetches; re-ran the borrow/library/bookmark flows from
+             Steps 4-6 end-to-end afterward to confirm nothing regressed.
+             Known gaps left open rather than folded in here: the
+             epubjs@0.3.93 dependency vulnerability noted in Step 6, and
+             generateMetadata on books/[id] and authors/[id] issuing a
+             second, uncached apiGet separate from the page's own fetch
+             (a real double round-trip, acceptable for now but not free).
 ```
 
 ## Out of scope for this roadmap

@@ -22,6 +22,7 @@ export default function LibraryStatusForm({ bookId, defaultStatus, label = "Upda
       <input type="hidden" name="book_id" value={bookId} />
       <select
         name="status"
+        aria-label="Library status"
         defaultValue={defaultStatus ?? ""}
         required
         className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent"

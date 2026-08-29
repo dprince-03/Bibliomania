@@ -2,6 +2,7 @@ import Link from "next/link";
 import Container from "./Container";
 import Logo from "./Logo";
 import Button from "./Button";
+import MobileMenu from "./MobileMenu";
 import { getRefreshToken } from "@/lib/session";
 
 const links = [
@@ -31,23 +32,21 @@ export default async function Navbar() {
           ))}
         </nav>
 
-        {hasSession ? (
-          <div className="flex items-center gap-3">
+        <div className="hidden items-center gap-3 sm:flex">
+          {hasSession && (
             <Link
               href="/borrows"
-              className="hidden text-sm font-medium text-muted transition-colors hover:text-accent sm:inline"
+              className="text-sm font-medium text-muted transition-colors hover:text-accent"
             >
               My borrows
             </Link>
-            <Button href="/account" variant="ghost">
-              Account
-            </Button>
-          </div>
-        ) : (
-          <Button href="/login" variant="ghost">
-            Sign in
+          )}
+          <Button href={hasSession ? "/account" : "/login"} variant="ghost">
+            {hasSession ? "Account" : "Sign in"}
           </Button>
-        )}
+        </div>
+
+        <MobileMenu links={links} hasSession={hasSession} />
       </Container>
     </header>
   );

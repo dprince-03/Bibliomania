@@ -15,7 +15,7 @@ export default function Button({
   children,
   ...rest
 }) {
-  const classes = `inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium transition-colors font-serif tracking-wide ${variants[variant]} ${className}`;
+  const classes = `inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium transition-colors font-serif tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${variants[variant]} ${className}`;
 
   if (href) {
     return (

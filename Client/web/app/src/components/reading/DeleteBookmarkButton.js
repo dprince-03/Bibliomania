@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { deleteBookmarkAction } from "@/app/actions/reading";
 
-export default function DeleteBookmarkButton({ bookId, bookmarkId }) {
+export default function DeleteBookmarkButton({ bookId, bookmarkId, page }) {
   const [state, action, pending] = useActionState(deleteBookmarkAction, undefined);
 
   return (
@@ -13,6 +13,7 @@ export default function DeleteBookmarkButton({ bookId, bookmarkId }) {
       <button
         type="submit"
         disabled={pending}
+        aria-label={`Remove bookmark for page ${page}`}
         className="text-xs text-muted hover:text-alert"
       >
         {pending ? "Removing…" : "Remove"}

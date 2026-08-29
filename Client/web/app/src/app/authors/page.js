@@ -3,6 +3,10 @@ import AuthorCard from "@/components/AuthorCard";
 import Pagination from "@/components/Pagination";
 import { apiGet, ApiError } from "@/lib/api";
 
+export const metadata = {
+  title: "Authors — Bibliotheca",
+};
+
 async function getAuthors(page) {
   const query = new URLSearchParams();
   if (page) query.set("page", page);

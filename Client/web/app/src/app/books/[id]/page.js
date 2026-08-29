@@ -17,6 +17,20 @@ async function getBook(id) {
   }
 }
 
+// A second apiGet call, separate from the one BookDetailPage below makes —
+// generateMetadata and the page component don't share a cache here, so
+// this is a deliberate extra round-trip in exchange for a real per-book
+// <title> instead of every book sharing the root layout's title.
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  try {
+    const book = await apiGet(`/api/v1/books/${id}`);
+    return { title: `${book.title} — Bibliotheca` };
+  } catch {
+    return {};
+  }
+}
+
 export default async function BookDetailPage({ params }) {
   const { id } = await params;
   const book = await getBook(id);

@@ -4,6 +4,10 @@ import Pagination from "@/components/Pagination";
 import LibraryStatusForm from "@/components/LibraryStatusForm";
 import { apiGet, ApiError } from "@/lib/api";
 
+export const metadata = {
+  title: "My library — Bibliotheca",
+};
+
 const filters = [
   { value: "", label: "All" },
   { value: "wishlist", label: "Wishlist" },

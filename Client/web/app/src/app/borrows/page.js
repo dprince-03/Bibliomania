@@ -4,6 +4,10 @@ import Pagination from "@/components/Pagination";
 import ReturnForm from "@/components/ReturnForm";
 import { apiGet, ApiError } from "@/lib/api";
 
+export const metadata = {
+  title: "My borrows — Bibliotheca",
+};
+
 const statusStyles = {
   active: "bg-link/10 text-link",
   overdue: "bg-alert/10 text-alert",
