@@ -8,6 +8,12 @@ RUN npm ci
 
 COPY . .
 
+# public/ is optional in Next.js and git doesn't track empty directories —
+# if it has no committed files, a fresh checkout never creates it at all,
+# and the final stage's COPY --from=builder below would fail with
+# "not found". Guarantee it exists regardless of what's actually in it.
+RUN mkdir -p public
+
 # next.config.mjs sets output: "standalone"
 RUN npm run build
 
