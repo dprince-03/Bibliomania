@@ -10,7 +10,9 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/redis/go-redis/v9 v9.22.0
+	github.com/swaggo/http-swagger v1.3.4
+	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.49.0
 	golang.org/x/time v0.15.0
 )
@@ -34,8 +36,6 @@ require (
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
-	github.com/swaggo/http-swagger v1.3.4 // indirect
-	github.com/swaggo/swag v1.16.6 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.51.0 // indirect
