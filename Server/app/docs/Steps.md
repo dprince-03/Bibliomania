@@ -351,6 +351,16 @@
              exists; skip catalog seeding if any author exists at all)
              rather than per-row upserts — meant for a fresh dev database,
              not repeated runs against one already in use.
+             Update (found while building Client/web/app's Step 3 —
+             catalog search): after a real seed, runs `OPTIMIZE TABLE
+             books` once. MySQL's InnoDB FULLTEXT index caches newly-
+             inserted rows in memory and only merges them into the
+             on-disk index on a size threshold or an explicit OPTIMIZE,
+             not immediately on insert — without this, GET
+             /api/v1/search found nothing for the very books just seeded,
+             even searching their exact title. Confirmed directly in
+             MySQL (MATCH/AGAINST scored 0 for every row until OPTIMIZE
+             TABLE; scored correctly after).
              Verified end-to-end: `make migrate-up` against the real Server/app/.env
              (proving the `#`-in-password handling actually works, not just
              in theory), `make seed` twice (second run correctly skipped

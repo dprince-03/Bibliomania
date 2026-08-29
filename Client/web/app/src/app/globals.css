@@ -44,6 +44,38 @@
   }
 }
 
+/* Reading-theme overrides (Step 6) — set via a data-reading-theme attribute
+   on <html>, only while the e-library reader view is mounted (see
+   ReadingThemeToggle.js). Deliberately app-wide dark/light are left alone;
+   this is a separate, reader-scoped choice per web-app-plan.md, not an
+   app-wide theme switcher. Only the surface/text tokens shift — accent/
+   link/alert stay put so the app's branding stays recognizable. Sepia has
+   no light/dark counterpart to fight, since prefers-color-scheme never
+   produces it. */
+:root[data-reading-theme="light"] {
+  --background: #ffffff;
+  --surface: #f2e6d4;
+  --foreground: #0d1b3e;
+  --muted: #5b6b8c;
+  --border: #c9a878;
+}
+
+:root[data-reading-theme="dark"] {
+  --background: #0a1633;
+  --surface: #142a52;
+  --foreground: #f2ede1;
+  --muted: #9db4d9;
+  --border: #2c4a8c;
+}
+
+:root[data-reading-theme="sepia"] {
+  --background: #f4ecd8;
+  --surface: #ece0c4;
+  --foreground: #3b2f1e;
+  --muted: #8a7554;
+  --border: #d8c9a3;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

@@ -1,50 +1,91 @@
 import Container from "@/components/Container";
-import Button from "@/components/Button";
+import BookCard from "@/components/BookCard";
+import Pagination from "@/components/Pagination";
+import SearchForm from "@/components/SearchForm";
 import { apiGet, ApiError } from "@/lib/api";
 
-async function getBookCount() {
+function buildQuery(searchParams) {
+  const params = new URLSearchParams();
+  if (searchParams.page) params.set("page", searchParams.page);
+  if (searchParams.q) params.set("q", searchParams.q);
+  if (searchParams.genre) params.set("genre", searchParams.genre);
+  if (searchParams.format) params.set("format", searchParams.format);
+  if (searchParams.author) params.set("author", searchParams.author);
+  if (searchParams.year) params.set("year", searchParams.year);
+  return params;
+}
+
+function isSearching(searchParams) {
+  return Boolean(
+    searchParams.q ||
+      searchParams.genre ||
+      searchParams.format ||
+      searchParams.author ||
+      searchParams.year
+  );
+}
+
+async function getCatalogPage(searchParams) {
+  const query = buildQuery(searchParams);
+  const path = isSearching(searchParams)
+    ? `/api/v1/search?${query.toString()}`
+    : `/api/v1/books?${query.toString()}`;
+
   try {
-    const data = await apiGet("/api/v1/books?limit=1");
-    return { count: data?.total_count ?? null, error: null };
+    return { data: await apiGet(path), error: null };
   } catch (err) {
-    if (err instanceof ApiError) {
-      return { count: null, error: err.message };
-    }
-    return { count: null, error: "Could not reach the API." };
+    const message = err instanceof ApiError ? err.message : "Could not reach the API.";
+    return { data: null, error: message };
   }
 }
 
-export default async function Home() {
-  const { count, error } = await getBookCount();
+export default async function Home({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const { data, error } = await getCatalogPage(resolvedSearchParams);
 
   return (
-    <section className="py-24">
-      <Container className="flex flex-col items-center gap-8 text-center">
-        <h1 className="font-serif text-4xl font-semibold tracking-wide text-foreground sm:text-5xl">
-          Welcome to Bibliotheca
-        </h1>
-        <p className="max-w-xl text-lg text-muted">
-          This is the foundation for the product app — layout, palette,
-          typography, and a working connection to the API. Real pages start
-          arriving in the next step.
-        </p>
-
-        <div className="rounded-2xl border border-border bg-surface px-8 py-6">
-          {error ? (
-            <p className="text-sm text-alert">
-              Couldn&apos;t reach the API: {error}
-            </p>
-          ) : (
-            <p className="font-serif text-2xl text-accent">
-              {count !== null ? count.toLocaleString() : "—"}{" "}
-              <span className="text-base font-sans text-muted">
-                books in the catalog
-              </span>
-            </p>
-          )}
+    <section className="py-16">
+      <Container className="flex flex-col gap-10">
+        <div className="text-center">
+          <h1 className="font-serif text-4xl font-semibold text-foreground">
+            The catalog
+          </h1>
+          <p className="mt-2 text-muted">
+            Search by title, author, genre, or format.
+          </p>
         </div>
 
-        <Button href="/">Placeholder button</Button>
+        <SearchForm defaultValues={resolvedSearchParams} />
+
+        {error && <p className="text-center text-sm text-alert">{error}</p>}
+
+        {!error && data.items.length === 0 && (
+          <p className="text-center text-sm text-muted">
+            No books matched your search.
+          </p>
+        )}
+
+        {!error && data.items.length > 0 && (
+          <>
+            <p className="text-sm text-muted">
+              {data.total_count.toLocaleString()} book
+              {data.total_count === 1 ? "" : "s"}
+            </p>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {data.items.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+            <Pagination
+              basePath="/"
+              searchParams={resolvedSearchParams}
+              page={data.page}
+              totalPages={data.total_pages}
+              hasNextPage={data.has_next_page}
+              hasPreviousPage={data.has_previous_page}
+            />
+          </>
+        )}
       </Container>
     </section>
   );
