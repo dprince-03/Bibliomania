@@ -1,5 +1,9 @@
 # API Reference (frontend view)
 
+`web/app`'s own build plan is [`web-app-plan.md`](web-app-plan.md) +
+[`web-app-Steps.md`](web-app-Steps.md) — auth strategy, API base URLs, and
+the step-by-step roadmap for actually consuming what's described below.
+
 The endpoint list, request/response shapes, and auth model live in the
 generated Swagger UI (`http://localhost:8080/swagger/index.html` when the
 server is running — see `Server/app/docs/API.md`) — don't duplicate them here;
