@@ -99,9 +99,34 @@ export default async function BookDetailPage({ params }) {
           </div>
         )}
 
-        <p className="mt-4 text-sm text-muted">
-          Reading in the browser is coming in a later step.
-        </p>
+        {book.is_digital && book.file_format && (
+          <div className="mt-6 flex items-center gap-4 text-sm">
+            {hasSession ? (
+              <>
+                <Link
+                  href={`/books/${book.id}/read`}
+                  className="text-link hover:underline"
+                >
+                  Read online
+                </Link>
+                <a
+                  href={`/api/books/${book.id}/file?mode=attachment`}
+                  download
+                  className="text-link hover:underline"
+                >
+                  Download
+                </a>
+              </>
+            ) : (
+              <p className="text-muted">
+                <Link href="/login" className="text-link hover:underline">
+                  Sign in
+                </Link>{" "}
+                to read or download this book.
+              </p>
+            )}
+          </div>
+        )}
       </Container>
     </section>
   );

@@ -32,7 +32,10 @@ export class ApiError extends Error {
 // promise across concurrent callers in this process avoids that race.
 let refreshPromise = null;
 
-function refreshSession() {
+// Exported for src/app/api/books/[id]/file/route.js, which streams the raw
+// file response itself rather than going through request() above but still
+// needs the same one-shot refresh-and-retry on an expired access token.
+export function refreshSession() {
   if (!refreshPromise) {
     refreshPromise = performRefresh().finally(() => {
       refreshPromise = null;

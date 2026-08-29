@@ -1,4 +1,4 @@
-> Status as of 2026-08-29: **Steps 1-5 done, Steps 6-7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
+> Status as of 2026-08-29: **Steps 1-6 done, Step 7 not started.** This is `Client/web/app`'s own roadmap — Steps 1-7 below, numbered fresh from 1. It is a **separate roadmap from the Server's** (`Server/app/docs/Steps.md`, Steps 1-45) — don't confuse the two. See [`web-app-plan.md`](web-app-plan.md) for the full architecture reasoning (auth strategy, `proxy.js` naming, API base URLs, visual identity) behind the steps below. One step, one branch — same discipline the Server roadmap uses.
 
 ```
 ✅ Step 1 — Foundations
@@ -231,21 +231,112 @@
              /history rendered the exact current_page/total_pages,
              progress_pct-sized bar, and last_read_at the API returned.
 
-⏳ Step 6 — E-library reading experience
-             Download flow (GET /api/v1/books/{id}/download — any
-             authenticated user per the API's own annotation).
-             An actual in-browser reader — the biggest single UI lift in
-             this roadmap, format-dependent rendering (PDF/EPUB); library
-             choice and exact approach decided when this step starts,
-             not locked in here.
-             Reading-progress sync (PATCH /api/v1/reading/{bookId}/sync,
-             GET /api/v1/reading/{bookId}/session,
-             PATCH /api/v1/reading/{bookId}/progress).
-             Bookmarks CRUD (GET/POST /api/v1/reading/{bookId}/bookmarks,
-             DELETE /api/v1/reading/{bookId}/bookmarks/{id}).
-             This step's own light/dark/sepia reading-theme toggle,
-             scoped to the reader view (see web-app-plan.md — deliberately
-             not an app-wide switcher built earlier than this).
+✅ Step 6 — E-library reading experience
+             The Go API always answers GET /api/v1/books/{id}/download with
+             Content-Disposition: attachment and requires a Bearer token
+             the browser can't attach to a plain <a href> — so a new
+             src/app/api/books/[id]/file/route.js Route Handler proxies it:
+             reads the access token cookie server-side, forwards the
+             request with the Authorization header, and streams the
+             response back, overriding Content-Disposition to `inline`
+             (?mode=inline, for the in-browser reader) or passing the API's
+             own `attachment` through (?mode=attachment/default, for the
+             book detail page's real "Download" link, replacing Step 3's
+             placeholder text). One-shot refresh-and-retry on an expired
+             access token reuses lib/api.js's refreshSession (newly
+             exported for this).
+             New src/app/books/[id]/read/page.js (protected — proxy.js
+             gained a /^\/books\/[^/]+\/read(\/|$)/ pattern alongside its
+             static protectedRoutes list, since this route has a dynamic
+             segment). Renders format-dependent per book.file_format:
+               - pdf: an <iframe> pointed at the file route in inline mode
+                 — the browser's own native PDF viewer, which exposes no
+                 JS API to read the current page back out. Progress is
+                 self-reported instead, via a new
+                 src/components/reading/ProgressForm.js (client,
+                 useActionState) with real current/total page number
+                 inputs, calling a new src/app/actions/reading.js's
+                 updateProgressAction (PATCH /api/v1/reading/{bookId}/progress
+                 — the plain always-online variant, not Sync, since this
+                 app has no offline story to feed Sync's client_updated_at).
+               - epub: a new src/components/reading/EpubReader.js (client)
+                 using the epubjs library (added as a new dependency) for
+                 real pagination, chapter navigation, and location-based
+                 progress — ePub(fileUrl, { openAs: "epub" }) is required
+                 (found by testing against a real generated .epub): without
+                 it epub.js sniffs the input type from the URL's file
+                 extension, and the file route's extension-less URL gets
+                 misread as an already-unpacked directory tree, 404ing on
+                 META-INF/container.xml relative to it. Since
+                 ReadingSessionResponse only has current_page/total_pages
+                 (no percentage field), and epub.js's pagination is virtual
+                 (no fixed "page 12 of 340"), progress is mapped as
+                 current_page = round(location percentage * 100) against a
+                 fixed total_pages of 100 — documented in-code since it's a
+                 real, deliberate reinterpretation of those two fields for
+                 this format only. Saves progress by calling
+                 updateProgressAction directly (Server Actions can be
+                 invoked as plain async functions, not only bound to a
+                 <form>), since the value being saved is computed
+                 client-side from epub.js's own location state rather than
+                 typed into form fields the way the PDF reader's is.
+             Bookmarks CRUD: new src/components/reading/BookmarkForm.js
+             (create), BookmarkList.js + DeleteBookmarkButton.js (list/
+             delete), all driven by new Server Actions in the same
+             actions/reading.js (createBookmarkAction/deleteBookmarkAction
+             calling POST/DELETE /api/v1/reading/{bookId}/bookmarks[/{id}]).
+             Shared by both formats — "page" is a real PDF page number or
+             the epub reader's 0-100 pseudo-page, whichever the book is.
+             New src/components/reading/ReadingThemeToggle.js: a
+             light/sepia/dark toggle scoped to the reader view only (per
+             web-app-plan.md — deliberately not an app-wide switcher).
+             Persists to localStorage via useSyncExternalStore (avoids a
+             "setState synchronously in an effect" lint error from reading
+             localStorage into state on mount) and sets a data-reading-theme
+             attribute on <html>, removed again on unmount so leaving the
+             reader doesn't leak the choice elsewhere; new CSS variable
+             overrides for it live in globals.css. Also dispatches a
+             window "readingthemechange" event so EpubReader (a sibling,
+             not a descendant) can recolor the book's own text via epub.js's
+             rendition.themes — confirmed working in a real browser (below).
+             Verified end-to-end with a real headless-browser session
+             (Playwright, driven directly since curl can't execute the
+             client-side JS this step is mostly made of), reusing cookies
+             from a real curl-driven registration exactly like prior steps:
+             uploaded a real generated PDF to The Hobbit and a real
+             generated 2-chapter EPUB to Dune directly via the Go API's
+             admin-only upload endpoint (setup only — that endpoint is
+             explicitly out of scope for this app, see below). Confirmed
+             the file route streams byte-identical content with the
+             correct Content-Type/Content-Disposition for both modes;
+             confirmed the PDF reader's iframe points at a real, correctly-
+             served application/pdf response (verified by fetching the
+             iframe's own src from inside the page's browser context, since
+             headless Chromium doesn't render its native PDF viewer inside
+             automated iframes the way a real browser session does);
+             confirmed the EPUB reader actually renders real chapter text
+             ("Chapter 1" → "Chapter 2" after clicking Next, screenshotted),
+             tracks real location percentage (0% → 100%), and saves
+             progress to the API; confirmed submitting the real progress
+             form on the PDF reader (current/total page) persisted and
+             re-rendered correctly, and confirmed the API's own session
+             data (GET /api/v1/reading/{bookId}/session) matched what was
+             submitted; created, listed, and deleted a real bookmark
+             through the actual rendered forms, confirming each step
+             against a direct API call; confirmed the reading-theme toggle
+             recolors both the surrounding page chrome and the epub.js
+             book text together (screenshotted in sepia), and confirmed the
+             data-reading-theme attribute is removed on navigating away
+             from the reader; confirmed an unauthenticated request to both
+             the reader page and the file route redirect/401 correctly; and
+             confirmed a book with no digital file shows "isn't available
+             as an e-book" instead of an empty reader.
+             Known tradeoff: epubjs@0.3.93 pulls in a vulnerable
+             @xmldom/xmldom (client-side XML parsing only, used on files
+             uploaded by librarians/admins — a trusted role — not
+             user-supplied input); the fix requires a breaking major-version
+             bump (0.4.2) left for a dedicated follow-up rather than folded
+             into this step.
 
 ⏳ Step 7 — Polish
              Loading/error-state audit across Steps 1-6 (every

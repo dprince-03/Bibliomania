@@ -1,6 +1,6 @@
 # `Client/web/app` plan
 
-**Status: Steps 1-5 (Foundations, Auth, Catalog browsing, Borrowing, Profile & personal library) done, Steps 6-7 not started.** See [`web-app-Steps.md`](web-app-Steps.md) for the step-by-step build checklist — one step, one branch, same discipline as `Server/app/docs/Steps.md`. This file covers the *why* and the cross-cutting architecture decisions; the Steps file covers the *what*, in order.
+**Status: Steps 1-6 (Foundations, Auth, Catalog browsing, Borrowing, Profile & personal library, E-library reading experience) done, Step 7 not started.** See [`web-app-Steps.md`](web-app-Steps.md) for the step-by-step build checklist — one step, one branch, same discipline as `Server/app/docs/Steps.md`. This file covers the *why* and the cross-cutting architecture decisions; the Steps file covers the *what*, in order.
 
 ## Context
 
