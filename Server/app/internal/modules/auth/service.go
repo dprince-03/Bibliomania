@@ -65,7 +65,12 @@ func (s *Service) issueTokens(ctx context.Context, u *user.User) (*AuthResponse,
 		Token: TokenResponse{
 			AccessToken:  accessToken,
 			RefreshToken: rawRefreshed,
-			ExpiresIn:    int64(s.refreshTTL.Seconds()),
+			// The access token's own TTL, not the refresh token's — this
+			// previously reused s.refreshTTL by mistake, so ExpiresIn (and
+			// anything relying on it, e.g. a client setting its access-token
+			// cookie's Max-Age) reported 7 days instead of the real 15
+			// minutes the JWT itself actually expires in.
+			ExpiresIn: int64(s.jwtManager.AccessTokenTTL().Seconds()),
 		},
 	}, nil
 }

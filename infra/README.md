@@ -78,7 +78,9 @@ Dev also publishes host ports for local tooling, in the `9080-9090` range —
 deliberately not the usual `3000`/`5000`/`8080`/`6379`/etc. defaults, because
 this machine runs several other projects' Docker stacks that already claim
 those (checked via `docker ps` when these were picked; override via `.env`
-if a future project collides with one of these instead):
+if a future project collides with one of these instead — see
+[`docs/PORTS.md`](../docs/PORTS.md) for the conflict-check method and the
+verification log):
 
 | Service | Host port (env var, default) |
 |---|---|
