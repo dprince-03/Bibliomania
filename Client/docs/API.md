@@ -27,8 +27,8 @@ day one.
 
 ## Base URLs
 
-Values come from the root `.env` (see `.env.example` and `infra/README.md`
-→ "Routes (dev)"). Never hardcode these in app code — read from an env var
+Values come from `infra/docker/.env` (see `infra/docker/.env.example` and
+`infra/README.md` → "Routes (dev)"). Never hardcode these in app code — read from an env var
 per app's own framework convention (e.g. `NEXT_PUBLIC_API_URL` for the
 Next.js apps).
 
@@ -39,8 +39,8 @@ Next.js apps).
 | Prod | Not yet deployed anywhere — no real domain assigned yet. |
 
 `admin`'s equivalent (its own backend, `Server/admin`, not the Go app) is
-`http://admin.bibliomania.local/api` in dev — see `ADMIN_WEB_API_URL` in the
-root `.env.example`.
+`http://admin.bibliomania.local/api` in dev — see `ADMIN_WEB_API_URL` in
+`infra/docker/.env.example`.
 
 ## Auth
 

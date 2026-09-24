@@ -30,11 +30,11 @@ long-lived services. CI build/packaging images for either are future work.
 
 1. Copy env files:
    ```bash
-   cp .env.example .env                       # repo root — compose-level vars
-   cp Server/app/.env.example Server/app/.env  # app-level vars (JWT secret, timeouts, etc.)
+   cp infra/docker/.env.example infra/docker/.env  # compose-level vars, lives beside the compose files it configures
+   cp Server/app/.env.example Server/app/.env      # app-level vars (JWT secret, timeouts, etc.)
    ```
-2. **`DB_NAME`/`DB_USER`/`DB_PASSWORD` in the root `.env` are the source of
-   truth** — `docker-compose.yml` overrides `app`'s environment with these
+2. **`DB_NAME`/`DB_USER`/`DB_PASSWORD` in `infra/docker/.env` are the source
+   of truth** — `docker-compose.yml` overrides `app`'s environment with these
    same values so it can never disagree with what `mysql` was initialized
    with. You don't need to hand-sync `Server/app/.env`'s copies of those three
    keys for Docker use; they only matter when running the API outside Docker.
@@ -45,20 +45,21 @@ long-lived services. CI build/packaging images for either are future work.
 
 ## Run
 
-All commands run from the **repo root**. Use `--env-file .env`, not
-`--project-directory .` — the latter also changes how build contexts and
+All commands run from the **repo root**, pointing `--env-file` at
+`infra/docker/.env` (where the file actually lives). Don't use
+`--project-directory .` instead — that also changes how build contexts and
 `env_file:` paths inside the compose files resolve (they're written relative
 to `infra/docker/`, the compose files' own directory) and breaks them.
 
 ```bash
 # Dev
-docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build
+docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build
 
 # Prod
-docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.prod.yml up -d --build
+docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.prod.yml up -d --build
 
 # Validate config without starting anything (catches path/env mistakes early)
-docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml config
+docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml config
 ```
 
 ## Routes (dev)
@@ -77,8 +78,8 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docke
 Dev also publishes host ports for local tooling, in the `9080-9090` range —
 deliberately not the usual `3000`/`5000`/`8080`/`6379`/etc. defaults, because
 this machine runs several other projects' Docker stacks that already claim
-those (checked via `docker ps` when these were picked; override via `.env`
-if a future project collides with one of these instead — see
+those (checked via `docker ps` when these were picked; override via
+`infra/docker/.env` if a future project collides with one of these instead — see
 [`docs/PORTS.md`](../docs/PORTS.md) for the conflict-check method and the
 verification log):
 

@@ -33,7 +33,7 @@ tradeoffs, not a restatement of the diff.
 - Update `docs/TODO.md` when you finish something on it or discover new
   work — it's meant to stay current, not describe a snapshot from whenever
   it was last touched.
-- If you change something documented in `CLAUDE.md`, `infra/README.md`, or
+- If you change something documented in `.claude/CLAUDE.md`, `infra/README.md`, or
   `docs/ARCHITECTURE.md`, update that doc in the same PR. Stale
   architecture docs are worse than none, because they're actively
   misleading.

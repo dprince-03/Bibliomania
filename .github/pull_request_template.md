@@ -6,7 +6,7 @@
 
 <!-- Which app(s)/area does this touch? Server/app, Server/admin, web/app,
      web/main, admin, mobile, desktop, infra, docs — this repo's convention
-     is one concern per branch/PR (see CLAUDE.md), so this should usually be
+     is one concern per branch/PR (see .claude/CLAUDE.md), so this should usually be
      short. -->
 
 - [ ] If this closes a roadmap step, `Server/app/docs/Steps.md` is updated (status marker + notes)

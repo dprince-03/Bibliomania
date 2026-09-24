@@ -67,7 +67,7 @@ Base `docker-compose.yml`: networks, volumes, every service's static shape, imag
 
 `docker-compose.prod.yml`: prod Dockerfiles, no bind mounts, no dev-only services, `restart: always`.
 
-Run from the repo root with `--env-file .env` (not `--project-directory .` — that flag also changes how the compose files' relative paths resolve and breaks them, a real behavior discovered during implementation).
+Run from the repo root with `--env-file infra/docker/.env` (not `--project-directory .` — that flag also changes how the compose files' relative paths resolve and breaks them, a real behavior discovered during implementation).
 
 ### 4. nginx — subdomain routing
 
@@ -75,11 +75,11 @@ Run from the repo root with `--env-file .env` (not `--project-directory .` — t
 
 ### 5. Env files
 
-Root `.env.example` (compose-level: DB creds, Umami Postgres creds, Resend placeholder) + `Server/.env.example` (app-level, unchanged shape, added SMTP/Resend placeholders). The `server` container's DB_* environment is overridden from the root `.env`'s values (not left to `Server/.env`), so `mysql`'s init credentials and the app's connection credentials can never drift out of sync — found during implementation that they otherwise silently could.
+`infra/docker/.env.example` (compose-level: DB creds, Umami Postgres creds, Resend placeholder) + `Server/.env.example` (app-level, unchanged shape, added SMTP/Resend placeholders). The `server` container's DB_* environment is overridden from `infra/docker/.env`'s values (not left to `Server/.env`), so `mysql`'s init credentials and the app's connection credentials can never drift out of sync — found during implementation that they otherwise silently could.
 
 ### 6. Docs updates
 
-Root `README.md`, `CLAUDE.md`, new `infra/README.md` — layout, setup, run commands, routes, known caveats.
+Root `README.md`, `.claude/CLAUDE.md`, new `infra/README.md` — layout, setup, run commands, routes, known caveats.
 
 ### Verification
 

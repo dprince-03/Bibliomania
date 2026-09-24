@@ -43,11 +43,13 @@ Each `Client/` Node app (`web/app`, `web/main`, `admin`) has its own `package.js
 
 ### Docker / Compose (whole stack)
 
-Run from the **repo root**, with `--env-file .env` (not `--project-directory .` — see `infra/README.md` for why that flag breaks path resolution here):
+Run from the **repo root**, with `--env-file infra/docker/.env` (not
+`--project-directory .` — see `infra/README.md` for why that flag breaks
+path resolution here):
 ```bash
-docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build   # dev
-docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.prod.yml up -d --build # prod
-docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml config         # validate only
+docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up --build   # dev
+docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.prod.yml up -d --build # prod
+docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml config         # validate only
 ```
 
 ## Architecture

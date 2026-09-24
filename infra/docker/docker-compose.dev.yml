@@ -4,7 +4,7 @@ services:
       # dockerfile: is resolved relative to build.context (../../Server/app,
       # from the base compose file), NOT to this file's own directory — it
       # needs to walk back out to infra/docker/ where Dockerfiles actually
-      # live (see CLAUDE.md's "Docker images" note).
+      # live (see .claude/CLAUDE.md's "Docker images" note).
       dockerfile: ../../infra/docker/app/Dockerfile.dev
     command: air
     ports:
