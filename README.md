@@ -39,8 +39,8 @@ Server/app/
 ├── internal/
 │   ├── modules/         # feature packages — one dir per business domain
 │   │   ├── auth/        # Register/Login/Logout/Refresh — model, dto, repository, service, handler
-│   │   ├── user/        # Profile, user library (moved from reading — see CLAUDE.md), reading history, admin user management
-│   │   ├── catalog/     # Author + Book merged (real many-to-many via book_authors — see CLAUDE.md)
+│   │   ├── user/        # Profile, user library (moved from reading — see .claude/CLAUDE.md), reading history, admin user management
+│   │   ├── catalog/     # Author + Book merged (real many-to-many via book_authors — see .claude/CLAUDE.md)
 │   │   ├── borrow/      # Borrowing/returns — atomic copy reservation, read-time overdue sweep
 │   │   └── reading/     # Reading sessions, offline sync, bookmarks
 │   ├── cache/          # Cache interface, Redis implementation, key/TTL helpers

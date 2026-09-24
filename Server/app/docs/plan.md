@@ -12,7 +12,7 @@ readers". Read that section first for the *why*; this file is scoped to the
 scope) — that file has the terser step-by-step summary; this one has the
 fuller reasoning behind each. Each section becomes its own
 `feat/step-<N>-<slug>` branch later, one at a time, per the existing
-convention in `CLAUDE.md` / `docs/CONTRIBUTING.md`.
+convention in `.claude/CLAUDE.md` / `docs/CONTRIBUTING.md`.
 
 ## Step 21 — New `library` module
 
@@ -47,7 +47,7 @@ convention in `CLAUDE.md` / `docs/CONTRIBUTING.md`.
   the branch's service radius; readers outside it fall back to `mail`
   fulfillment rather than being blocked.
 - The existing atomic `WHERE available_copies > 0` reservation pattern
-  (`Server/app/internal/modules/borrow`, see `CLAUDE.md`) still applies — just
+  (`Server/app/internal/modules/borrow`, see `.claude/CLAUDE.md`) still applies — just
   scoped to a branch's copy count instead of a global one.
 
 ## Step 24 — Library signup, verification, admin approval

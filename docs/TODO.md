@@ -40,7 +40,7 @@ feature roadmap (Steps 13-20).
 - [x] **Server "Structure by Feature" refactor** — done, on
       `refactor/server-feature-structure`. `Server/app/internal/` now groups by
       domain (`auth/`, `user/`, `catalog/`, `borrow/`, `reading/`) instead of
-      by layer — see `docs/ARCHITECTURE.md` and `CLAUDE.md` for the package
+      by layer — see `docs/ARCHITECTURE.md` and `.claude/CLAUDE.md` for the package
       map, `Server/app/docs/Steps.md` → "Build history" for what got fixed along
       the way. As an inherent side effect (not separate work), this also
       fixed the Go server build break that used to block everything below —

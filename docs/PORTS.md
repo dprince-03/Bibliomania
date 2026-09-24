@@ -2,7 +2,7 @@
 
 Bibliomania's dev host ports are defined in [`infra/README.md`](../infra/README.md)
 (the source of truth for the actual `*_HOST_PORT`/`DB_PORT`/`REDIS_PORT` env
-vars) and root `.env.example`. This file is a periodic audit log — a record
+vars) and `infra/docker/.env.example`. This file is a periodic audit log — a record
 of checking that assignment against every *other* project's
 containers/processes running on this development machine, since this
 machine runs several unrelated Docker stacks at once. Re-run the check
@@ -25,7 +25,7 @@ current range is still safe — don't just trust the last recorded result.
 | Mailpit web UI (dev only) | `MAILPIT_WEB_PORT` | 9089 |
 | Mailpit SMTP (dev only) | `MAILPIT_SMTP_PORT` | 9090 |
 
-If any of these ever need to change, update `.env.example` and
+If any of these ever need to change, update `infra/docker/.env.example` and
 `infra/README.md`'s table together — this file only tracks verification,
 it isn't itself a config source.
 
@@ -38,7 +38,7 @@ it isn't itself a config source.
 ```
 
 Cross-reference the output against the table above. Any overlap means a
-port needs reassigning in both `.env.example` and `infra/README.md`.
+port needs reassigning in both `infra/docker/.env.example` and `infra/README.md`.
 
 ## Verification log
 
