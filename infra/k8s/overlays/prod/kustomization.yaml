@@ -83,14 +83,14 @@ patches:
 # CD (app-cd.yml → promote) pins the Go services' newTag to the commit SHA
 # with a line-level edit — keep each entry on one line in this exact shape.
 images:
-  - { name: bibliomania-gateway, newName: ghcr.io/dprince-03/bibliomania-gateway, newTag: latest }
-  - { name: bibliomania-auth, newName: ghcr.io/dprince-03/bibliomania-auth, newTag: latest }
-  - { name: bibliomania-catalog, newName: ghcr.io/dprince-03/bibliomania-catalog, newTag: latest }
-  - { name: bibliomania-borrow, newName: ghcr.io/dprince-03/bibliomania-borrow, newTag: latest }
-  - { name: bibliomania-reading, newName: ghcr.io/dprince-03/bibliomania-reading, newTag: latest }
-  - { name: bibliomania-user, newName: ghcr.io/dprince-03/bibliomania-user, newTag: latest }
-  - { name: bibliomania-notification, newName: ghcr.io/dprince-03/bibliomania-notification, newTag: latest }
-  - { name: bibliomania-payment, newName: ghcr.io/dprince-03/bibliomania-payment, newTag: latest }
+  - { name: bibliomania-gateway, newName: ghcr.io/dprince-03/bibliomania-gateway, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-auth, newName: ghcr.io/dprince-03/bibliomania-auth, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-catalog, newName: ghcr.io/dprince-03/bibliomania-catalog, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-borrow, newName: ghcr.io/dprince-03/bibliomania-borrow, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-reading, newName: ghcr.io/dprince-03/bibliomania-reading, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-user, newName: ghcr.io/dprince-03/bibliomania-user, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-notification, newName: ghcr.io/dprince-03/bibliomania-notification, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
+  - { name: bibliomania-payment, newName: ghcr.io/dprince-03/bibliomania-payment, newTag: d3adfd51fc3428dcf09941f428e1b041fb970f2a }
   - { name: bibliomania-web-app, newName: ghcr.io/dprince-03/bibliomania-web-app, newTag: latest }
   - { name: bibliomania-web-main, newName: ghcr.io/dprince-03/bibliomania-web-main, newTag: latest }
   - { name: bibliomania-admin-web, newName: ghcr.io/dprince-03/bibliomania-admin-web, newTag: latest }
