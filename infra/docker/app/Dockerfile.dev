@@ -4,7 +4,7 @@
 # command per container. Source is bind-mounted, so this only needs the
 # toolchain + air + a warm module cache.
 # Same patched toolchain as Dockerfile.prod (see the note there).
-FROM --platform=linux/amd64 golang:1.26-alpine
+FROM --platform=linux/amd64 golang:1.27-alpine
 
 RUN apk add --no-cache git curl make gcc musl-dev
 
