@@ -10,7 +10,7 @@
 # minimum language version, not the compiler. The standard library is
 # compiled into the binary, so its security fixes come from this image:
 # Go 1.25 is out of support, and govulncheck flags 1.25.x/1.26.<6 stdlib.
-FROM --platform=linux/amd64 golang:1.26-alpine AS builder
+FROM --platform=linux/amd64 golang:1.27-alpine AS builder
 
 ARG SERVICE
 RUN test -n "$SERVICE" || (echo "SERVICE build arg is required (auth|catalog|borrow|reading|user|notification|payment|gateway)" && false)
