@@ -18,7 +18,7 @@ require (
 	github.com/nats-io/nats.go v1.46.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rabbitmq/amqp091-go v1.13.0
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/redis/go-redis/v9 v9.22.0
 	github.com/sony/gobreaker/v2 v2.4.0
 	github.com/stripe/stripe-go/v82 v82.5.1
 	github.com/swaggo/http-swagger v1.3.4
