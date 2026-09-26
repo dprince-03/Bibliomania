@@ -1,14 +1,99 @@
+# dockerfile: is resolved relative to build.context (declared in the base
+# compose file as each app's own source dir), NOT to this file's own
+# directory — every path below walks back out to infra/docker/ where
+# Dockerfiles actually live (see .claude/CLAUDE.md's "Docker images" note).
+#
+# The eight Go services share one Dockerfile.prod; the base file's
+# build.args.SERVICE picks the binary.
+x-go-prod: &go-prod
+  build:
+    context: ../../Server/app
+    dockerfile: ../../infra/docker/app/Dockerfile.prod
+  restart: always
+
+x-go-prod-env: &go-prod-env
+  APP_ENV: production
+
 services:
-  # dockerfile: is resolved relative to build.context (declared in the base
-  # compose file as each app's own source dir), NOT to this file's own
-  # directory — every path below walks back out to infra/docker/ where
-  # Dockerfiles actually live (see .claude/CLAUDE.md's "Docker images" note).
-  app:
+  gateway:
+    <<: *go-prod
     build:
+      context: ../../Server/app
       dockerfile: ../../infra/docker/app/Dockerfile.prod
-    restart: always
+      args:
+        SERVICE: gateway
     environment:
-      - APP_ENV=production
+      <<: *go-prod-env
+
+  auth:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: auth
+    environment:
+      <<: *go-prod-env
+
+  catalog:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: catalog
+    environment:
+      <<: *go-prod-env
+
+  borrow:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: borrow
+    environment:
+      <<: *go-prod-env
+
+  reading:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: reading
+    environment:
+      <<: *go-prod-env
+
+  user:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: user
+    environment:
+      <<: *go-prod-env
+
+  notification:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: notification
+    environment:
+      <<: *go-prod-env
+
+  payment:
+    <<: *go-prod
+    build:
+      context: ../../Server/app
+      dockerfile: ../../infra/docker/app/Dockerfile.prod
+      args:
+        SERVICE: payment
+    environment:
+      <<: *go-prod-env
 
   web-app:
     build:
@@ -33,13 +118,50 @@ services:
       dockerfile: ../../infra/docker/admin/Dockerfile.prod
     restart: always
 
+  # Data stores, brokers and observability: no host port publishing in
+  # prod — reachable only inside bibliomania_network.
   mysql:
     restart: always
-    # No host port publishing in prod — reachable only inside bibliomania_network.
+
+  postgres:
+    restart: always
+
+  mongo:
+    restart: always
+    # Known gap: MongoDB runs without authentication (a replica set with
+    # auth needs a shared keyfile). Acceptable while it's unreachable from
+    # outside the network; must be closed before a real deployment — see
+    # Server/app/docs/plan.md, "Still open".
 
   redis:
     restart: always
-    # No host port publishing in prod — reachable only inside bibliomania_network.
+
+  seaweedfs:
+    restart: always
+
+  rabbitmq:
+    restart: always
+
+  kafka:
+    restart: always
+
+  nats:
+    restart: always
+
+  prometheus:
+    restart: always
+
+  loki:
+    restart: always
+
+  tempo:
+    restart: always
+
+  alloy:
+    restart: always
+
+  grafana:
+    restart: always
 
   umami:
     restart: always

@@ -1,0 +1,71 @@
+// user-service's internal gRPC contract — called only by the GraphQL
+// gateway. Identity comes from the forwarded JWT (see borrow.proto).
+
+syntax = "proto3";
+
+package bibliomania.user.v1;
+
+option go_package = "github.com/dprince-03/Bibliomania/gen/user/v1;userv1";
+
+import "google/protobuf/timestamp.proto";
+
+service UserService {
+  rpc GetMe(GetMeRequest) returns (UserProfile);
+
+  // Book IDs + statuses only — no titles. The gateway resolves titles live
+  // from catalog-service (a wishlist should show a book's current title).
+  rpc ListLibrary(ListLibraryRequest) returns (ListLibraryResponse);
+
+  // For the gateway's Book.myLibraryStatus. NOT_FOUND when the book isn't
+  // on the caller's shelf.
+  rpc GetLibraryEntry(GetLibraryEntryRequest) returns (LibraryEntry);
+
+  // Validates the book against catalog-service before writing.
+  rpc UpdateLibraryStatus(UpdateLibraryStatusRequest) returns (LibraryEntry);
+}
+
+message GetMeRequest {}
+
+message UserProfile {
+  uint64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string role = 5;
+  bool is_active = 6;
+  optional string phone_number = 7;
+  optional string bio = 8;
+  optional string profile_picture = 9;
+  // Eventually-consistent copies of reading-service's counters.
+  uint32 total_books_read = 10;
+  uint32 total_pages_read = 11;
+}
+
+message ListLibraryRequest {
+  // "" = every status.
+  string status = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message ListLibraryResponse {
+  repeated LibraryEntry entries = 1;
+  int32 total_count = 2;
+}
+
+message GetLibraryEntryRequest {
+  uint64 book_id = 1;
+}
+
+message UpdateLibraryStatusRequest {
+  uint64 book_id = 1;
+  // wishlist | to_read | reading | completed | dropped
+  string status = 2;
+}
+
+message LibraryEntry {
+  uint64 book_id = 1;
+  string status = 2;
+  google.protobuf.Timestamp added_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}

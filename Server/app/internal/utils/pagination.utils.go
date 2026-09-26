@@ -56,3 +56,16 @@ func NewPaginatedResponse(items any, total, page, limit int) PaginatedResponse {
 		HasPreviousPage: page > 1,
 	}
 }
+
+// NewPagination builds a Pagination from explicit page/limit values (gRPC
+// requests, GraphQL arguments), applying the same defaults and bounds as
+// GetPagination does for query strings.
+func NewPagination(page, limit int) Pagination {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+	return Pagination{Page: page, Limit: limit, Offset: (page - 1) * limit}
+}

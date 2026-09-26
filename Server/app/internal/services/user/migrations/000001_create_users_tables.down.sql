@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS user_library;
+DROP TABLE IF EXISTS users_profile;
+DROP TABLE IF EXISTS users;
+DROP FUNCTION IF EXISTS set_updated_at();

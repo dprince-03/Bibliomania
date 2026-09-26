@@ -1,0 +1,42 @@
+# gRPC (port 9090) on every Go service: mTLS-authenticated mesh clients only.
+# A pod outside the mesh — or anything that got into the cluster network —
+# can't call ReserveCopy, GetBook etc. directly.
+apiVersion: policy.linkerd.io/v1beta3
+kind: Server
+metadata:
+  name: grpc
+  namespace: bibliomania
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [auth, catalog, borrow, reading, user, notification, payment]
+  port: grpc
+  proxyProtocol: gRPC
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: MeshTLSAuthentication
+metadata:
+  name: meshed-services
+  namespace: bibliomania
+spec:
+  # Any workload with a mesh identity in this namespace (all eight services
+  # run as the namespace's default ServiceAccount).
+  identities:
+    - "*.bibliomania.serviceaccount.identity.linkerd.cluster.local"
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: grpc-mesh-only
+  namespace: bibliomania
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: grpc
+  requiredAuthenticationRefs:
+    - group: policy.linkerd.io
+      kind: MeshTLSAuthentication
+      name: meshed-services

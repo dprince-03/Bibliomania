@@ -1,0 +1,53 @@
+// Ships stdout of every container in the bibliomania Compose project to
+// Loki. The Go services log JSON (log/slog) with service/trace_id fields,
+// which Grafana's Loki datasource links to Tempo.
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+  filter {
+    name   = "label"
+    values = ["com.docker.compose.project=bibliomania"]
+  }
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    // "app" — the same label the Kubernetes Alloy config sets, so Grafana's
+    // queries work in both environments.
+    target_label  = "app"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.relabel.containers.output
+  forward_to    = [loki.process.json.receiver]
+  relabel_rules = discovery.relabel.containers.rules
+}
+
+// Promote the service name and level from JSON log lines to labels
+// (low-cardinality only — trace_id stays in the line, not a label).
+loki.process "json" {
+  forward_to = [loki.write.default.receiver]
+
+  stage.json {
+    expressions = { service = "service", level = "level" }
+  }
+  stage.labels {
+    values = { service = "", level = "" }
+  }
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

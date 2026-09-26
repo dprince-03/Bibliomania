@@ -1,6 +1,8 @@
 name: app CD
 
-# Builds the prod image and pushes to GHCR — only on push to main, never PRs.
+# Builds each Server/app service's prod image and pushes it to GHCR — only
+# on push to main, never PRs. One Dockerfile.prod for all eight binaries;
+# the SERVICE build arg picks cmd/<service>.
 on:
   push:
     branches: [main]
@@ -15,6 +17,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [gateway, auth, catalog, borrow, reading, user, notification, payment]
     steps:
       - uses: actions/checkout@v4
 
@@ -24,11 +30,65 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Build → scan → push: an image with a fixable HIGH/CRITICAL CVE never
+      # reaches the registry.
       - uses: docker/build-push-action@v6
         with:
           context: Server/app
           file: infra/docker/app/Dockerfile.prod
+          build-args: |
+            SERVICE=${{ matrix.service }}
+          load: true
+          tags: bibliomania-${{ matrix.service }}:scan
+
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: bibliomania-${{ matrix.service }}:scan
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: Server/app
+          file: infra/docker/app/Dockerfile.prod
+          build-args: |
+            SERVICE=${{ matrix.service }}
           push: true
           tags: |
-            ghcr.io/dprince-03/bibliomania-app:latest
-            ghcr.io/dprince-03/bibliomania-app:${{ github.sha }}
+            ghcr.io/dprince-03/bibliomania-${{ matrix.service }}:latest
+            ghcr.io/dprince-03/bibliomania-${{ matrix.service }}:${{ github.sha }}
+
+  # GitOps hand-off: pin the prod overlay to the images just pushed and
+  # commit it. Argo CD (infra/k8s/argocd/application-prod.yaml) sees the
+  # commit and rolls production forward; reverting the commit rolls back.
+  # Commits made with GITHUB_TOKEN don't trigger workflows, so no loop.
+  promote:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: promote-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      # A targeted edit of each one-line image entry, not `kustomize edit set
+      # image`: that rewrites the whole file (reflows it, drops comments).
+      - name: Pin service images to this commit
+        working-directory: infra/k8s/overlays/prod
+        run: |
+          for s in gateway auth catalog borrow reading user notification payment; do
+            grep -qE "^  - \{ name: bibliomania-$s, " kustomization.yaml \
+              || { echo "::error::no one-line images entry for bibliomania-$s"; exit 1; }
+            sed -i -E "s|^(  - \{ name: bibliomania-$s, newName: [^,]+, newTag: )[^ }]+( \})$|\1${GITHUB_SHA}\2|" kustomization.yaml
+          done
+          git diff --stat
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add infra/k8s/overlays/prod/kustomization.yaml
+          git diff --cached --quiet && { echo "nothing to promote"; exit 0; }
+          git commit -m "deploy(prod): app services @ ${GITHUB_SHA::7}"
+          git push

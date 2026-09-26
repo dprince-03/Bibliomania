@@ -1,0 +1,13 @@
+# Argo CD Helm values (`make -C infra/k8s argocd`).
+configs:
+  cm:
+    # Same flag the Makefile/Terraform pass: the overlays load shared files
+    # (init SQL, observability configs) from outside their own directory.
+    kustomize.buildOptions: --load-restrictor LoadRestrictionsNone
+  params:
+    # TLS terminates at the ingress in front of Argo CD's UI.
+    server.insecure: true
+dex:
+  enabled: false # no SSO yet — log in with the generated admin password
+notifications:
+  enabled: false

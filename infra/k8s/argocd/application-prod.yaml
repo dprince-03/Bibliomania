@@ -1,0 +1,37 @@
+# GitOps: Argo CD keeps the production cluster equal to
+# infra/k8s/overlays/prod on main. CD (app-cd.yml → "promote") pins each
+# service image in that overlay to the commit SHA it just pushed, so a merge
+# to main becomes a rollout with no kubectl in anyone's hands — and a
+# `git revert` is the rollback.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bibliomania-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background # deleting the app deletes what it deployed
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dprince-03/Bibliomania.git
+    targetRevision: main
+    path: infra/k8s/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bibliomania
+  syncPolicy:
+    automated:
+      prune: true    # resources removed from git are removed from the cluster
+      selfHeal: true # manual kubectl edits are reverted to what git says
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true # CRDs/large objects exceed client-side apply's annotation limit
+    retry:
+      limit: 5
+      backoff: { duration: 10s, factor: 2, maxDuration: 3m }
+  # HPAs own replica counts (overlays/prod/scaling.yaml); CNPG and the
+  # RabbitMQ operator write status/defaults back — don't fight them.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers: [/spec/replicas]

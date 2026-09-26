@@ -5,7 +5,7 @@
 the step-by-step roadmap for actually consuming what's described below.
 
 The endpoint list, request/response shapes, and auth model live in the
-generated Swagger UI (`http://localhost:8080/swagger/index.html` when the
+generated Swagger UI (`http://localhost:9081/swagger/index.html` — the gateway — when the
 server is running — see `Server/app/docs/API.md`) — don't duplicate them here;
 this file only covers what's specific to consuming that API *from* the
 apps in this `Client/` directory. `web/main` has real API integration
@@ -18,12 +18,18 @@ day one.
 
 | App | Talks to | How |
 |---|---|---|
-| `web/app` | the Go API (`Server/app`) | Directly — the product app is the primary consumer of every endpoint in `Server/app/docs/API.md`. |
-| `web/main` | the Go API (`Server/app`) | Directly, client-side only — a small public-endpoint fetch for live book/author counts on the home page (`GET /api/v1/books`, `GET /api/v1/authors`), nothing else. |
-| `admin` | `Server/admin`, not the Go API directly | The admin dashboard's own backend fronts the Go app's data — see `docs/ARCHITECTURE.md` → "Why a separate admin backend instead of extending the Go app". |
-| `Server/admin` | The Go app's MySQL database directly, and potentially its API for some operations | Not yet decided which — see `docs/ARCHITECTURE.md` for the caveat about two backends sharing one database. |
-| `mobile` | the Go API (`Server/app`) | Directly, same as `web/app`. |
-| `desktop` | the Go API (`Server/app`) | Directly, same as `web/app`. |
+| `web/app` | the gateway (`Server/app`, `cmd/gateway`) | REST `/api/v1` today (server-side, via `API_INTERNAL_URL=http://gateway:8080` in Docker). The gateway also serves `POST /graphql`, built for this app — moving `web/app`'s data layer onto it is open work (`docs/TODO.md`). |
+| `web/main` | the gateway | Directly, client-side only — a small public-endpoint fetch for live book/author counts on the home page (`GET /api/v1/books`, `GET /api/v1/authors`), nothing else. |
+| `admin` | `Server/admin`, not the gateway directly | The admin dashboard's own backend — see `docs/ARCHITECTURE.md` → "Why a separate admin backend". |
+| `Server/admin` | the gateway's REST API (`GATEWAY_URL`) | Since the microservices split there is no shared application database to connect to — each service owns its own. |
+| `mobile` | the gateway | REST, same as `web/app`. |
+| `desktop` | the gateway | REST, same as `web/app`. |
+
+Clients only ever talk to the **gateway**: the seven services behind it
+aren't reachable from outside the Compose network. Every pre-split REST path
+still works unchanged (the gateway proxies each to the service that owns
+it); the handful of deliberate behaviour changes are listed in
+`Server/app/docs/API.md` → "Behaviour changes from the split".
 
 ## Base URLs
 
@@ -32,19 +38,20 @@ Values come from `infra/docker/.env` (see `infra/docker/.env.example` and
 per app's own framework convention (e.g. `NEXT_PUBLIC_API_URL` for the
 Next.js apps).
 
-| Environment | Go API base URL |
+| Environment | Gateway base URL |
 |---|---|
 | Dev (via `infra/docker/docker-compose.dev.yml` + nginx) | `http://api.bibliomania.local` |
-| Dev (Go API run directly, no Docker) | `http://localhost:8080` (or `$SERVER_HOST_PORT` if you changed it — see `infra/README.md`) |
+| Dev (gateway's published port) | `http://localhost:9081` (`$SERVER_HOST_PORT` — see `infra/README.md`) |
+| Dev, inside the Compose network (server-side code) | `http://gateway:8080` |
 | Prod | Not yet deployed anywhere — no real domain assigned yet. |
 
-`admin`'s equivalent (its own backend, `Server/admin`, not the Go app) is
+`admin`'s equivalent (its own backend, `Server/admin`, not the gateway) is
 `http://admin.bibliomania.local/api` in dev — see `ADMIN_WEB_API_URL` in
 `infra/docker/.env.example`.
 
 ## Auth
 
-Every non-public Go API route expects `Authorization: Bearer <access_token>`
-(see `Server/app/docs/API.md` → "Auth"). Access tokens expire in 15 minutes by
+Every non-public API route (REST or GraphQL) expects `Authorization: Bearer <access_token>`
+(see `Server/app/docs/API.md` → "Conventions"). Access tokens expire in 15 minutes by
 default (`JWT_ACCESS_TOKEN_TTL`) — any client integration needs to handle
 refresh via `POST /auth/refresh` before that, not just react to a `401`.

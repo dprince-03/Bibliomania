@@ -1,0 +1,80 @@
+# Postgres HA: a 3-instance CloudNativePG cluster (one primary, two streaming
+# replicas) with automatic failover — the operator promotes a replica if the
+# primary dies. Needs the CNPG operator (`make -C infra/k8s operators`).
+#
+# Replaces base's single-instance StatefulSet. Services keep connecting to
+# "postgres" (base's headless Service, re-pointed at whichever pod is
+# primary); catalog's public reads use "pg-ro" (replicas only).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg
+  namespace: bibliomania
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+  primaryUpdateStrategy: unsupervised
+  # How long a stopping instance waits for clients to disconnect before a
+  # fast shutdown. The default (180s) let our services' pooled connections
+  # hold a deleted primary alive for the full 3 minutes, with no primary
+  # behind the "postgres" Service meanwhile (measured in the failover test,
+  # 2026-09-26). pgx pools reconnect on their own, so 15s is plenty.
+  smartShutdownTimeout: 15
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: pg-superuser # username postgres; used by backups + postgres-exporter
+  postgresql:
+    shared_preload_libraries: [pg_stat_statements]
+    parameters:
+      pg_stat_statements.track: all
+  bootstrap:
+    initdb:
+      database: bibliomania_catalog
+      owner: catalog
+      secret:
+        name: pg-catalog
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_stat_statements
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm
+        - CREATE EXTENSION IF NOT EXISTS pg_stat_statements
+  managed:
+    roles:
+      - { name: borrow, ensure: present, login: true, passwordSecret: { name: pg-borrow } }
+      - { name: users, ensure: present, login: true, passwordSecret: { name: pg-users } }
+      - { name: payment, ensure: present, login: true, passwordSecret: { name: pg-payment } }
+  storage:
+    size: 5Gi
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 1Gi }
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: bibliomania-borrow
+  namespace: bibliomania
+spec:
+  name: bibliomania_borrow
+  owner: borrow
+  cluster: { name: pg }
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: bibliomania-user
+  namespace: bibliomania
+spec:
+  name: bibliomania_user
+  owner: users
+  cluster: { name: pg }
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: bibliomania-payment
+  namespace: bibliomania
+spec:
+  name: bibliomania_payment
+  owner: payment
+  cluster: { name: pg }

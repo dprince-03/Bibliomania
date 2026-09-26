@@ -9,12 +9,23 @@
 > **This isn't the end of Server work** — a platform-vision repositioning
 > (multi-branch libraries, payments/commissions, curation, AI features,
 > security/observability, and reader/community features) was agreed after
-> Step 20 landed. **Steps 21-45 are listed below, ⏳ not started**, in the
+> Step 20 landed. **Steps 21-45 are listed below, ⏳ not started** (🟡 = partly built — Steps 27 and 37, by the microservices split), in the
 > same dependency order as `Server/app/docs/plan.md`'s fuller technical writeup
 > (start with Step 21 — everything from Step 22 onward depends on it; Step
 > 38 is a hard launch-blocker on Step 27, not a strict build-order
 > dependency). Root [`docs/plan.md`](../../../docs/plan.md) has the full
 > business/product context these steps implement.
+>
+> **`Server/app` is now microservices (built 2026-09-25, not a numbered
+> Step):** the five modules became auth/catalog/borrow/reading/user
+> services, each with its own database, plus new notification and payment
+> services and a GraphQL + REST gateway. Steps 1-20 below describe the
+> monolith as it was built; their behaviour carries over (see
+> `Server/app/docs/API.md` → "Behaviour changes from the split"). Steps
+> 21-45 now land in the owning service. Step 27 has a first slice
+> (payment-service) and Step 37 is largely done. See
+> `Server/app/docs/plan.md` → "Microservices split — Server-side
+> implications" → "Implementation".
 
 ```
 ✅ Step 1  — Scaffold: folder structure, go.mod, git init
@@ -453,7 +464,8 @@ Steps 21+ — platform-vision repositioning (not started; see plan.md)
              (industry norm: up to ~3 per book), replacing the bespoke
              genre string.
 
-⏳ Step 27 — Payments/billing module
+🟡 Step 27 — Payments/billing module  (first slice built with the microservices split:
+             payment-service — one-time purchases via Stripe Checkout)
              New internal/modules/billing/ package.
              LibraryLicense   → flat $2,000/yr, platform-to-library
              ReaderSubscription → recurring monthly, tiered, 85/15 split
@@ -523,7 +535,11 @@ Steps 21+ — platform-vision repositioning (not started; see plan.md)
              MFA required on library-admin and author-payout accounts —
              the single most common 2026 compliance-audit failure point.
 
-⏳ Step 37 — Observability: OpenTelemetry + Prometheus + Grafana
+🟡 Step 37 — Observability: OpenTelemetry + Prometheus + Grafana  (largely built with the
+             microservices split — traces/logs/metrics + exporters + dashboard;
+             alerting added 2026-09-26: 15 rules + Alertmanager, verified end to
+             end (a stopped service → ServiceDown email in Mailpit). Left: the
+             exporters' community dashboards)
              Self-hosted for now. Threads trace_id/span_id alongside the
              existing request_id (middleware/requestID.go, Step 8) rather
              than replacing it. Metrics → Prometheus, dashboards → Grafana,
@@ -576,7 +592,12 @@ Steps 21+ — platform-vision repositioning (not started; see plan.md)
              signal (Step 20) — libraries paying the Step 27 annual
              license will want visible uptime, not just an internal check.
 
-⏳ Step 45 — Backup & disaster-recovery policy
+🟡 Step 45 — Backup & disaster-recovery policy  (2026-09-26: backup.sh/restore.sh
+             for Compose — restore verified against the original — and a nightly
+             db-backup CronJob on Kubernetes (rclone → SeaweedFS, verified, keep 7);
+             replication + measured failover in infra/k8s/components/ha; runbook in
+             infra/backup/README.md. Left: off-site copies, a written RPO/RTO
+             policy, scheduled restore drills)
              Documented (and tested) DB backup/restore procedure — an
              operational runbook as much as code, but now load-bearing
              given real institutional and financial data lives in this

@@ -41,7 +41,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.LoginRequest"
+                            "$ref": "#/definitions/auth.LoginRequest"
                         }
                     }
                 ],
@@ -57,7 +57,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -105,7 +105,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.RefreshTokenRequest"
+                            "$ref": "#/definitions/auth.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -151,7 +151,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.RefreshTokenRequest"
+                            "$ref": "#/definitions/auth.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -167,7 +167,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -215,7 +215,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_auth.RegisterRequest"
+                            "$ref": "#/definitions/auth.RegisterRequest"
                         }
                     }
                 ],
@@ -231,7 +231,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_auth.AuthResponse"
+                                            "$ref": "#/definitions/auth.AuthResponse"
                                         }
                                     }
                                 }
@@ -306,7 +306,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                                                "$ref": "#/definitions/catalog.AuthorResponse"
                                                             }
                                                         }
                                                     }
@@ -343,7 +343,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_catalog.CreateAuthorRequest"
+                            "$ref": "#/definitions/catalog.CreateAuthorRequest"
                         }
                     }
                 ],
@@ -359,7 +359,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                            "$ref": "#/definitions/catalog.AuthorResponse"
                                         }
                                     }
                                 }
@@ -423,7 +423,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                            "$ref": "#/definitions/catalog.AuthorResponse"
                                         }
                                     }
                                 }
@@ -474,7 +474,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_catalog.UpdateAuthorRequest"
+                            "$ref": "#/definitions/catalog.UpdateAuthorRequest"
                         }
                     }
                 ],
@@ -490,7 +490,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
+                                            "$ref": "#/definitions/catalog.AuthorResponse"
                                         }
                                     }
                                 }
@@ -639,7 +639,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                                                "$ref": "#/definitions/catalog.BookResponse"
                                                             }
                                                         }
                                                     }
@@ -713,7 +713,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                                                "$ref": "#/definitions/catalog.BookResponse"
                                                             }
                                                         }
                                                     }
@@ -751,7 +751,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_catalog.CreateBookRequest"
+                            "$ref": "#/definitions/catalog.CreateBookRequest"
                         }
                     }
                 ],
@@ -767,7 +767,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                            "$ref": "#/definitions/catalog.BookResponse"
                                         }
                                     }
                                 }
@@ -831,7 +831,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                            "$ref": "#/definitions/catalog.BookResponse"
                                         }
                                     }
                                 }
@@ -883,7 +883,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_catalog.UpdateBookRequest"
+                            "$ref": "#/definitions/catalog.UpdateBookRequest"
                         }
                     }
                 ],
@@ -899,7 +899,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                            "$ref": "#/definitions/catalog.BookResponse"
                                         }
                                     }
                                 }
@@ -1025,7 +1025,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_catalog.AssignAuthorRequest"
+                            "$ref": "#/definitions/catalog.AssignAuthorRequest"
                         }
                     }
                 ],
@@ -1187,7 +1187,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "multipart/form-data with a single field named \"file\". Only .pdf/.epub are accepted, up to MAX_UPLOAD_SIZE_MB. Sets is_digital=true on success; re-uploading replaces the previous file.",
+                "description": "multipart/form-data with a single field named \"file\". Only real PDF/EPUB files are accepted — the content is checked, not just the extension — up to MAX_UPLOAD_SIZE_MB, and virus-scanned when a scanner is configured (422 if rejected, 503 if the scanner is down). Stored under a generated name. Sets is_digital=true on success; re-uploading replaces the previous file.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1226,7 +1226,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                            "$ref": "#/definitions/catalog.BookResponse"
                                         }
                                     }
                                 }
@@ -1313,7 +1313,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_borrow.BorrowResponse"
+                                                                "$ref": "#/definitions/borrow.BorrowResponse"
                                                             }
                                                         }
                                                     }
@@ -1345,7 +1345,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "409 if you already have an active borrow for this book. 400 if no copies are available. due_at is now + BORROW_LOAN_DAYS.",
+                "description": "409 if you already have an active or overdue borrow for this book. 400 if no copies are available. due_at is now + BORROW_LOAN_DAYS.\nSend an Idempotency-Key header to make retries safe: a repeat request with the same key returns the original borrow (200) instead of borrowing again (201).",
                 "consumes": [
                     "application/json"
                 ],
@@ -1363,11 +1363,35 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_borrow.BorrowRequest"
+                            "$ref": "#/definitions/borrow.BorrowRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client-chosen key (e.g. a UUID) that makes retries safe",
+                        "name": "Idempotency-Key",
+                        "in": "header"
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "replayed: this key already borrowed",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/borrow.BorrowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
                     "201": {
                         "description": "Created",
                         "schema": {
@@ -1379,7 +1403,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_borrow.BorrowResponse"
+                                            "$ref": "#/definitions/borrow.BorrowResponse"
                                         }
                                     }
                                 }
@@ -1387,7 +1411,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "invalid body, or no available copies",
+                        "description": "invalid body",
                         "schema": {
                             "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
@@ -1405,7 +1429,7 @@ const docTemplate = `{
                         }
                     },
                     "409": {
-                        "description": "already have an active borrow for this book",
+                        "description": "no available copies, or already have an active borrow for this book",
                         "schema": {
                             "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
@@ -1471,7 +1495,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_borrow.BorrowResponse"
+                                                                "$ref": "#/definitions/borrow.BorrowResponse"
                                                             }
                                                         }
                                                     }
@@ -1509,8 +1533,8 @@ const docTemplate = `{
                 "summary": "Return a borrowed book",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Borrow ID",
+                        "type": "string",
+                        "description": "Borrow id — the numeric id or the public_id UUID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1520,7 +1544,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/borrow.BorrowResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1558,7 +1594,7 @@ const docTemplate = `{
         },
         "/health": {
             "get": {
-                "description": "Pings the database and Redis; returns 200 \"ok\" only if both are reachable, 503 \"degraded\" otherwise",
+                "description": "Pings every dependency of the service answering (database, cache, broker, downstream services); returns 200 \"ok\" only if all are reachable, 503 \"degraded\" otherwise. The gateway's /health also checks every service behind it.",
                 "produces": [
                     "application/json"
                 ],
@@ -1577,6 +1613,214 @@ const docTemplate = `{
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/internal_health.status"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/checkout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts a hosted checkout for a book that has a price set; redirect the reader to checkout_url. The provider follows the book's currency — Paystack for NGN/GHS/ZAR/KES (PAYSTACK_CURRENCIES), Stripe otherwise — unless \"provider\" is given. The purchase becomes \"paid\" when the provider's webhook confirms it. 503 if the needed provider isn't configured on this server.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Buy a book",
+                "parameters": [
+                    {
+                        "description": "Book to buy",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/payment.CheckoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/payment.CheckoutResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "invalid body, book not for sale, or no provider takes its currency",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "book not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    },
+                    "409": {
+                        "description": "already owned",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    },
+                    "503": {
+                        "description": "payments not configured",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "List my purchases",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/payment.PurchaseResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "missing/invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/webhook/{provider}": {
+            "post": {
+                "description": "Called by Stripe or Paystack, not clients — register /api/v1/payments/webhook/stripe and /api/v1/payments/webhook/paystack in each dashboard. Stripe: verified with Stripe-Signature against STRIPE_WEBHOOK_SECRET. Paystack: x-paystack-signature (HMAC-SHA512 with the secret key), then re-checked against Paystack's Verify API. Deduped per provider event; a paid amount/currency that doesn't match the purchase never grants the book.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Payment provider webhook",
+                "parameters": [
+                    {
+                        "enum": [
+                            "stripe",
+                            "paystack"
+                        ],
+                        "type": "string",
+                        "description": "stripe or paystack",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "bad signature or payload",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "unknown provider",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
+                    },
+                    "503": {
+                        "description": "provider not configured",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
                     }
                 }
@@ -1620,7 +1864,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/internal_modules_reading.BookmarkResponse"
+                                                "$ref": "#/definitions/reading.BookmarkResponse"
                                             }
                                         }
                                     }
@@ -1636,12 +1880,6 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "missing/invalid token",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
-                        }
-                    },
-                    "404": {
-                        "description": "book not found",
                         "schema": {
                             "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
@@ -1678,7 +1916,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_reading.BookmarkRequest"
+                            "$ref": "#/definitions/reading.BookmarkRequest"
                         }
                     }
                 ],
@@ -1694,7 +1932,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_reading.BookmarkResponse"
+                                            "$ref": "#/definitions/reading.BookmarkResponse"
                                         }
                                     }
                                 }
@@ -1825,7 +2063,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_reading.ProgressUpdateRequest"
+                            "$ref": "#/definitions/reading.ProgressUpdateRequest"
                         }
                     }
                 ],
@@ -1841,7 +2079,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_reading.ReadingSessionResponse"
+                                            "$ref": "#/definitions/reading.ReadingSessionResponse"
                                         }
                                     }
                                 }
@@ -1910,7 +2148,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_reading.ReadingSessionResponse"
+                                            "$ref": "#/definitions/reading.ReadingSessionResponse"
                                         }
                                     }
                                 }
@@ -1930,7 +2168,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "book not found, or no session started yet",
+                        "description": "no session started yet",
                         "schema": {
                             "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
@@ -1970,7 +2208,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_reading.UpdateProgressRequest"
+                            "$ref": "#/definitions/reading.UpdateProgressRequest"
                         }
                     }
                 ],
@@ -1986,7 +2224,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_reading.ReadingSessionResponse"
+                                            "$ref": "#/definitions/reading.ReadingSessionResponse"
                                         }
                                     }
                                 }
@@ -2022,7 +2260,7 @@ const docTemplate = `{
         },
         "/search": {
             "get": {
-                "description": "q matches book title/description (full-text) OR author name. genre/format/author/year are exact-match filters, independent of q and each other.",
+                "description": "q matches book title/description (Postgres full-text), a partial title, OR author name. genre/format/author/year are exact-match filters, independent of q and each other.",
                 "produces": [
                     "application/json"
                 ],
@@ -2102,7 +2340,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_catalog.BookResponse"
+                                                                "$ref": "#/definitions/catalog.BookResponse"
                                                             }
                                                         }
                                                     }
@@ -2176,7 +2414,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_user.UserResponse"
+                                                                "$ref": "#/definitions/user.UserResponse"
                                                             }
                                                         }
                                                     }
@@ -2229,7 +2467,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.UserProfileResponse"
+                                            "$ref": "#/definitions/user.UserProfileResponse"
                                         }
                                     }
                                 }
@@ -2274,7 +2512,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_user.UpdateProfileRequest"
+                            "$ref": "#/definitions/user.UpdateProfileRequest"
                         }
                     }
                 ],
@@ -2290,7 +2528,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.UserProfileResponse"
+                                            "$ref": "#/definitions/user.UserProfileResponse"
                                         }
                                     }
                                 }
@@ -2325,7 +2563,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Reading activity (from session data) — not the same as GET /borrows/my, which is checkout history.",
+                "description": "Reading activity (from session data) — not the same as GET /borrows/my, which is checkout history. Served by reading-service since the microservices split.",
                 "produces": [
                     "application/json"
                 ],
@@ -2371,7 +2609,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_user.HistoryEntryResponse"
+                                                                "$ref": "#/definitions/reading.HistoryEntryResponse"
                                                             }
                                                         }
                                                     }
@@ -2399,6 +2637,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "Aggregated by the gateway: shelf entries from user-service, titles resolved live (one batch call) from catalog-service. If catalog-service is down the shelf is still returned, with empty titles and an X-Degraded: catalog-service header.",
                 "produces": [
                     "application/json"
                 ],
@@ -2457,7 +2696,7 @@ const docTemplate = `{
                                                         "items": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/internal_modules_user.LibraryEntryResponse"
+                                                                "$ref": "#/definitions/internal_gateway.libraryEntry"
                                                             }
                                                         }
                                                     }
@@ -2510,7 +2749,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_user.UpdateLibraryStatusRequest"
+                            "$ref": "#/definitions/user.UpdateLibraryStatusRequest"
                         }
                     }
                 ],
@@ -2526,7 +2765,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_modules_user.LibraryEntryResponse"
+                                            "$ref": "#/definitions/user.LibraryEntryResponse"
                                         }
                                     }
                                 }
@@ -2567,7 +2806,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Deactivating immediately blocks the user's next login and any endpoint that filters to is_active=TRUE (e.g. their own GET /users/me starts 404ing, even with a still-valid token).",
+                "description": "Deactivating blocks the user's next login and revokes their refresh tokens (propagated to auth-service via the user.status_changed event, normally within a second), and any endpoint that filters to is_active=TRUE (e.g. their own GET /users/me starts 404ing, even with a still-valid access token).",
                 "consumes": [
                     "application/json"
                 ],
@@ -2592,7 +2831,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_user.UpdateUserStatusRequest"
+                            "$ref": "#/definitions/user.UpdateUserStatusRequest"
                         }
                     }
                 ],
@@ -2620,13 +2859,100 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
                         }
+                    },
+                    "404": {
+                        "description": "user not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
-        "github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse": {
+        "auth.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "$ref": "#/definitions/auth.TokenResponse"
+                },
+                "user": {
+                    "$ref": "#/definitions/auth.UserResponse"
+                }
+            }
+        },
+        "auth.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "first_name",
+                "last_name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 8
+                }
+            }
+        },
+        "auth.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "description": "seconds",
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2646,6 +2972,326 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
+                }
+            }
+        },
+        "borrow.BorrowRequest": {
+            "type": "object",
+            "required": [
+                "book_id"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "borrow.BorrowResponse": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "borrowed_at": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "public_id": {
+                    "type": "string"
+                },
+                "returned_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "catalog.AssignAuthorRequest": {
+            "type": "object",
+            "required": [
+                "author_id",
+                "role"
+            ],
+            "properties": {
+                "author_id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "primary",
+                        "co-author",
+                        "editor",
+                        "illustrator"
+                    ]
+                }
+            }
+        },
+        "catalog.AuthorResponse": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "middle_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "catalog.BookResponse": {
+            "type": "object",
+            "properties": {
+                "authors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/catalog.AuthorResponse"
+                    }
+                },
+                "available_copies": {
+                    "type": "integer"
+                },
+                "cover_image": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "file_format": {
+                    "type": "string"
+                },
+                "genre": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_digital": {
+                    "type": "boolean"
+                },
+                "isbn": {
+                    "type": "string"
+                },
+                "price_cents": {
+                    "type": "integer"
+                },
+                "published_year": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_copies": {
+                    "type": "integer"
+                }
+            }
+        },
+        "catalog.CreateAuthorRequest": {
+            "type": "object",
+            "required": [
+                "first_name",
+                "last_name"
+            ],
+            "properties": {
+                "biography": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "middle_name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "catalog.CreateBookRequest": {
+            "type": "object",
+            "required": [
+                "author_ids",
+                "genre",
+                "isbn",
+                "title",
+                "total_copies"
+            ],
+            "properties": {
+                "author_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "author_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cover_image": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "genre": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "is_digital": {
+                    "type": "boolean"
+                },
+                "isbn": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "price_cents": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "published_year": {
+                    "type": "integer",
+                    "maximum": 2100,
+                    "minimum": 1000
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "total_copies": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "catalog.UpdateAuthorRequest": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "image": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "middle_name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "catalog.UpdateBookRequest": {
+            "type": "object",
+            "properties": {
+                "cover_image": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "genre": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "is_digital": {
+                    "type": "boolean"
+                },
+                "price_cents": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "published_year": {
+                    "type": "integer",
+                    "maximum": 2100,
+                    "minimum": 1000
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "total_copies": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -2699,14 +3345,34 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_gateway.libraryEntry": {
+            "type": "object",
+            "properties": {
+                "added_at": {
+                    "type": "string"
+                },
+                "book_id": {
+                    "type": "integer"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_health.status": {
             "type": "object",
             "properties": {
-                "cache": {
-                    "type": "string"
-                },
-                "database": {
-                    "type": "string"
+                "checks": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "service": {
                     "type": "string"
@@ -2716,88 +3382,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_auth.AuthResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "$ref": "#/definitions/internal_modules_auth.TokenResponse"
-                },
-                "user": {
-                    "$ref": "#/definitions/github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse"
-                }
-            }
-        },
-        "internal_modules_auth.LoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_auth.RefreshTokenRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_auth.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "first_name",
-                "last_name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "last_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 72,
-                    "minLength": 8
-                }
-            }
-        },
-        "internal_modules_auth.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "description": "seconds",
-                    "type": "integer"
-                },
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_borrow.BorrowRequest": {
+        "payment.CheckoutRequest": {
             "type": "object",
             "required": [
                 "book_id"
@@ -2805,28 +3390,59 @@ const docTemplate = `{
             "properties": {
                 "book_id": {
                     "type": "integer"
+                },
+                "provider": {
+                    "description": "Optional: force a provider. By default the book's currency decides\n(NGN/GHS/ZAR/KES → Paystack, anything else → Stripe).",
+                    "type": "string",
+                    "enum": [
+                        "stripe",
+                        "paystack"
+                    ]
                 }
             }
         },
-        "internal_modules_borrow.BorrowResponse": {
+        "payment.CheckoutResponse": {
             "type": "object",
             "properties": {
+                "checkout_url": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "public_id": {
+                    "type": "string"
+                },
+                "purchase_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "payment.PurchaseResponse": {
+            "type": "object",
+            "properties": {
+                "amount_cents": {
+                    "type": "integer"
+                },
                 "book_id": {
                     "type": "integer"
                 },
                 "book_title": {
                     "type": "string"
                 },
-                "borrowed_at": {
+                "created_at": {
                     "type": "string"
                 },
-                "due_at": {
+                "currency": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "returned_at": {
+                "provider": {
+                    "type": "string"
+                },
+                "public_id": {
                     "type": "string"
                 },
                 "status": {
@@ -2834,267 +3450,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_catalog.AssignAuthorRequest": {
-            "type": "object",
-            "required": [
-                "author_id",
-                "role"
-            ],
-            "properties": {
-                "author_id": {
-                    "type": "integer"
-                },
-                "role": {
-                    "type": "string",
-                    "enum": [
-                        "primary",
-                        "co-author",
-                        "editor",
-                        "illustrator"
-                    ]
-                }
-            }
-        },
-        "internal_modules_catalog.AuthorResponse": {
-            "type": "object",
-            "properties": {
-                "biography": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "image": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "middle_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_catalog.BookResponse": {
-            "type": "object",
-            "properties": {
-                "authors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_catalog.AuthorResponse"
-                    }
-                },
-                "available_copies": {
-                    "type": "integer"
-                },
-                "cover_image": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "file_format": {
-                    "type": "string"
-                },
-                "genre": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_digital": {
-                    "type": "boolean"
-                },
-                "isbn": {
-                    "type": "string"
-                },
-                "published_year": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "total_copies": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_modules_catalog.CreateAuthorRequest": {
-            "type": "object",
-            "required": [
-                "first_name",
-                "last_name"
-            ],
-            "properties": {
-                "biography": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "image": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "middle_name": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "phone": {
-                    "type": "string",
-                    "maxLength": 20
-                }
-            }
-        },
-        "internal_modules_catalog.CreateBookRequest": {
-            "type": "object",
-            "required": [
-                "author_ids",
-                "genre",
-                "isbn",
-                "title",
-                "total_copies"
-            ],
-            "properties": {
-                "author_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "author_roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "cover_image": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "genre": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "is_digital": {
-                    "type": "boolean"
-                },
-                "isbn": {
-                    "type": "string",
-                    "maxLength": 20
-                },
-                "published_year": {
-                    "type": "integer",
-                    "maximum": 2100,
-                    "minimum": 1000
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                },
-                "total_copies": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
-        "internal_modules_catalog.UpdateAuthorRequest": {
-            "type": "object",
-            "properties": {
-                "biography": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "image": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "middle_name": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "phone": {
-                    "type": "string",
-                    "maxLength": 20
-                }
-            }
-        },
-        "internal_modules_catalog.UpdateBookRequest": {
-            "type": "object",
-            "properties": {
-                "cover_image": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "genre": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "is_digital": {
-                    "type": "boolean"
-                },
-                "published_year": {
-                    "type": "integer",
-                    "maximum": 2100,
-                    "minimum": 1000
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                },
-                "total_copies": {
-                    "type": "integer",
-                    "minimum": 1
-                }
-            }
-        },
-        "internal_modules_reading.BookmarkRequest": {
+        "reading.BookmarkRequest": {
             "type": "object",
             "required": [
                 "page"
@@ -3124,7 +3480,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_reading.BookmarkResponse": {
+        "reading.BookmarkResponse": {
             "type": "object",
             "properties": {
                 "book_id": {
@@ -3147,7 +3503,33 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_reading.ProgressUpdateRequest": {
+        "reading.HistoryEntryResponse": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "integer"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "current_page": {
+                    "type": "integer"
+                },
+                "is_completed": {
+                    "type": "boolean"
+                },
+                "last_read_at": {
+                    "type": "string"
+                },
+                "progress_pct": {
+                    "type": "number"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "reading.ProgressUpdateRequest": {
             "type": "object",
             "required": [
                 "total_pages"
@@ -3167,7 +3549,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_reading.ReadingSessionResponse": {
+        "reading.ReadingSessionResponse": {
             "type": "object",
             "properties": {
                 "book_id": {
@@ -3193,7 +3575,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_reading.UpdateProgressRequest": {
+        "reading.UpdateProgressRequest": {
             "type": "object",
             "required": [
                 "client_updated_at",
@@ -3218,33 +3600,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.HistoryEntryResponse": {
-            "type": "object",
-            "properties": {
-                "book_id": {
-                    "type": "integer"
-                },
-                "book_title": {
-                    "type": "string"
-                },
-                "current_page": {
-                    "type": "integer"
-                },
-                "is_completed": {
-                    "type": "boolean"
-                },
-                "last_read_at": {
-                    "type": "string"
-                },
-                "progress_pct": {
-                    "type": "number"
-                },
-                "total_pages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_modules_user.LibraryEntryResponse": {
+        "user.LibraryEntryResponse": {
             "type": "object",
             "properties": {
                 "added_at": {
@@ -3264,7 +3620,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.UpdateLibraryStatusRequest": {
+        "user.UpdateLibraryStatusRequest": {
             "type": "object",
             "required": [
                 "status"
@@ -3282,7 +3638,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.UpdateProfileRequest": {
+        "user.UpdateProfileRequest": {
             "type": "object",
             "properties": {
                 "bio": {
@@ -3299,7 +3655,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.UpdateUserStatusRequest": {
+        "user.UpdateUserStatusRequest": {
             "type": "object",
             "properties": {
                 "is_active": {
@@ -3307,7 +3663,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.UserProfileResponse": {
+        "user.UserProfileResponse": {
             "type": "object",
             "properties": {
                 "bio": {
@@ -3348,7 +3704,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_user.UserResponse": {
+        "user.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {
@@ -3389,7 +3745,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Bibliomania API",
-	Description:      "Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.\nAll endpoints except /health and /auth/* return the shared JSON envelope: {\"success\", \"message\"|\"error\", \"data\"|\"code\"}.",
+	Description:      "Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, member management and purchases.\nServed by the gateway, which routes each path to the microservice that owns it. All endpoints except /health and /auth/* return the shared JSON envelope: {\"success\", \"message\"|\"error\", \"data\"|\"code\"}.\nVersioned by URL path (/api/v1). GET /api/versions lists served versions; a deprecated version's responses carry Deprecation/Sunset headers. A GraphQL API is also available at POST /graphql.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

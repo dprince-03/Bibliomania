@@ -1,0 +1,31 @@
+# Service mesh (Linkerd): mTLS between the eight Go services, plus
+# latency-aware per-request gRPC balancing with live endpoint updates (the
+# clients' own round-robin over headless DNS only sees new pods when it
+# re-resolves). Needs the Linkerd control plane (`make -C infra/k8s mesh`).
+#
+# Scope, on purpose: only app-to-app traffic. Databases and brokers are
+# skipped (config.linkerd.io/skip-outbound-ports) — they aren't meshed, so
+# there's no mTLS to gain, and server-speaks-first protocols (NATS, MySQL)
+# would stall behind Linkerd's protocol detection.
+#
+# Enforcement: every service's gRPC port only accepts meshed (mTLS) clients
+# (policy.yaml). HTTP ports stay open: Traefik → gateway, Prometheus
+# scrapes and kubelet probes come from outside the mesh.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - policy.yaml
+
+patches:
+  - target: { kind: Deployment, name: "gateway|auth|catalog|borrow|reading|user|notification|payment" }
+    # Per-key adds: the pods already carry prometheus.io/* annotations, and
+    # adding the whole map would replace them.
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/annotations/linkerd.io~1inject
+        value: enabled
+      # mysql, postgres, redis, mongo, rabbitmq, kafka, nats, seaweedfs, clamav, tempo
+      - op: add
+        path: /spec/template/metadata/annotations/config.linkerd.io~1skip-outbound-ports
+        value: "3306,5432,6379,27017,5672,9092,4222,8333,3310,4317"

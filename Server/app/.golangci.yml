@@ -1,0 +1,51 @@
+# golangci-lint v2 — run from Server/app: `golangci-lint run` (CI: app-ci.yml).
+version: "2"
+
+run:
+  timeout: 5m
+  build-tags: [integration] # lint the Testcontainers tests too
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - gosec     # security (also run standalone in CI for SARIF upload)
+    - bodyclose # unclosed HTTP response bodies leak connections
+    - misspell
+  settings:
+    errcheck:
+      exclude-functions:
+        # Deferred rollback after a commit returns sql.ErrTxDone by design.
+        - (*database/sql.Tx).Rollback
+        - (*github.com/jmoiron/sqlx.Tx).Rollback
+        # Only used to write HTTP responses: once the status line is out,
+        # a failed body write (client gone) has no one left to report to.
+        - (*encoding/json.Encoder).Encode
+    gosec:
+      excludes:
+        # Integer-narrowing conversions. Every flagged site converts page /
+        # limit (clamped to 1..100 by utils.GetPagination), a row count, or a
+        # proto int32 field — none take unbounded input. Revisit if a
+        # conversion ever takes a raw client value.
+        - G115
+        # Unhandled errors — errcheck already covers these, with the
+        # std-error-handling exclusions below.
+        - G104
+  exclusions:
+    generated: lax
+    presets:
+      - std-error-handling # unchecked Close/Write/Flush etc. on best-effort paths
+    rules:
+      # Test fakes write to in-memory servers; a failed write fails the test anyway.
+      - path: _test\.go
+        linters: [errcheck, gosec]
+      # Dev CLIs run by a developer against their own files/URLs.
+      - path: cmd/(key|seed)/
+        linters: [gosec]
+        text: "G304|G703|G706"
+    paths:
+      - gen/
+      - internal/gateway/graph/generated.go
+      - internal/swaggerdocs/
+
+formatters:
+  enable: [gofmt]

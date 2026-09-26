@@ -26,10 +26,22 @@ func (r *RedisCache) prefixKey(key string) string {
 	return fmt.Sprintf("%s:%s", r.prefix, key)
 }
 
+// Set stores strings and []byte as-is and JSON-encodes anything else.
+// (It used to JSON-encode everything, so the already-encoded strings every
+// caller passes were stored double-encoded and never decoded back — the
+// catalog cache had never produced a single hit.)
 func (r *RedisCache) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
-	data, err := json.Marshal(value)
-	if err != nil {
-		return fmt.Errorf("cache marshal error: %w", err)
+	var data []byte
+	switch v := value.(type) {
+	case string:
+		data = []byte(v)
+	case []byte:
+		data = v
+	default:
+		var err error
+		if data, err = json.Marshal(value); err != nil {
+			return fmt.Errorf("cache marshal error: %w", err)
+		}
 	}
 
 	if err := r.client.Set(ctx, r.prefixKey(key), data, ttl).Err(); err != nil {
@@ -91,4 +103,33 @@ func (r *RedisCache) Flush(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// DeletePrefix uses SCAN (not KEYS, which blocks Redis) to find and delete
+// every key under prefix.
+func (r *RedisCache) DeletePrefix(ctx context.Context, prefix string) error {
+	iter := r.client.Scan(ctx, 0, r.prefixKey(prefix)+"*", 100).Iterator()
+	var batch []string
+	for iter.Next(ctx) {
+		batch = append(batch, iter.Val())
+		if len(batch) == 100 {
+			if err := r.client.Del(ctx, batch...).Err(); err != nil {
+				return fmt.Errorf("cache delete-prefix error: %w", err)
+			}
+			batch = batch[:0]
+		}
+	}
+	if err := iter.Err(); err != nil {
+		return fmt.Errorf("cache delete-prefix scan error: %w", err)
+	}
+	if len(batch) > 0 {
+		if err := r.client.Del(ctx, batch...).Err(); err != nil {
+			return fmt.Errorf("cache delete-prefix error: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *RedisCache) Ping(ctx context.Context) error {
+	return r.client.Ping(ctx).Err()
 }

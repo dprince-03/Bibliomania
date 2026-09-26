@@ -14,7 +14,7 @@ func Recovery(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				requestID := GetRequestID(r.Context())
 
-				slog.Error(
+				slog.ErrorContext(r.Context(),
 					"panic recovered",
 					"request_id", requestID,
 					"method", r.Method,

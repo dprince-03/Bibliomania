@@ -44,6 +44,10 @@ func AuthGuard(jwtManager *jwt.Manager) func(http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 			ctx = context.WithValue(ctx, UserRoleKey, claims.Role)
 			ctx = context.WithValue(ctx, UserEmailKey, claims.Email)
+			// The raw token rides along so gRPC clients (internal/grpcx) can
+			// forward the caller's identity to the next service, which
+			// verifies it itself instead of trusting a bare user ID.
+			ctx = context.WithValue(ctx, TokenKey, tokenStr)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

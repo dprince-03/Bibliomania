@@ -1,6 +1,62 @@
 basePath: /api/v1
 definitions:
-  github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse:
+  auth.AuthResponse:
+    properties:
+      token:
+        $ref: '#/definitions/auth.TokenResponse'
+      user:
+        $ref: '#/definitions/auth.UserResponse'
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        maxLength: 72
+        minLength: 8
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  auth.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        description: seconds
+        type: integer
+      refresh_token:
+        type: string
+    type: object
+  auth.UserResponse:
     properties:
       email:
         type: string
@@ -14,6 +70,230 @@ definitions:
         type: string
       role:
         type: string
+    type: object
+  borrow.BorrowRequest:
+    properties:
+      book_id:
+        type: integer
+    required:
+    - book_id
+    type: object
+  borrow.BorrowResponse:
+    properties:
+      book_id:
+        type: integer
+      book_title:
+        type: string
+      borrowed_at:
+        type: string
+      due_at:
+        type: string
+      id:
+        type: integer
+      public_id:
+        type: string
+      returned_at:
+        type: string
+      status:
+        type: string
+    type: object
+  catalog.AssignAuthorRequest:
+    properties:
+      author_id:
+        type: integer
+      role:
+        enum:
+        - primary
+        - co-author
+        - editor
+        - illustrator
+        type: string
+    required:
+    - author_id
+    - role
+    type: object
+  catalog.AuthorResponse:
+    properties:
+      biography:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+    type: object
+  catalog.BookResponse:
+    properties:
+      authors:
+        items:
+          $ref: '#/definitions/catalog.AuthorResponse'
+        type: array
+      available_copies:
+        type: integer
+      cover_image:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      file_format:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      is_digital:
+        type: boolean
+      isbn:
+        type: string
+      price_cents:
+        type: integer
+      published_year:
+        type: integer
+      title:
+        type: string
+      total_copies:
+        type: integer
+    type: object
+  catalog.CreateAuthorRequest:
+    properties:
+      biography:
+        maxLength: 2000
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      image:
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      middle_name:
+        maxLength: 100
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    required:
+    - first_name
+    - last_name
+    type: object
+  catalog.CreateBookRequest:
+    properties:
+      author_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      author_roles:
+        items:
+          type: string
+        type: array
+      cover_image:
+        type: string
+      currency:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      genre:
+        maxLength: 100
+        type: string
+      is_digital:
+        type: boolean
+      isbn:
+        maxLength: 20
+        type: string
+      price_cents:
+        minimum: 0
+        type: integer
+      published_year:
+        maximum: 2100
+        minimum: 1000
+        type: integer
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      total_copies:
+        minimum: 1
+        type: integer
+    required:
+    - author_ids
+    - genre
+    - isbn
+    - title
+    - total_copies
+    type: object
+  catalog.UpdateAuthorRequest:
+    properties:
+      biography:
+        maxLength: 2000
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      image:
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      middle_name:
+        maxLength: 100
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    type: object
+  catalog.UpdateBookRequest:
+    properties:
+      cover_image:
+        type: string
+      currency:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      genre:
+        maxLength: 100
+        type: string
+      is_digital:
+        type: boolean
+      price_cents:
+        minimum: 0
+        type: integer
+      published_year:
+        maximum: 2100
+        minimum: 1000
+        type: integer
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      total_copies:
+        minimum: 1
+        type: integer
     type: object
   github_com_dprince-03_Bibliomania_internal_utils.APIError:
     properties:
@@ -48,282 +328,78 @@ definitions:
       total_pages:
         type: integer
     type: object
+  internal_gateway.libraryEntry:
+    properties:
+      added_at:
+        type: string
+      book_id:
+        type: integer
+      book_title:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
   internal_health.status:
     properties:
-      cache:
-        type: string
-      database:
-        type: string
+      checks:
+        additionalProperties:
+          type: string
+        type: object
       service:
         type: string
       status:
         type: string
     type: object
-  internal_modules_auth.AuthResponse:
-    properties:
-      token:
-        $ref: '#/definitions/internal_modules_auth.TokenResponse'
-      user:
-        $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_modules_user.UserResponse'
-    type: object
-  internal_modules_auth.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  internal_modules_auth.RefreshTokenRequest:
-    properties:
-      refresh_token:
-        type: string
-    required:
-    - refresh_token
-    type: object
-  internal_modules_auth.RegisterRequest:
-    properties:
-      email:
-        type: string
-      first_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      last_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      password:
-        maxLength: 72
-        minLength: 8
-        type: string
-    required:
-    - email
-    - first_name
-    - last_name
-    - password
-    type: object
-  internal_modules_auth.TokenResponse:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        description: seconds
-        type: integer
-      refresh_token:
-        type: string
-    type: object
-  internal_modules_borrow.BorrowRequest:
+  payment.CheckoutRequest:
     properties:
       book_id:
         type: integer
+      provider:
+        description: |-
+          Optional: force a provider. By default the book's currency decides
+          (NGN/GHS/ZAR/KES → Paystack, anything else → Stripe).
+        enum:
+        - stripe
+        - paystack
+        type: string
     required:
     - book_id
     type: object
-  internal_modules_borrow.BorrowResponse:
+  payment.CheckoutResponse:
     properties:
+      checkout_url:
+        type: string
+      provider:
+        type: string
+      public_id:
+        type: string
+      purchase_id:
+        type: integer
+    type: object
+  payment.PurchaseResponse:
+    properties:
+      amount_cents:
+        type: integer
       book_id:
         type: integer
       book_title:
         type: string
-      borrowed_at:
+      created_at:
         type: string
-      due_at:
+      currency:
         type: string
       id:
         type: integer
-      returned_at:
+      provider:
+        type: string
+      public_id:
         type: string
       status:
         type: string
     type: object
-  internal_modules_catalog.AssignAuthorRequest:
-    properties:
-      author_id:
-        type: integer
-      role:
-        enum:
-        - primary
-        - co-author
-        - editor
-        - illustrator
-        type: string
-    required:
-    - author_id
-    - role
-    type: object
-  internal_modules_catalog.AuthorResponse:
-    properties:
-      biography:
-        type: string
-      date_of_birth:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      id:
-        type: integer
-      image:
-        type: string
-      last_name:
-        type: string
-      middle_name:
-        type: string
-    type: object
-  internal_modules_catalog.BookResponse:
-    properties:
-      authors:
-        items:
-          $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
-        type: array
-      available_copies:
-        type: integer
-      cover_image:
-        type: string
-      description:
-        type: string
-      file_format:
-        type: string
-      genre:
-        type: string
-      id:
-        type: integer
-      is_digital:
-        type: boolean
-      isbn:
-        type: string
-      published_year:
-        type: integer
-      title:
-        type: string
-      total_copies:
-        type: integer
-    type: object
-  internal_modules_catalog.CreateAuthorRequest:
-    properties:
-      biography:
-        maxLength: 2000
-        type: string
-      date_of_birth:
-        type: string
-      email:
-        type: string
-      first_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      image:
-        type: string
-      last_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      middle_name:
-        maxLength: 100
-        type: string
-      phone:
-        maxLength: 20
-        type: string
-    required:
-    - first_name
-    - last_name
-    type: object
-  internal_modules_catalog.CreateBookRequest:
-    properties:
-      author_ids:
-        items:
-          type: integer
-        minItems: 1
-        type: array
-      author_roles:
-        items:
-          type: string
-        type: array
-      cover_image:
-        type: string
-      description:
-        maxLength: 2000
-        type: string
-      genre:
-        maxLength: 100
-        type: string
-      is_digital:
-        type: boolean
-      isbn:
-        maxLength: 20
-        type: string
-      published_year:
-        maximum: 2100
-        minimum: 1000
-        type: integer
-      title:
-        maxLength: 255
-        minLength: 1
-        type: string
-      total_copies:
-        minimum: 1
-        type: integer
-    required:
-    - author_ids
-    - genre
-    - isbn
-    - title
-    - total_copies
-    type: object
-  internal_modules_catalog.UpdateAuthorRequest:
-    properties:
-      biography:
-        maxLength: 2000
-        type: string
-      date_of_birth:
-        type: string
-      email:
-        type: string
-      first_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      image:
-        type: string
-      last_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      middle_name:
-        maxLength: 100
-        type: string
-      phone:
-        maxLength: 20
-        type: string
-    type: object
-  internal_modules_catalog.UpdateBookRequest:
-    properties:
-      cover_image:
-        type: string
-      description:
-        maxLength: 2000
-        type: string
-      genre:
-        maxLength: 100
-        type: string
-      is_digital:
-        type: boolean
-      published_year:
-        maximum: 2100
-        minimum: 1000
-        type: integer
-      title:
-        maxLength: 255
-        minLength: 1
-        type: string
-      total_copies:
-        minimum: 1
-        type: integer
-    type: object
-  internal_modules_reading.BookmarkRequest:
+  reading.BookmarkRequest:
     properties:
       color:
         enum:
@@ -345,7 +421,7 @@ definitions:
     required:
     - page
     type: object
-  internal_modules_reading.BookmarkResponse:
+  reading.BookmarkResponse:
     properties:
       book_id:
         type: integer
@@ -360,7 +436,24 @@ definitions:
       page:
         type: integer
     type: object
-  internal_modules_reading.ProgressUpdateRequest:
+  reading.HistoryEntryResponse:
+    properties:
+      book_id:
+        type: integer
+      book_title:
+        type: string
+      current_page:
+        type: integer
+      is_completed:
+        type: boolean
+      last_read_at:
+        type: string
+      progress_pct:
+        type: number
+      total_pages:
+        type: integer
+    type: object
+  reading.ProgressUpdateRequest:
     properties:
       current_chapter:
         maxLength: 255
@@ -374,7 +467,7 @@ definitions:
     required:
     - total_pages
     type: object
-  internal_modules_reading.ReadingSessionResponse:
+  reading.ReadingSessionResponse:
     properties:
       book_id:
         type: integer
@@ -391,7 +484,7 @@ definitions:
       total_pages:
         type: integer
     type: object
-  internal_modules_reading.UpdateProgressRequest:
+  reading.UpdateProgressRequest:
     properties:
       client_updated_at:
         type: string
@@ -412,24 +505,7 @@ definitions:
     - client_updated_at
     - total_pages
     type: object
-  internal_modules_user.HistoryEntryResponse:
-    properties:
-      book_id:
-        type: integer
-      book_title:
-        type: string
-      current_page:
-        type: integer
-      is_completed:
-        type: boolean
-      last_read_at:
-        type: string
-      progress_pct:
-        type: number
-      total_pages:
-        type: integer
-    type: object
-  internal_modules_user.LibraryEntryResponse:
+  user.LibraryEntryResponse:
     properties:
       added_at:
         type: string
@@ -442,7 +518,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  internal_modules_user.UpdateLibraryStatusRequest:
+  user.UpdateLibraryStatusRequest:
     properties:
       status:
         enum:
@@ -455,7 +531,7 @@ definitions:
     required:
     - status
     type: object
-  internal_modules_user.UpdateProfileRequest:
+  user.UpdateProfileRequest:
     properties:
       bio:
         maxLength: 500
@@ -467,12 +543,12 @@ definitions:
       profile_picture:
         type: string
     type: object
-  internal_modules_user.UpdateUserStatusRequest:
+  user.UpdateUserStatusRequest:
     properties:
       is_active:
         type: boolean
     type: object
-  internal_modules_user.UserProfileResponse:
+  user.UserProfileResponse:
     properties:
       bio:
         type: string
@@ -499,7 +575,7 @@ definitions:
       total_pages_read:
         type: integer
     type: object
-  internal_modules_user.UserResponse:
+  user.UserResponse:
     properties:
       email:
         type: string
@@ -520,8 +596,9 @@ info:
     name: Bibliomania
     url: https://github.com/dprince-03/Bibliomania
   description: |-
-    Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, and member management.
-    All endpoints except /health and /auth/* return the shared JSON envelope: {"success", "message"|"error", "data"|"code"}.
+    Library Management & E-Library System — REST API for authentication, the book catalog, borrowing, reading progress, member management and purchases.
+    Served by the gateway, which routes each path to the microservice that owns it. All endpoints except /health and /auth/* return the shared JSON envelope: {"success", "message"|"error", "data"|"code"}.
+    Versioned by URL path (/api/v1). GET /api/versions lists served versions; a deprecated version's responses carry Deprecation/Sunset headers. A GraphQL API is also available at POST /graphql.
   license:
     name: MIT
   title: Bibliomania API
@@ -538,7 +615,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_auth.LoginRequest'
+          $ref: '#/definitions/auth.LoginRequest'
       produces:
       - application/json
       responses:
@@ -549,7 +626,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_auth.AuthResponse'
+                  $ref: '#/definitions/auth.AuthResponse'
               type: object
         "400":
           description: invalid body
@@ -578,7 +655,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_auth.RefreshTokenRequest'
+          $ref: '#/definitions/auth.RefreshTokenRequest'
       produces:
       - application/json
       responses:
@@ -609,7 +686,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_auth.RefreshTokenRequest'
+          $ref: '#/definitions/auth.RefreshTokenRequest'
       produces:
       - application/json
       responses:
@@ -620,7 +697,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_auth.AuthResponse'
+                  $ref: '#/definitions/auth.AuthResponse'
               type: object
         "400":
           description: invalid body
@@ -649,7 +726,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_auth.RegisterRequest'
+          $ref: '#/definitions/auth.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -660,7 +737,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_auth.AuthResponse'
+                  $ref: '#/definitions/auth.AuthResponse'
               type: object
         "400":
           description: invalid body
@@ -705,7 +782,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+                          $ref: '#/definitions/catalog.AuthorResponse'
                         type: array
                     type: object
               type: object
@@ -721,7 +798,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_catalog.CreateAuthorRequest'
+          $ref: '#/definitions/catalog.CreateAuthorRequest'
       produces:
       - application/json
       responses:
@@ -732,7 +809,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+                  $ref: '#/definitions/catalog.AuthorResponse'
               type: object
         "400":
           description: invalid body
@@ -808,7 +885,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+                  $ref: '#/definitions/catalog.AuthorResponse'
               type: object
         "400":
           description: invalid id
@@ -835,7 +912,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_catalog.UpdateAuthorRequest'
+          $ref: '#/definitions/catalog.UpdateAuthorRequest'
       produces:
       - application/json
       responses:
@@ -846,7 +923,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.AuthorResponse'
+                  $ref: '#/definitions/catalog.AuthorResponse'
               type: object
         "400":
           description: invalid id/body
@@ -906,7 +983,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                          $ref: '#/definitions/catalog.BookResponse'
                         type: array
                     type: object
               type: object
@@ -949,7 +1026,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                          $ref: '#/definitions/catalog.BookResponse'
                         type: array
                     type: object
               type: object
@@ -968,7 +1045,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_catalog.CreateBookRequest'
+          $ref: '#/definitions/catalog.CreateBookRequest'
       produces:
       - application/json
       responses:
@@ -979,7 +1056,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                  $ref: '#/definitions/catalog.BookResponse'
               type: object
         "400":
           description: invalid body, or an author_id doesn't exist
@@ -1055,7 +1132,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                  $ref: '#/definitions/catalog.BookResponse'
               type: object
         "400":
           description: invalid id
@@ -1084,7 +1161,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_catalog.UpdateBookRequest'
+          $ref: '#/definitions/catalog.UpdateBookRequest'
       produces:
       - application/json
       responses:
@@ -1095,7 +1172,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                  $ref: '#/definitions/catalog.BookResponse'
               type: object
         "400":
           description: invalid id/body
@@ -1137,7 +1214,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_catalog.AssignAuthorRequest'
+          $ref: '#/definitions/catalog.AssignAuthorRequest'
       produces:
       - application/json
       responses:
@@ -1246,9 +1323,11 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: multipart/form-data with a single field named "file". Only .pdf/.epub
-        are accepted, up to MAX_UPLOAD_SIZE_MB. Sets is_digital=true on success; re-uploading
-        replaces the previous file.
+      description: multipart/form-data with a single field named "file". Only real
+        PDF/EPUB files are accepted — the content is checked, not just the extension
+        — up to MAX_UPLOAD_SIZE_MB, and virus-scanned when a scanner is configured
+        (422 if rejected, 503 if the scanner is down). Stored under a generated name.
+        Sets is_digital=true on success; re-uploading replaces the previous file.
       parameters:
       - description: Book ID
         in: path
@@ -1270,7 +1349,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                  $ref: '#/definitions/catalog.BookResponse'
               type: object
         "400":
           description: invalid id, unsupported format, too large, or missing file
@@ -1323,7 +1402,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
+                          $ref: '#/definitions/borrow.BorrowResponse'
                         type: array
                     type: object
               type: object
@@ -1343,18 +1422,32 @@ paths:
     post:
       consumes:
       - application/json
-      description: 409 if you already have an active borrow for this book. 400 if
-        no copies are available. due_at is now + BORROW_LOAN_DAYS.
+      description: |-
+        409 if you already have an active or overdue borrow for this book. 400 if no copies are available. due_at is now + BORROW_LOAN_DAYS.
+        Send an Idempotency-Key header to make retries safe: a repeat request with the same key returns the original borrow (200) instead of borrowing again (201).
       parameters:
       - description: Book to borrow
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_borrow.BorrowRequest'
+          $ref: '#/definitions/borrow.BorrowRequest'
+      - description: Client-chosen key (e.g. a UUID) that makes retries safe
+        in: header
+        name: Idempotency-Key
+        type: string
       produces:
       - application/json
       responses:
+        "200":
+          description: 'replayed: this key already borrowed'
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/borrow.BorrowResponse'
+              type: object
         "201":
           description: Created
           schema:
@@ -1362,10 +1455,10 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
+                  $ref: '#/definitions/borrow.BorrowResponse'
               type: object
         "400":
-          description: invalid body, or no available copies
+          description: invalid body
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
@@ -1377,7 +1470,8 @@ paths:
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "409":
-          description: already have an active borrow for this book
+          description: no available copies, or already have an active borrow for this
+            book
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "422":
@@ -1394,18 +1488,23 @@ paths:
       description: A member may only return their own borrow; librarian/admin may
         return anyone's (e.g. processing a physical return at a desk).
       parameters:
-      - description: Borrow ID
+      - description: Borrow id — the numeric id or the public_id UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/borrow.BorrowResponse'
+              type: object
         "400":
           description: invalid id
           schema:
@@ -1459,7 +1558,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_borrow.BorrowResponse'
+                          $ref: '#/definitions/borrow.BorrowResponse'
                         type: array
                     type: object
               type: object
@@ -1474,8 +1573,10 @@ paths:
       - borrows
   /health:
     get:
-      description: Pings the database and Redis; returns 200 "ok" only if both are
-        reachable, 503 "degraded" otherwise
+      description: Pings every dependency of the service answering (database, cache,
+        broker, downstream services); returns 200 "ok" only if all are reachable,
+        503 "degraded" otherwise. The gateway's /health also checks every service
+        behind it.
       produces:
       - application/json
       responses:
@@ -1490,6 +1591,141 @@ paths:
       summary: Liveness check
       tags:
       - health
+  /payments/checkout:
+    post:
+      consumes:
+      - application/json
+      description: Starts a hosted checkout for a book that has a price set; redirect
+        the reader to checkout_url. The provider follows the book's currency — Paystack
+        for NGN/GHS/ZAR/KES (PAYSTACK_CURRENCIES), Stripe otherwise — unless "provider"
+        is given. The purchase becomes "paid" when the provider's webhook confirms
+        it. 503 if the needed provider isn't configured on this server.
+      parameters:
+      - description: Book to buy
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/payment.CheckoutRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/payment.CheckoutResponse'
+              type: object
+        "400":
+          description: invalid body, book not for sale, or no provider takes its currency
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "404":
+          description: book not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "409":
+          description: already owned
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "503":
+          description: payments not configured
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Buy a book
+      tags:
+      - payments
+  /payments/my:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/payment.PurchaseResponse'
+                        type: array
+                    type: object
+              type: object
+        "401":
+          description: missing/invalid token
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: List my purchases
+      tags:
+      - payments
+  /payments/webhook/{provider}:
+    post:
+      consumes:
+      - application/json
+      description: 'Called by Stripe or Paystack, not clients — register /api/v1/payments/webhook/stripe
+        and /api/v1/payments/webhook/paystack in each dashboard. Stripe: verified
+        with Stripe-Signature against STRIPE_WEBHOOK_SECRET. Paystack: x-paystack-signature
+        (HMAC-SHA512 with the secret key), then re-checked against Paystack''s Verify
+        API. Deduped per provider event; a paid amount/currency that doesn''t match
+        the purchase never grants the book.'
+      parameters:
+      - description: stripe or paystack
+        enum:
+        - stripe
+        - paystack
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
+        "400":
+          description: bad signature or payload
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "404":
+          description: unknown provider
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "503":
+          description: provider not configured
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+      summary: Payment provider webhook
+      tags:
+      - payments
   /reading/{bookId}/bookmarks:
     get:
       description: Bookmarks are private per user — this never returns another user's
@@ -1511,7 +1747,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/internal_modules_reading.BookmarkResponse'
+                    $ref: '#/definitions/reading.BookmarkResponse'
                   type: array
               type: object
         "400":
@@ -1520,10 +1756,6 @@ paths:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "401":
           description: missing/invalid token
-          schema:
-            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
-        "404":
-          description: book not found
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
@@ -1545,7 +1777,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_reading.BookmarkRequest'
+          $ref: '#/definitions/reading.BookmarkRequest'
       produces:
       - application/json
       responses:
@@ -1556,7 +1788,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_reading.BookmarkResponse'
+                  $ref: '#/definitions/reading.BookmarkResponse'
               type: object
         "400":
           description: invalid book id/body
@@ -1640,7 +1872,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_reading.ProgressUpdateRequest'
+          $ref: '#/definitions/reading.ProgressUpdateRequest'
       produces:
       - application/json
       responses:
@@ -1651,7 +1883,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
+                  $ref: '#/definitions/reading.ReadingSessionResponse'
               type: object
         "400":
           description: invalid book id/body
@@ -1692,7 +1924,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
+                  $ref: '#/definitions/reading.ReadingSessionResponse'
               type: object
         "400":
           description: invalid book id
@@ -1703,7 +1935,7 @@ paths:
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
         "404":
-          description: book not found, or no session started yet
+          description: no session started yet
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
@@ -1730,7 +1962,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_reading.UpdateProgressRequest'
+          $ref: '#/definitions/reading.UpdateProgressRequest'
       produces:
       - application/json
       responses:
@@ -1741,7 +1973,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_reading.ReadingSessionResponse'
+                  $ref: '#/definitions/reading.ReadingSessionResponse'
               type: object
         "400":
           description: invalid book id/body
@@ -1766,8 +1998,9 @@ paths:
       - reading
   /search:
     get:
-      description: q matches book title/description (full-text) OR author name. genre/format/author/year
-        are exact-match filters, independent of q and each other.
+      description: q matches book title/description (Postgres full-text), a partial
+        title, OR author name. genre/format/author/year are exact-match filters, independent
+        of q and each other.
       parameters:
       - description: Free text — matches title/description or author name
         in: query
@@ -1817,7 +2050,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_catalog.BookResponse'
+                          $ref: '#/definitions/catalog.BookResponse'
                         type: array
                     type: object
               type: object
@@ -1858,7 +2091,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_user.UserResponse'
+                          $ref: '#/definitions/user.UserResponse'
                         type: array
                     type: object
               type: object
@@ -1879,9 +2112,10 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Deactivating immediately blocks the user's next login and any endpoint
-        that filters to is_active=TRUE (e.g. their own GET /users/me starts 404ing,
-        even with a still-valid token).
+      description: Deactivating blocks the user's next login and revokes their refresh
+        tokens (propagated to auth-service via the user.status_changed event, normally
+        within a second), and any endpoint that filters to is_active=TRUE (e.g. their
+        own GET /users/me starts 404ing, even with a still-valid access token).
       parameters:
       - description: User ID
         in: path
@@ -1893,7 +2127,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_user.UpdateUserStatusRequest'
+          $ref: '#/definitions/user.UpdateUserStatusRequest'
       produces:
       - application/json
       responses:
@@ -1913,6 +2147,10 @@ paths:
           description: admin only
           schema:
             $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIError'
       security:
       - BearerAuth: []
       summary: Activate or deactivate a user
@@ -1930,7 +2168,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_user.UserProfileResponse'
+                  $ref: '#/definitions/user.UserProfileResponse'
               type: object
         "401":
           description: missing/invalid token
@@ -1956,7 +2194,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_user.UpdateProfileRequest'
+          $ref: '#/definitions/user.UpdateProfileRequest'
       produces:
       - application/json
       responses:
@@ -1967,7 +2205,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_user.UserProfileResponse'
+                  $ref: '#/definitions/user.UserProfileResponse'
               type: object
         "400":
           description: invalid body
@@ -1989,7 +2227,8 @@ paths:
   /users/me/history:
     get:
       description: Reading activity (from session data) — not the same as GET /borrows/my,
-        which is checkout history.
+        which is checkout history. Served by reading-service since the microservices
+        split.
       parameters:
       - default: 1
         description: Page number
@@ -2016,7 +2255,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_user.HistoryEntryResponse'
+                          $ref: '#/definitions/reading.HistoryEntryResponse'
                         type: array
                     type: object
               type: object
@@ -2031,6 +2270,10 @@ paths:
       - users
   /users/me/library:
     get:
+      description: 'Aggregated by the gateway: shelf entries from user-service, titles
+        resolved live (one batch call) from catalog-service. If catalog-service is
+        down the shelf is still returned, with empty titles and an X-Degraded: catalog-service
+        header.'
       parameters:
       - description: Filter to one status
         enum:
@@ -2067,7 +2310,7 @@ paths:
                   - properties:
                       items:
                         items:
-                          $ref: '#/definitions/internal_modules_user.LibraryEntryResponse'
+                          $ref: '#/definitions/internal_gateway.libraryEntry'
                         type: array
                     type: object
               type: object
@@ -2097,7 +2340,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_user.UpdateLibraryStatusRequest'
+          $ref: '#/definitions/user.UpdateLibraryStatusRequest'
       produces:
       - application/json
       responses:
@@ -2108,7 +2351,7 @@ paths:
             - $ref: '#/definitions/github_com_dprince-03_Bibliomania_internal_utils.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_modules_user.LibraryEntryResponse'
+                  $ref: '#/definitions/user.LibraryEntryResponse'
               type: object
         "400":
           description: invalid book id/body

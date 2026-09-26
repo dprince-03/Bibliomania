@@ -1,0 +1,32 @@
+# Traefik (chart traefik/traefik 41.6.0) as the ingress controller on kind.
+# Chosen over ingress-nginx, which the Kubernetes project retired in March
+# 2026. Used by both `make -C infra/k8s ingress` and Terraform.
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+providers:
+  kubernetesIngress:
+    enabled: true
+  kubernetesCRD:
+    enabled: true # the strip-api-prefix Middleware
+ports:
+  web:
+    hostPort: 80
+  websecure:
+    hostPort: 443
+# Reached through the node's host ports, not a cloud LoadBalancer — a
+# LoadBalancer Service never gets an address on kind, and Helm's --wait
+# would hang on it. (This chart takes the type under service.spec.)
+service:
+  spec:
+    type: ClusterIP
+nodeSelector:
+  ingress-ready: "true"
+tolerations:
+  - { key: node-role.kubernetes.io/control-plane, operator: Equal, effect: NoSchedule }
+# hostPorts can't be shared by two pods on one node: replace, don't surge.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 0

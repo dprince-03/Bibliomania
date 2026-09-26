@@ -1,0 +1,161 @@
+# catalog-service — generated alongside the other Go services; each is the
+# same shape: one Deployment running the bibliomania-catalog image
+# (infra/docker/app/Dockerfile.prod, SERVICE=catalog), config from the
+# bibliomania-common ConfigMap, secrets from bibliomania-secrets.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog
+  labels:
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/part-of: bibliomania
+    app.kubernetes.io/component: service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: catalog
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: catalog
+        app.kubernetes.io/part-of: bibliomania
+        app.kubernetes.io/component: service
+        bibliomania.dev/service: catalog-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: catalog
+          image: bibliomania-catalog
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: grpc
+              containerPort: 9090
+          envFrom:
+            - configMapRef:
+                name: bibliomania-common
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: JWT_SECRET
+            - name: CATALOG_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: CATALOG_DB_PASSWORD
+            - name: DATABASE_URL
+              value: "postgres://catalog:$(CATALOG_DB_PASSWORD)@postgres:5432/bibliomania_catalog?sslmode=disable"
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: RABBITMQ_URL
+              value: "amqp://bibliomania:$(RABBITMQ_PASSWORD)@rabbitmq:5672/"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: REDIS_PASSWORD
+            # E-library files in object storage (SeaweedFS S3 API), shared by
+            # every replica — catalog scales like any stateless service.
+            - name: STORAGE_BACKEND
+              value: "s3"
+            - name: S3_ENDPOINT
+              value: "seaweedfs:8333"
+            - name: S3_BUCKET
+              value: "bibliomania-books"
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: S3_SECRET_KEY
+            # Optional virus scanning — set to a clamd address (see
+            # infra/k8s/README.md) to enable; empty = off.
+            - name: CLAMAV_ADDR
+              value: ""
+          # Readiness = /health (checks this service's database/brokers):
+          # traffic stops while a dependency is down. Liveness = /livez (the
+          # process answers) — a database blip must not restart pods.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # Writable /tmp on a read-only root: multipart uploads over
+            # 10MB spool to os.TempDir.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog
+  labels:
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/part-of: bibliomania
+spec:
+  selector:
+    app.kubernetes.io/name: catalog
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: grpc
+      port: 9090
+      targetPort: grpc
+---
+# Headless: resolves to every pod's IP, so gRPC clients (round_robin, see
+# Server/app/internal/grpcx) spread calls across replicas instead of pinning
+# one long-lived HTTP/2 connection to a single pod behind a ClusterIP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-grpc
+  labels:
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/part-of: bibliomania
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: catalog
+  ports:
+    - name: grpc
+      port: 9090
+      targetPort: grpc

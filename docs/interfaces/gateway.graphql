@@ -1,0 +1,158 @@
+# GraphQL gateway schema — the one thing `web/app` talks to once the
+# split lands, replacing direct REST calls to five separate services.
+# This is where display-aggregation cross-service reads live (per
+# docs/plan.md's "exact data ownership per service" resolution) — no
+# individual service other than the gateway itself is allowed to fan out
+# to others purely to enrich a response.
+#
+# Mutations are included, not just queries: the point is `web/app` talks
+# to exactly one endpoint for everything, not "reads via GraphQL, writes
+# via REST" — the gateway resolves a mutation by calling the one service
+# that actually owns the write (gRPC internally), same as it fans out
+# reads.
+
+type Book {
+  id: ID!
+  title: String!
+  genre: String!
+  description: String
+  coverImage: String
+  publishedYear: Int
+  isDigital: Boolean!
+  fileFormat: String
+  authors: [Author!]!
+
+  # Fanned out to catalog-service directly — no other service owns this.
+  totalCopies: Int!
+  availableCopies: Int!
+
+  # Fanned out to borrow-service — null if the caller has no active
+  # borrow for this book. This is the concrete case that motivated the
+  # gateway in the first place: a book detail page needs catalog + borrow
+  # + user data in one response, which used to be one in-process call and
+  # would otherwise become three separate frontend requests.
+  myBorrowStatus: BorrowRecord
+
+  # Fanned out to user-service's library-shelf data, then the *title* is
+  # already on this Book object for free (same request) — this is the
+  # "resolve live, not a snapshot" case from the data-ownership decision.
+  myLibraryStatus: LibraryStatus
+}
+
+type Author {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  biography: String
+}
+
+type BorrowRecord {
+  id: ID!
+  book: Book!
+  borrowedAt: String!
+  dueAt: String!
+  returnedAt: String
+  status: BorrowStatus!
+}
+
+enum BorrowStatus {
+  ACTIVE
+  OVERDUE
+  RETURNED
+}
+
+type LibraryEntry {
+  book: Book!
+  status: LibraryStatus!
+  addedAt: String!
+  updatedAt: String!
+}
+
+enum LibraryStatus {
+  WISHLIST
+  TO_READ
+  READING
+  COMPLETED
+  DROPPED
+}
+
+# reading-service's data, fanned out to directly by the gateway for
+# `GET /users/me/history`'s replacement — user-service itself has no
+# dependency on reading-service per the resolved data-ownership decision.
+type ReadingHistoryEntry {
+  book: Book!
+  currentPage: Int!
+  totalPages: Int!
+  progressPct: Float!
+  isCompleted: Boolean!
+  lastReadAt: String!
+}
+
+type Bookmark {
+  id: ID!
+  page: Int!
+  note: String
+  color: String!
+}
+
+type UserProfile {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phoneNumber: String
+  bio: String
+  # Owned by reading-service, cached on user-service's profile row per the
+  # eventually-consistent-counter decision — the gateway just passes
+  # through whatever user-service already has, no extra fan-out needed
+  # here specifically (unlike myBorrowStatus/myLibraryStatus above).
+  totalBooksRead: Int!
+  totalPagesRead: Int!
+}
+
+type PageInfo {
+  page: Int!
+  totalPages: Int!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+type BookConnection {
+  items: [Book!]!
+  pageInfo: PageInfo!
+}
+
+type LibraryConnection {
+  items: [LibraryEntry!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  # Straight passthrough to catalog-service — no aggregation needed, but
+  # routed through the gateway anyway so web/app has exactly one endpoint.
+  books(q: String, genre: String, format: String, page: Int): BookConnection!
+  book(id: ID!): Book
+
+  # The two queries display-aggregation was actually built for.
+  myLibrary(status: LibraryStatus, page: Int): LibraryConnection!
+  myHistory(page: Int): [ReadingHistoryEntry!]!
+
+  myBorrows(page: Int): [BorrowRecord!]!
+  me: UserProfile
+}
+
+type Mutation {
+  # Resolves to borrow-service's orchestrated Saga (ReserveCopy on
+  # catalog-service, then create the record, with compensating
+  # ReleaseCopy on failure) — the gateway calls one service, that
+  # service owns the cross-service coordination, not the gateway itself.
+  borrowBook(bookId: ID!): BorrowRecord!
+  returnBook(borrowId: ID!): BorrowRecord!
+
+  updateLibraryStatus(bookId: ID!, status: LibraryStatus!): LibraryEntry!
+
+  updateReadingProgress(bookId: ID!, currentPage: Int!, totalPages: Int!): ReadingHistoryEntry!
+  createBookmark(bookId: ID!, page: Int!, note: String, color: String): Bookmark!
+  deleteBookmark(bookId: ID!, bookmarkId: ID!): Boolean!
+}

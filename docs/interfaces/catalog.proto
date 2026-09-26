@@ -1,0 +1,98 @@
+// catalog-service's internal gRPC contract — the only interface other
+// services are allowed to depend on directly (per the resolved dependency
+// graph in docs/plan.md's "exact data ownership per service" section).
+// `borrow-service` and `reading-service` each use exactly one RPC from
+// here at write time; the GraphQL gateway uses the read RPCs for display
+// aggregation. Nothing here is client-facing — browsers never see this.
+//
+// Field names/types mirror the existing BookResponse in
+// Server/app/internal/modules/catalog/book_dto.go, since this contract
+// describes the same data, just over gRPC instead of an in-process call.
+
+syntax = "proto3";
+
+package bibliomania.catalog.v1;
+
+option go_package = "github.com/dprince-03/Bibliomania/services/catalog/proto;catalogpb";
+
+import "google/protobuf/timestamp.proto";
+
+service CatalogService {
+  // Used by: borrow-service (validate before reserving), reading-service
+  // (validate once at session/bookmark creation), the GraphQL gateway
+  // (book detail page, "my library" title resolution).
+  rpc GetBook(GetBookRequest) returns (Book);
+
+  // Batch form of GetBook — used by the gateway when resolving titles for
+  // a list (e.g. "My Library", which needs N books in one round trip
+  // rather than N separate calls).
+  rpc GetBooksByIds(GetBooksByIdsRequest) returns (GetBooksByIdsResponse);
+
+  // The write-time half of the borrow Saga (docs/plan.md,
+  // "POST /borrow's actual reservation"). Atomic on catalog-service's own
+  // side — equivalent to today's `WHERE available_copies > 0` guard, just
+  // reached over the network instead of in-process.
+  //
+  // Returns FAILED_PRECONDITION (not a generic error) when no copies are
+  // available, so borrow-service can distinguish "book doesn't exist"
+  // from "book exists but nothing to reserve" without string-matching an
+  // error message.
+  rpc ReserveCopy(ReserveCopyRequest) returns (ReserveCopyResponse);
+
+  // The compensating half of the same Saga — called by borrow-service if
+  // creating the borrow record fails *after* a successful ReserveCopy, so
+  // a failed borrow never leaks a reserved copy. Idempotent: releasing an
+  // already-released copy is a no-op success, not an error, since a retry
+  // of the compensating call itself must be safe.
+  rpc ReleaseCopy(ReleaseCopyRequest) returns (ReleaseCopyResponse);
+}
+
+message GetBookRequest {
+  uint64 book_id = 1;
+}
+
+message GetBooksByIdsRequest {
+  repeated uint64 book_ids = 1;
+}
+
+message GetBooksByIdsResponse {
+  repeated Book books = 1;
+}
+
+message ReserveCopyRequest {
+  uint64 book_id = 1;
+  // Threaded through from the originating HTTP request so a retried
+  // ReserveCopy call (e.g. after a client timeout) doesn't reserve two
+  // copies for what the caller believes is one borrow attempt — see
+  // docs/plan.md's still-open "idempotency and tracing approach"
+  // question, which this field is the concrete hook for once resolved.
+  string idempotency_key = 2;
+}
+
+message ReserveCopyResponse {
+  bool reserved = 1;
+}
+
+message ReleaseCopyRequest {
+  uint64 book_id = 1;
+  string idempotency_key = 2;
+}
+
+message ReleaseCopyResponse {
+  bool released = 1;
+}
+
+message Book {
+  uint64 id = 1;
+  string title = 2;
+  string isbn = 3;
+  string genre = 4;
+  optional string description = 5;
+  optional string cover_image = 6;
+  optional int32 published_year = 7;
+  int32 total_copies = 8;
+  int32 available_copies = 9;
+  bool is_digital = 10;
+  optional string file_format = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}

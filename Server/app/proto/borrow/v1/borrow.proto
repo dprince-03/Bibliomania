@@ -1,0 +1,62 @@
+// borrow-service's internal gRPC contract — called only by the GraphQL
+// gateway. The caller's identity comes from the JWT forwarded in the
+// "authorization" metadata, never from a request field, so one user can't
+// act as another by changing a message.
+
+syntax = "proto3";
+
+package bibliomania.borrow.v1;
+
+option go_package = "github.com/dprince-03/Bibliomania/gen/borrow/v1;borrowv1";
+
+import "google/protobuf/timestamp.proto";
+
+service BorrowService {
+  // Runs the orchestrated Saga (ReserveCopy on catalog-service, create the
+  // record, ReleaseCopy to compensate on failure). A repeat call with the
+  // same idempotency_key returns the original record.
+  rpc BorrowBook(BorrowBookRequest) returns (BorrowRecord);
+  rpc ReturnBook(ReturnBookRequest) returns (BorrowRecord);
+  rpc ListMyBorrows(ListMyBorrowsRequest) returns (ListMyBorrowsResponse);
+
+  // The caller's active/overdue borrow for one book, for the gateway's
+  // Book.myBorrowStatus. NOT_FOUND when there isn't one.
+  rpc GetMyActiveBorrow(GetMyActiveBorrowRequest) returns (BorrowRecord);
+}
+
+message BorrowBookRequest {
+  uint64 book_id = 1;
+  string idempotency_key = 2;
+}
+
+message ReturnBookRequest {
+  uint64 borrow_id = 1;
+}
+
+message ListMyBorrowsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message ListMyBorrowsResponse {
+  repeated BorrowRecord records = 1;
+  int32 total_count = 2;
+}
+
+message GetMyActiveBorrowRequest {
+  uint64 book_id = 1;
+}
+
+message BorrowRecord {
+  uint64 id = 1;
+  uint64 book_id = 2;
+  // Snapshotted at borrow time — a historical record, not a live lookup.
+  string book_title = 3;
+  google.protobuf.Timestamp borrowed_at = 4;
+  google.protobuf.Timestamp due_at = 5;
+  optional google.protobuf.Timestamp returned_at = 6;
+  // "active", "overdue" or "returned".
+  string status = 7;
+  // Public, non-guessable UUIDv7 — what clients should reference.
+  string public_id = 8;
+}

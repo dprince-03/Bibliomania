@@ -1,0 +1,45 @@
+# Real hostnames + TLS for production. Replace bibliomania.example.com.
+# TLS assumes cert-manager with a ClusterIssuer named letsencrypt.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bibliomania
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+    - secretName: bibliomania-tls
+      hosts:
+        - api.bibliomania.example.com
+        - app.bibliomania.example.com
+        - bibliomania.example.com
+        - admin.bibliomania.example.com
+        - grafana.bibliomania.example.com
+        - analytics.bibliomania.example.com
+  rules:
+    - host: api.bibliomania.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: gateway, port: { name: http } } } }
+    - host: app.bibliomania.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: web-app, port: { name: http } } } }
+    - host: bibliomania.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: web-main, port: { name: http } } } }
+    - host: admin.bibliomania.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: admin-web, port: { name: http } } } }
+    - host: grafana.bibliomania.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: grafana, port: { name: http } } } }
+    - host: analytics.bibliomania.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: umami, port: { name: http } } } }

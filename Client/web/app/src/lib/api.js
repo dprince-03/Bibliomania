@@ -10,11 +10,12 @@ import {
 } from "./session";
 
 // Reachable by container name on bibliomania_network in Docker; falls back
-// to the Go API's default local port for bare `npm run dev`. Deliberately
+// to the gateway's published dev port (the Compose stack's
+// SERVER_HOST_PORT) for bare `npm run dev`. Deliberately
 // not NEXT_PUBLIC_* — this is never read in the browser, so it's never
 // shipped to client JS. See Client/docs/web-app-plan.md's "Two API base
 // URLs, not one".
-const API_INTERNAL_URL = process.env.API_INTERNAL_URL || "http://localhost:8080";
+const API_INTERNAL_URL = process.env.API_INTERNAL_URL || "http://localhost:9081";
 
 export class ApiError extends Error {
   constructor(message, status, code) {

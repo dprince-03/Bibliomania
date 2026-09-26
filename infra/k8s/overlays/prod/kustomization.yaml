@@ -1,0 +1,97 @@
+# Production overlay — a starting point, not a finished deployment (no
+# production cluster exists yet). Before using it:
+#   1. Secrets: fill in secrets/*.env (git-ignored — see secrets/README.md),
+#      then `make -C infra/k8s sealed-secrets seal SEAL_CONTEXT=<prod>`.
+#      That commits only SealedSecrets (sealed/), which nothing but the
+#      production cluster can decrypt — no plaintext secret in the repo.
+#   2. Replace bibliomania.example.com with the real domain (ingress.yaml
+#      patch below and the ConfigMap patch) and set up TLS.
+#   3. HA is on (components/ha): install its operators (its pg-* Secrets
+#      come from step 1).
+#   4. alertmanager.yml routes alerts to Slack; its webhook URL is the
+#      alertmanager-secrets Secret (step 1). The mesh (components/mesh)
+#      needs the Linkerd control plane — see infra/k8s/README.md. Managed databases are still worth considering — see
+#      infra/k8s/README.md → "Production".
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Repeated from base on purpose: base's namespace only applies to base's
+# own resources, so anything this overlay adds (the Secret, extra
+# resources) would otherwise land in "default".
+namespace: bibliomania
+
+resources:
+  - ../../base
+  - scaling.yaml
+  - sealed # SealedSecrets written by `make seal` (empty until then)
+
+# Replication for every stateful piece. Needs the CloudNativePG and RabbitMQ
+# Cluster operators installed, and the pg-* basic-auth Secrets plus
+# MYSQL_REPLICATION_PASSWORD created out-of-band (see components/ha).
+components:
+  - ../../components/ha
+  # mTLS + gRPC load balancing between services (Linkerd; `make mesh` installs it)
+  - ../../components/mesh
+
+configMapGenerator:
+  - name: alertmanager-config
+    behavior: replace
+    files:
+      - alertmanager.yml
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: alertmanager
+      spec:
+        template:
+          spec:
+            containers:
+              - name: alertmanager
+                volumeMounts:
+                  - { name: secrets, mountPath: /etc/alertmanager/secrets, readOnly: true }
+            volumes:
+              - name: secrets
+                secret: { secretName: alertmanager-secrets }
+  - target: { kind: ConfigMap, name: bibliomania-common }
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: production
+      - op: replace
+        path: /data/PUBLIC_API_URL
+        value: https://api.bibliomania.example.com
+      - op: replace
+        path: /data/PUBLIC_ADMIN_API_URL
+        value: https://admin.bibliomania.example.com/api
+      - op: replace
+        path: /data/PAYMENT_SUCCESS_URL
+        value: https://app.bibliomania.example.com/payments/success
+      - op: replace
+        path: /data/PAYMENT_CANCEL_URL
+        value: https://app.bibliomania.example.com/payments/cancel
+  - path: ingress.yaml
+  # Replica counts come from the HPAs in scaling.yaml; drop the base's
+  # fixed replicas: 1 so a re-apply never fights the autoscaler.
+  - target: { kind: Deployment, name: "gateway|auth|catalog|borrow|reading|user|payment|notification|web-app" }
+    patch: |-
+      - op: remove
+        path: /spec/replicas
+
+# CD (app-cd.yml → promote) pins the Go services' newTag to the commit SHA
+# with a line-level edit — keep each entry on one line in this exact shape.
+images:
+  - { name: bibliomania-gateway, newName: ghcr.io/dprince-03/bibliomania-gateway, newTag: latest }
+  - { name: bibliomania-auth, newName: ghcr.io/dprince-03/bibliomania-auth, newTag: latest }
+  - { name: bibliomania-catalog, newName: ghcr.io/dprince-03/bibliomania-catalog, newTag: latest }
+  - { name: bibliomania-borrow, newName: ghcr.io/dprince-03/bibliomania-borrow, newTag: latest }
+  - { name: bibliomania-reading, newName: ghcr.io/dprince-03/bibliomania-reading, newTag: latest }
+  - { name: bibliomania-user, newName: ghcr.io/dprince-03/bibliomania-user, newTag: latest }
+  - { name: bibliomania-notification, newName: ghcr.io/dprince-03/bibliomania-notification, newTag: latest }
+  - { name: bibliomania-payment, newName: ghcr.io/dprince-03/bibliomania-payment, newTag: latest }
+  - { name: bibliomania-web-app, newName: ghcr.io/dprince-03/bibliomania-web-app, newTag: latest }
+  - { name: bibliomania-web-main, newName: ghcr.io/dprince-03/bibliomania-web-main, newTag: latest }
+  - { name: bibliomania-admin-web, newName: ghcr.io/dprince-03/bibliomania-admin-web, newTag: latest }
+  - { name: bibliomania-admin, newName: ghcr.io/dprince-03/bibliomania-admin, newTag: latest }

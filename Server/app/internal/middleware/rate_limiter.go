@@ -105,6 +105,9 @@ func RateLimitStrict(rps float64, burst int) func(http.Handler) http.Handler {
 }
 
 // extractIP gets the real client IP, respecting proxies.
+// ClientIP is the caller's IP as the rate limiter sees it.
+func ClientIP(r *http.Request) string { return extractIP(r) }
+
 func extractIP(r *http.Request) string {
 	// Check X-Forwarded-For first (set by load balancers / proxies)
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {

@@ -1,0 +1,55 @@
+# Object storage for e-library files (catalog-service), S3 API on :8333 —
+# SeaweedFS, same as Compose — self-hosted, runs inside this cluster, no
+# cloud account. "S3" is just the protocol it speaks. Single node here;
+# SeaweedFS scales out with more volume servers.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: seaweedfs
+  labels: { app.kubernetes.io/name: seaweedfs, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: storage }
+spec:
+  serviceName: seaweedfs
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: seaweedfs }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: seaweedfs, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: storage }
+    spec:
+      containers:
+        - name: seaweedfs
+          image: chrislusf/seaweedfs:4.47
+          args: ["server", "-s3", "-dir=/data", "-volume.max=0"]
+          ports:
+            - { name: s3, containerPort: 8333 }
+            - { name: master, containerPort: 9333 }
+          # SeaweedFS reads its S3-protocol credentials from these variable
+          # names (a protocol convention) — nothing here talks to Amazon.
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: S3_ACCESS_KEY } }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: S3_SECRET_KEY } }
+          readinessProbe:
+            httpGet: { path: /cluster/healthz, port: master }
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 1Gi }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 10Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs
+  labels: { app.kubernetes.io/name: seaweedfs, app.kubernetes.io/part-of: bibliomania }
+spec:
+  selector: { app.kubernetes.io/name: seaweedfs }
+  ports:
+    - { name: s3, port: 8333, targetPort: s3 }

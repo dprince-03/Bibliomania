@@ -19,7 +19,16 @@ func newResponseWriter(w http.ResponseWriter) *responseWriter {
 	}
 }
 
+// WriteHeader records the final status. 1xx statuses (e.g. the "100
+// Continue" a reverse proxy relays for Expect: 100-continue uploads) are
+// informational — passed through without counting as "written", otherwise
+// the real status that follows would be swallowed and the client would get
+// an implicit 200 with an error body.
 func (rw *responseWriter) WriteHeader(code int) {
+	if code >= 100 && code < 200 {
+		rw.ResponseWriter.WriteHeader(code)
+		return
+	}
 	if !rw.written {
 		rw.statusCode = code
 		rw.written = true
@@ -40,7 +49,7 @@ func Logger(next http.Handler) http.Handler {
 		// Choose log level based on status code
 		switch {
 		case wrapped.statusCode >= 500:
-			slog.Error(
+			slog.ErrorContext(r.Context(),
 				"request completed",
 				"request_id", requestID,
 				"method", r.Method,
@@ -50,7 +59,7 @@ func Logger(next http.Handler) http.Handler {
 				"ip", r.RemoteAddr,
 			)
 		case wrapped.statusCode >= 400:
-			slog.Warn(
+			slog.WarnContext(r.Context(),
 				"request completed",
 				"request_id", requestID,
 				"method", r.Method,
@@ -60,7 +69,7 @@ func Logger(next http.Handler) http.Handler {
 				"ip", r.RemoteAddr,
 			)
 		default:
-			slog.Info(
+			slog.InfoContext(r.Context(),
 				"request completed",
 				"request_id", requestID,
 				"method", r.Method,

@@ -1,0 +1,73 @@
+# Umami analytics + its own Postgres — never the application's database.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: umami-postgres
+  labels: { app.kubernetes.io/name: umami-postgres, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: analytics }
+spec:
+  serviceName: umami-postgres
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: umami-postgres } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: umami-postgres, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: analytics }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - { name: POSTGRES_USER, value: umami }
+            - { name: POSTGRES_DB, value: umami }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: UMAMI_POSTGRES_PASSWORD } }
+          ports: [{ name: postgres, containerPort: 5432 }]
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "umami"] }
+          resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: umami-postgres }
+spec:
+  clusterIP: None
+  selector: { app.kubernetes.io/name: umami-postgres }
+  ports: [{ name: postgres, port: 5432, targetPort: postgres }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umami
+  labels: { app.kubernetes.io/name: umami, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: analytics }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: umami } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: umami, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: analytics }
+    spec:
+      containers:
+        - name: umami
+          image: ghcr.io/umami-software/umami:postgresql-latest
+          env:
+            - name: UMAMI_POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: UMAMI_POSTGRES_PASSWORD } }
+            - { name: DATABASE_URL, value: "postgresql://umami:$(UMAMI_POSTGRES_PASSWORD)@umami-postgres:5432/umami" }
+            - name: APP_SECRET
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: UMAMI_APP_SECRET } }
+          ports: [{ name: http, containerPort: 3000 }]
+          resources: { requests: { cpu: 50m, memory: 256Mi }, limits: { memory: 768Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: umami }
+spec:
+  selector: { app.kubernetes.io/name: umami }
+  ports: [{ name: http, port: 3000, targetPort: http }]

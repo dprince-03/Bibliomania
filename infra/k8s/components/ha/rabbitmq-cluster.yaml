@@ -1,0 +1,24 @@
+# RabbitMQ HA: a 3-node cluster run by the RabbitMQ Cluster Operator
+# (`make -C infra/k8s operators`), with quorum queues (Raft-replicated —
+# services set RABBITMQ_QUEUE_TYPE=quorum). The operator creates the
+# "rabbitmq" Service (same ports as base: 5672, 15672, 15692) and the
+# rabbitmq-default-user Secret the services read their connection string
+# from.
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  namespace: bibliomania
+spec:
+  replicas: 3
+  # 4.2+: the operator's startup probe calls
+  # /api/health/checks/reached-target-cluster-size, which 4.1 doesn't have
+  # (404 → pods killed in a loop). Base and Compose use the same version.
+  image: rabbitmq:4.2-management-alpine
+  persistence:
+    storage: 1Gi
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 768Mi }
+  rabbitmq:
+    additionalPlugins: [rabbitmq_prometheus]

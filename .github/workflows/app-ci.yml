@@ -6,11 +6,13 @@ on:
     paths:
       - "Server/app/**"
       - "infra/docker/app/**"
+      - "infra/k8s/**"
       - ".github/workflows/app-ci.yml"
   pull_request:
     paths:
       - "Server/app/**"
       - "infra/docker/app/**"
+      - "infra/k8s/**"
       - ".github/workflows/app-ci.yml"
 
 jobs:
@@ -27,6 +29,121 @@ jobs:
           go-version-file: Server/app/go.mod
           cache-dependency-path: Server/app/go.sum
 
+      # Builds with go.mod's own version — proves the `go 1.25.5` minimum
+      # still holds. The jobs below use the patched toolchain the images ship.
       - run: go vet ./...
       - run: go build ./...
-      - run: go test ./...
+      - run: go test -race ./...
+
+      # Generated GraphQL code must match the committed schema.
+      - name: gqlgen output is up to date
+        run: |
+          go tool gqlgen generate
+          git diff --exit-code -- internal/gateway/graph
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          check-latest: true
+          cache-dependency-path: Server/app/go.sum
+      # Config: Server/app/.golangci.yml (standard linters + gosec,
+      # bodyclose, misspell, gofmt).
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.14.0
+          working-directory: Server/app
+
+  # Testcontainers: real MySQL / Postgres / MongoDB per test — the
+  # concurrency guarantees (refresh-token rotation, copy reservation vs.
+  # edits, one pending checkout, Mongo last-write-wins) and the reconciler
+  # can't be proven against mocks. GitHub's ubuntu runners have Docker.
+  integration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Server/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: Server/app/go.mod
+          cache-dependency-path: Server/app/go.sum
+      - run: go test -tags integration -count=1 -timeout 20m ./...
+
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # upload SARIF to the repo's Security tab
+    defaults:
+      run:
+        working-directory: Server/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          # The toolchain the prod images build with (infra/docker/app/
+          # Dockerfile.prod) — stdlib vulnerabilities depend on it, not go.mod.
+          go-version: "1.26.x"
+          check-latest: true
+          cache-dependency-path: Server/app/go.sum
+
+      # Fails only on vulnerabilities our code actually reaches (call-graph
+      # analysis), not on every advisory in the module graph.
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          # Same exclusions as .golangci.yml (see the reasons there).
+          gosec -exclude-generated -exclude-dir=gen -exclude-dir=cmd/key -exclude-dir=cmd/seed \
+            -exclude=G115,G104 -fmt=sarif -out=gosec.sarif -stdout -verbose=text ./...
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: Server/app/gosec.sarif
+          category: gosec
+
+      # Dependency CVEs (go.sum), secrets committed by mistake, and
+      # Dockerfile/Kubernetes/Terraform misconfigurations.
+      - name: Trivy (repo scan)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+  proto:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Server/app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - run: buf lint
+      # Breaking-change check against main — protects every service that
+      # depends on a contract (bibliomania.<svc>.v1 must stay compatible;
+      # a breaking change means a new v2 package).
+      # Skipped until main has contracts to compare against.
+      - if: github.event_name == 'pull_request'
+        run: |
+          if git cat-file -e origin/main:Server/app/proto 2>/dev/null; then
+            buf breaking --against "../../.git#ref=origin/main,subdir=Server/app"
+          else
+            echo "main has no Server/app/proto yet — nothing to compare against"
+          fi

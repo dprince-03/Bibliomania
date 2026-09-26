@@ -1,0 +1,54 @@
+// Kubernetes variant of infra/observability/alloy/config.alloy: tails every
+// bibliomania pod's logs through the Kubernetes API (no node filesystem or
+// Docker socket needed) and ships them to Loki with the same labels
+// (`app`, plus `service`/`level` promoted from the JSON log line).
+
+discovery.kubernetes "pods" {
+  role = "pod"
+  namespaces {
+    names = ["bibliomania"]
+  }
+}
+
+discovery.relabel "pods" {
+  targets = discovery.kubernetes.pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+    target_label  = "app"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+}
+
+loki.source.kubernetes "pods" {
+  targets    = discovery.relabel.pods.output
+  forward_to = [loki.process.json.receiver]
+}
+
+loki.process "json" {
+  forward_to = [loki.write.default.receiver]
+
+  stage.json {
+    expressions = { service = "service", level = "level" }
+  }
+  stage.labels {
+    values = { service = "", level = "" }
+  }
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

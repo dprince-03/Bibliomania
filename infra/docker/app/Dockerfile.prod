@@ -1,53 +1,59 @@
-# Stage 1: Builder
-FROM --platform=linux/amd64 golang:1.25.5-alpine AS builder
+# Prod image for one Go service in Server/app. Same Dockerfile for all
+# eight binaries — pick one with the SERVICE build arg (the cmd/<SERVICE>
+# directory), e.g. `--build-arg SERVICE=catalog`. Images are tagged
+# bibliomania-<SERVICE> (see infra/docker/docker-compose.yml and the
+# app-cd.yml matrix).
 
-# Install build dependencies
-RUN apk add --no-cache git make gcc musl-dev
+# Stage 1: Builder
+# The toolchain is a supported, patched Go (1.26.x floats to the newest
+# patch on rebuild), newer than go.mod's `go 1.25.5` — that line is the
+# minimum language version, not the compiler. The standard library is
+# compiled into the binary, so its security fixes come from this image:
+# Go 1.25 is out of support, and govulncheck flags 1.25.x/1.26.<6 stdlib.
+FROM --platform=linux/amd64 golang:1.26-alpine AS builder
+
+ARG SERVICE
+RUN test -n "$SERVICE" || (echo "SERVICE build arg is required (auth|catalog|borrow|reading|user|notification|payment|gateway)" && false)
+
+RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Copy and download dependencies first (layer caching)
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# Build the binary
-# -ldflags: strip debug info for smaller binary
-# CGO_ENABLED=0: static binary, no C dependencies
+# CGO_ENABLED=0: static binary, no C dependencies. -w -s: strip debug info.
+# Migrations are embedded (embed.FS), so the binary is all a service needs.
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
-    -o bibliomania \
-    ./cmd/api/main.go
+    -o /out/service \
+    ./cmd/${SERVICE}
 
 
-# Stage 2: Runner — plain alpine, not golang, since the binary is static (CGO_ENABLED=0)
-FROM --platform=linux/amd64 alpine:3.20 AS final
+# Stage 2: Runner — plain alpine, since the binary is static
+FROM --platform=linux/amd64 alpine:3.22 AS final
 
-# Install CA certs (needed for HTTPS calls), timezone data, and wget (for HEALTHCHECK)
+# CA certs (HTTPS calls, e.g. Stripe/Resend), tzdata, wget (HEALTHCHECK)
 RUN apk add --no-cache ca-certificates tzdata wget
 
-# Create a non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Fixed numeric UID/GID (10001): Kubernetes' runAsNonRoot can only verify a
+# numeric user, and the catalog storage volume is written with this fsGroup.
+RUN addgroup -S -g 10001 appgroup && adduser -S -u 10001 -G appgroup appuser
 
 WORKDIR /app
+COPY --from=builder /out/service ./service
 
-# Copy only the compiled binary from builder
-COPY --from=builder /app/bibliomania .
-
-# Copy storage directory (for E-Library uploads)
+# E-library uploads (catalog-service mounts a volume here).
 RUN mkdir -p ./storage && chown -R appuser:appgroup ./storage
 
-# Switch to non-root user
-USER appuser
+USER 10001:10001
 
-# Expose port
-EXPOSE 8080
+# 8080: HTTP (REST, /health, /metrics). 9090: internal gRPC.
+EXPOSE 8080 9090
 
-# Health check — Docker will monitor this
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD wget -qO- http://localhost:8080/health || exit 1
 
-# Run the binary
-CMD ["./bibliomania"]
+CMD ["./service"]

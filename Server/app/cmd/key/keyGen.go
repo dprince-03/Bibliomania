@@ -43,7 +43,7 @@ func updateEnvFile(fileName, key, value string) error {
 		newLines = append(newLines, fmt.Sprintf("%s=%s", key, value))
 	}
 
-	return os.WriteFile(fileName, []byte(strings.Join(newLines, "\n")+"\n"), 0644)
+	return os.WriteFile(fileName, []byte(strings.Join(newLines, "\n")+"\n"), 0o600) // holds secrets: owner-only
 }
 
 func main() {

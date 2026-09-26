@@ -1,0 +1,26 @@
+# Local HA test on kind: everything in overlays/local, plus
+# components/ha (replication for every stateful piece). Heavier — about
+# 45 pods; give Docker ≥12 GB.
+#   make -C infra/k8s up-ha      (operators + this overlay)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: bibliomania
+
+resources:
+  - ../local
+
+components:
+  - ../../components/ha
+  # mTLS + gRPC load balancing between services (Linkerd; `make mesh` installs it)
+  - ../../components/mesh
+
+# Credentials CloudNativePG expects as basic-auth Secrets, generated from
+# ha-secrets/*.env (git-ignored; `make -C infra/k8s secrets` writes them
+# from overlays/local/secrets.env so the passwords match).
+secretGenerator:
+  - { name: pg-superuser, type: kubernetes.io/basic-auth, envs: [ha-secrets/pg-superuser.env], options: { disableNameSuffixHash: true } }
+  - { name: pg-catalog, type: kubernetes.io/basic-auth, envs: [ha-secrets/pg-catalog.env], options: { disableNameSuffixHash: true } }
+  - { name: pg-borrow, type: kubernetes.io/basic-auth, envs: [ha-secrets/pg-borrow.env], options: { disableNameSuffixHash: true } }
+  - { name: pg-users, type: kubernetes.io/basic-auth, envs: [ha-secrets/pg-users.env], options: { disableNameSuffixHash: true } }
+  - { name: pg-payment, type: kubernetes.io/basic-auth, envs: [ha-secrets/pg-payment.env], options: { disableNameSuffixHash: true } }

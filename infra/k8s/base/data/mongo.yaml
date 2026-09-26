@@ -1,0 +1,78 @@
+# reading-service's MongoDB — a single-node replica set (rs0), needed for
+# the multi-document transactions reading-service's outbox uses. The set's
+# only member is addressed by its stable StatefulSet DNS name
+# (mongo-0.mongo); the mongo-rs-init Job below initiates it once.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  labels: { app.kubernetes.io/name: mongo, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: database }
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: mongo }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: mongo, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: database }
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          args: ["--replSet", "rs0", "--bind_ip_all"]
+          ports:
+            - { name: mongo, containerPort: 27017 }
+          readinessProbe:
+            exec: { command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"] }
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+          volumeMounts:
+            - { name: data, mountPath: /data/db }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 2Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels: { app.kubernetes.io/name: mongo, app.kubernetes.io/part-of: bibliomania }
+spec:
+  clusterIP: None
+  # Members must resolve each other before they're "ready".
+  publishNotReadyAddresses: true
+  selector: { app.kubernetes.io/name: mongo }
+  ports:
+    - { name: mongo, port: 27017, targetPort: mongo }
+---
+# Initiates the replica set once; idempotent (a no-op if already initiated),
+# retried until mongo-0 is up.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-rs-init
+  labels: { app.kubernetes.io/name: mongo-rs-init, app.kubernetes.io/part-of: bibliomania }
+spec:
+  backoffLimit: 30
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: mongo-rs-init, app.kubernetes.io/part-of: bibliomania }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: rs-init
+          image: mongo:7
+          command:
+            - mongosh
+            - --host
+            - mongo-0.mongo:27017
+            - --quiet
+            - --eval
+            - |
+              try { rs.status().ok }
+              catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo-0.mongo:27017' }] }).ok }

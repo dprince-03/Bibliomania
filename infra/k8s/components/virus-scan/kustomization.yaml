@@ -1,0 +1,28 @@
+# Opt-in virus scanning for e-library uploads. Enable from an overlay:
+#   components:
+#     - ../../components/virus-scan
+# Adds a clamd Deployment and points catalog at it (CLAMAV_ADDR). Needs
+# ~1 GB RAM, and clamd downloads its signature database on first start
+# (several minutes) — catalog's /health reports the scanner, and uploads
+# fail closed (503) until it's ready.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - clamav.yaml
+
+patches:
+  # Strategic merge: env entries merge by name, overriding CLAMAV_ADDR.
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: catalog
+      spec:
+        template:
+          spec:
+            containers:
+              - name: catalog
+                env:
+                  - name: CLAMAV_ADDR
+                    value: clamav:3310

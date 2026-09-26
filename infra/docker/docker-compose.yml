@@ -1,41 +1,265 @@
 name: bibliomania
 
+# ── Shared settings for the eight Go binaries in Server/app ──────────────
+# One module, one Dockerfile per mode (infra/docker/app/Dockerfile.{dev,prod});
+# the SERVICE build arg / air command picks which cmd/<service> runs.
+x-go-service: &go-service
+  build:
+    context: ../../Server/app
+  restart: unless-stopped
+  env_file:
+    - ../../Server/app/.env
+  networks:
+    - bibliomania_network
+
+# Env every Go service gets. Values here override Server/app/.env (Compose
+# `environment` beats `env_file`), so containers always agree with the
+# infrastructure containers below. JWT_SECRET etc. still come from
+# Server/app/.env.
+x-go-env: &go-env
+  APP_ENV: development
+  SERVER_PORT: "8080"
+  GRPC_PORT: "9090"
+  OTEL_EXPORTER_OTLP_ENDPOINT: tempo:4317
+  CATALOG_GRPC_ADDR: catalog:9090
+  BORROW_GRPC_ADDR: borrow:9090
+  READING_GRPC_ADDR: reading:9090
+  USER_GRPC_ADDR: user:9090
+  RABBITMQ_URL: amqp://${RABBITMQ_USER:-bibliomania}:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/
+  KAFKA_BROKERS: kafka:9092
+  NATS_URL: nats://nats:4222
+
 services:
-  # ── Go API ──────────────────────────────────────────────
-  app:
-    image: bibliomania-app
-    container_name: bibliomania-app
+  # ══ Application services ════════════════════════════════════════════
+
+  # ── Gateway: GraphQL + versioned REST façade, the only service nginx
+  # (and anything else outside the network) talks to ─────────────────────
+  gateway:
+    <<: *go-service
+    image: bibliomania-gateway
+    container_name: bibliomania-gateway
     build:
       context: ../../Server/app
-    restart: unless-stopped
-    env_file:
-      - ../../Server/app/.env
+      args:
+        SERVICE: gateway
     environment:
-      # These override whatever Server/app/.env sets for the same keys, so
-      # the `app` container always agrees with `mysql`'s init credentials
-      # below — both come from the root .env, not two files that have to be
-      # kept in sync by hand.
-      - APP_ENV=development
-      - DB_HOST=mysql
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      <<: *go-env
+      # Long enough for book file downloads streamed through the proxy.
+      SERVER_WRITE_TIMEOUT: "120"
+      AUTH_HTTP_URL: http://auth:8080
+      CATALOG_HTTP_URL: http://catalog:8080
+      BORROW_HTTP_URL: http://borrow:8080
+      READING_HTTP_URL: http://reading:8080
+      USER_HTTP_URL: http://user:8080
+      PAYMENT_HTTP_URL: http://payment:8080
+      API_DEPRECATED_VERSIONS: ${API_DEPRECATED_VERSIONS:-}
+      # Idempotency records + rate limits shared across gateway replicas.
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      catalog:
+        condition: service_started
+      borrow:
+        condition: service_started
+      reading:
+        condition: service_started
+      user:
+        condition: service_started
+      payment:
+        condition: service_started
+
+  # ── auth-service — MySQL + RabbitMQ ───────────────────────────────────
+  auth:
+    <<: *go-service
+    image: bibliomania-auth
+    container_name: bibliomania-auth
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: auth
+    environment:
+      <<: *go-env
+      DATABASE_URL: ${AUTH_DB_USER:-auth}:${AUTH_DB_PASSWORD:-changeme}@tcp(mysql:3306)/${AUTH_DB_NAME:-bibliomania_auth}
+      # Shared secret for auth's internal accounts endpoint, which user-service's
+      # reconciler reads (never routed by the gateway).
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-dev-internal-token-change-me}
     depends_on:
       mysql:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # ── catalog-service — Postgres + Redis + RabbitMQ ─────────────────────
+  catalog:
+    <<: *go-service
+    image: bibliomania-catalog
+    container_name: bibliomania-catalog
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: catalog
+    environment:
+      <<: *go-env
+      SERVER_WRITE_TIMEOUT: "120"
+      DATABASE_URL: postgres://catalog:${CATALOG_DB_PASSWORD:-changeme}@postgres:5432/bibliomania_catalog?sslmode=disable
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # E-library files in object storage (SeaweedFS's S3 API), not a local
+      # volume — so catalog can run more than one replica.
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: seaweedfs:8333
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-bibliomania}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-changeme-s3}
+      S3_BUCKET: bibliomania-books
+      # Set to clamav:3310 (and start the `scan` profile) to virus-scan
+      # uploads; empty = no scanning.
+      CLAMAV_ADDR: ${CLAMAV_ADDR:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - bibliomania_network
+      rabbitmq:
+        condition: service_healthy
+
+  # ── borrow-service — Postgres + Kafka (+ catalog over gRPC) ───────────
+  borrow:
+    <<: *go-service
+    image: bibliomania-borrow
+    container_name: bibliomania-borrow
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: borrow
+    environment:
+      <<: *go-env
+      DATABASE_URL: postgres://borrow:${BORROW_DB_PASSWORD:-changeme}@postgres:5432/bibliomania_borrow?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+
+  # ── reading-service — MongoDB + NATS (+ catalog over gRPC) ────────────
+  reading:
+    <<: *go-service
+    image: bibliomania-reading
+    container_name: bibliomania-reading
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: reading
+    environment:
+      <<: *go-env
+      MONGO_URL: mongodb://mongo:27017/?replicaSet=rs0
+      MONGO_DB: bibliomania_reading
+    depends_on:
+      mongo:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+
+  # ── user-service — Postgres + RabbitMQ + NATS (+ catalog over gRPC) ───
+  user:
+    <<: *go-service
+    image: bibliomania-user
+    container_name: bibliomania-user
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: user
+    environment:
+      <<: *go-env
+      DATABASE_URL: postgres://users:${USER_DB_PASSWORD:-changeme}@postgres:5432/bibliomania_user?sslmode=disable
+      # Shared secret for auth's internal accounts endpoint, which user-service's
+      # reconciler reads (never routed by the gateway).
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-dev-internal-token-change-me}
+      AUTH_HTTP_URL: http://auth:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+
+  # ── notification-service — consumes RabbitMQ + Kafka, sends email ─────
+  notification:
+    <<: *go-service
+    image: bibliomania-notification
+    container_name: bibliomania-notification
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: notification
+    environment:
+      <<: *go-env
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-Bibliomania <no-reply@bibliomania.local>}
+      # "Already emailed for this event" markers (dedupes redeliveries).
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── payment-service — Postgres + Kafka + Stripe/Paystack ──────────────
+  payment:
+    <<: *go-service
+    image: bibliomania-payment
+    container_name: bibliomania-payment
+    build:
+      context: ../../Server/app
+      args:
+        SERVICE: payment
+    environment:
+      <<: *go-env
+      DATABASE_URL: postgres://payment:${PAYMENT_DB_PASSWORD:-changeme}@postgres:5432/bibliomania_payment?sslmode=disable
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+      PAYSTACK_CURRENCIES: ${PAYSTACK_CURRENCIES:-NGN,GHS,ZAR,KES}
+      # Overridable only to point at a mock/sandbox for testing.
+      PAYSTACK_BASE_URL: ${PAYSTACK_BASE_URL:-https://api.paystack.co}
+      PAYMENTS_LIVE_ENABLED: ${PAYMENTS_LIVE_ENABLED:-false}
+      PAYMENT_SUCCESS_URL: ${PAYMENT_SUCCESS_URL:-http://app.bibliomania.local/payments/success}
+      PAYMENT_CANCEL_URL: ${PAYMENT_CANCEL_URL:-http://app.bibliomania.local/payments/cancel}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+
+  # ══ Clients ═════════════════════════════════════════════════════════
 
   # ── Web: product app ────────────────────────────────────
   # API_INTERNAL_URL is server-only (no NEXT_PUBLIC_ prefix) — used by
-  # src/lib/api.js's server-side calls, reaching the app service directly
+  # src/lib/api.js's server-side calls, reaching the gateway directly
   # inside bibliomania_network instead of round-tripping through nginx.
-  # NEXT_PUBLIC_API_URL stays for any direct client-side calls a later step
-  # adds. See Client/docs/web-app-plan.md's "Two API base URLs, not one".
+  # The gateway serves the same /api/v1 REST paths the monolith did.
   web-app:
     image: bibliomania-web-app
     container_name: bibliomania-web-app
@@ -44,9 +268,9 @@ services:
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=${WEB_APP_API_URL:-http://api.bibliomania.local}
-      - API_INTERNAL_URL=${WEB_APP_API_INTERNAL_URL:-http://app:8080}
+      - API_INTERNAL_URL=${WEB_APP_API_INTERNAL_URL:-http://gateway:8080}
     depends_on:
-      - app
+      - gateway
     networks:
       - bibliomania_network
 
@@ -82,37 +306,44 @@ services:
       - bibliomania_network
 
   # ── Admin: backend API ───────────────────────────────────
+  # Talks to the services through the gateway's REST API — there is no
+  # shared application database to reach into any more.
   admin:
     image: bibliomania-admin
     container_name: bibliomania-admin
     build:
       context: ../../Server/admin
     restart: unless-stopped
+    environment:
+      - GATEWAY_URL=http://gateway:8080
     depends_on:
-      mysql:
-        condition: service_healthy
+      - gateway
     networks:
       - bibliomania_network
 
-  # ── MySQL (app database) ─────────────────────────────────
+  # ══ Data stores — one database per service ══════════════════════════
+
+  # ── MySQL: auth-service only ──────────────────────────────────────────
+  # Fresh volume (auth_mysql_data), not the monolith's old mysql_data: the
+  # auth schema is new and golang-migrate's version table in the old
+  # database would otherwise claim it's already at version 11.
   mysql:
     image: mysql:8.4
     container_name: bibliomania-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${AUTH_DB_ROOT_PASSWORD:-changeme}
+      MYSQL_DATABASE: ${AUTH_DB_NAME:-bibliomania_auth}
+      MYSQL_USER: ${AUTH_DB_USER:-auth}
+      MYSQL_PASSWORD: ${AUTH_DB_PASSWORD:-changeme}
     volumes:
-      - mysql_data:/var/lib/mysql
-      # No migrations mount here: cmd/api/main.go already runs golang-migrate
-      # on boot (database.RunMigration). Mounting migrations/ into
-      # /docker-entrypoint-initdb.d would also run every *.sql file
-      # alphabetically once, which for paired up/down files immediately
-      # undoes each "up" with the following "down".
+      - auth_mysql_data:/var/lib/mysql
+      # Server-level settings only (mysql/init/*.sql, first boot). Tables
+      # come from auth-service's own embedded migrations on boot — never
+      # mount migrations here (see infra/README.md → "Known caveats").
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -120,7 +351,67 @@ services:
     networks:
       - bibliomania_network
 
-  # ── Redis (app cache) ─────────────────────────────────────
+  # ── Postgres: catalog, borrow, user, payment ─────────────────────────
+  # One server, four databases, four roles — each service can only reach
+  # its own database (see postgres/init/*.sql). A shared server is a
+  # dev/ops economy, not shared data.
+  postgres:
+    image: postgres:16-alpine
+    container_name: bibliomania-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD:-changeme}
+      BORROW_DB_PASSWORD: ${BORROW_DB_PASSWORD:-changeme}
+      USER_DB_PASSWORD: ${USER_DB_PASSWORD:-changeme}
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD:-changeme}
+    command:
+      - postgres
+      # pg_stat_statements: per-query stats for spotting slow queries
+      # (postgres-exporter + Grafana).
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - bibliomania_network
+
+  # ── MongoDB: reading-service ──────────────────────────────────────────
+  # Single-node replica set: standalone mongod has no multi-document
+  # transactions, which reading-service's outbox needs. The healthcheck
+  # initiates the set on first boot.
+  mongo:
+    image: mongo:7
+    container_name: bibliomania-mongo
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}).ok }"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - bibliomania_network
+
+  # ── Redis: catalog-service's cache (never a system of record) ─────────
   redis:
     image: redis:7-alpine
     container_name: bibliomania-redis
@@ -151,6 +442,290 @@ services:
     networks:
       - bibliomania_network
 
+  # ── SeaweedFS: S3-compatible object storage for e-library files ──────
+  # (catalog-service). Self-hosted — no cloud account; "S3" is only the
+  # storage protocol it speaks. SeaweedFS (Apache-2.0) rather than MinIO,
+  # which stopped publishing community container images in 2025. It reads
+  # its credentials from the AWS_*-named variables below (a protocol naming
+  # convention, nothing to do with Amazon); anonymous requests are refused.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.47
+    container_name: bibliomania-seaweedfs
+    restart: unless-stopped
+    command: ["server", "-s3", "-dir=/data", "-volume.max=0"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-bibliomania}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-changeme-s3}
+    volumes:
+      - seaweedfs_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:9333/cluster/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - bibliomania_network
+
+  # ── ClamAV: virus scanning for uploads (optional) ─────────────────────
+  # Opt-in — `--profile scan` — since it needs ~1 GB RAM and downloads its
+  # signature database on first start (a few minutes). Point catalog at it
+  # with CLAMAV_ADDR=clamav:3310.
+  clamav:
+    image: clamav/clamav:1.4
+    container_name: bibliomania-clamav
+    restart: unless-stopped
+    profiles: ["scan"]
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+    networks:
+      - bibliomania_network
+
+  # ══ Message brokers ══════════════════════════════════════════════════
+
+  # ── RabbitMQ: auth / user / catalog events ────────────────────────────
+  rabbitmq:
+    image: rabbitmq:4.2-management-alpine
+    container_name: bibliomania-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-bibliomania}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-changeme}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      # Management UI + the Prometheus endpoint (:15692/metrics).
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - bibliomania_network
+
+  # ── Kafka: borrow + payment events (single-node KRaft, no ZooKeeper) ──
+  kafka:
+    image: apache/kafka:3.9.1
+    container_name: bibliomania-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - bibliomania_network
+
+  # ── NATS (JetStream): reading events ──────────────────────────────────
+  nats:
+    image: nats:2.11-alpine
+    container_name: bibliomania-nats
+    restart: unless-stopped
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - bibliomania_network
+
+  # ══ Observability (Step 37): Prometheus, Loki, Tempo, Grafana ════════
+  # Every service exports traces to Tempo (OTLP), exposes /metrics for
+  # Prometheus, and logs JSON to stdout, which Alloy ships to Loki.
+  # Configs: infra/observability/.
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: bibliomania-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-remote-write-receiver
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - bibliomania_network
+
+  # Routes the alert rules above. Dev: email to Mailpit (web UI on
+  # MAILPIT_WEB_PORT). Prod: replace alertmanager.yml with a real receiver
+  # (see infra/k8s/overlays/prod/alertmanager.yml for a Slack example).
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: bibliomania-alertmanager
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ../observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - bibliomania_network
+
+  loki:
+    image: grafana/loki:3.5.3
+    container_name: bibliomania-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ../observability/loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - bibliomania_network
+
+  tempo:
+    image: grafana/tempo:2.8.2
+    container_name: bibliomania-tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ../observability/tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/var/tempo
+    networks:
+      - bibliomania_network
+
+  # Ships every bibliomania container's stdout to Loki.
+  alloy:
+    image: grafana/alloy:v1.10.2
+    container_name: bibliomania-alloy
+    restart: unless-stopped
+    command: ["run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data"]
+    volumes:
+      - ../observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    networks:
+      - bibliomania_network
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: bibliomania-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-changeme}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - bibliomania_network
+
+  # ── Exporters: databases and brokers into the same Prometheus ────────
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.17.2
+    container_name: bibliomania-mysqld-exporter
+    restart: unless-stopped
+    command:
+      - --mysqld.address=mysql:3306
+      - --mysqld.username=root
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${AUTH_DB_ROOT_PASSWORD:-changeme}
+    depends_on:
+      - mysql
+    networks:
+      - bibliomania_network
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: bibliomania-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_URI: postgres:5432/postgres?sslmode=disable
+      DATA_SOURCE_USER: ${POSTGRES_USER:-postgres}
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:-changeme}
+    depends_on:
+      - postgres
+    networks:
+      - bibliomania_network
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.44
+    container_name: bibliomania-mongodb-exporter
+    restart: unless-stopped
+    command:
+      - --mongodb.uri=mongodb://mongo:27017/?directConnection=true
+      - --collect-all
+      - --compatible-mode
+    depends_on:
+      - mongo
+    networks:
+      - bibliomania_network
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.74.0
+    container_name: bibliomania-redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      - redis
+    networks:
+      - bibliomania_network
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.9.0
+    container_name: bibliomania-kafka-exporter
+    restart: unless-stopped
+    command: ["--kafka.server=kafka:9092"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - bibliomania_network
+
+  nats-exporter:
+    image: natsio/prometheus-nats-exporter:0.17.3
+    container_name: bibliomania-nats-exporter
+    restart: unless-stopped
+    command: ["-varz", "-connz", "-jsz=all", "http://nats:8222"]
+    depends_on:
+      - nats
+    networks:
+      - bibliomania_network
+  # (RabbitMQ needs no exporter — its built-in rabbitmq_prometheus plugin
+  # serves :15692/metrics directly.)
+
+  # ══ Analytics + edge ═════════════════════════════════════════════════
+
   # ── Umami analytics ───────────────────────────────────────
   umami:
     image: ghcr.io/umami-software/umami:postgresql-latest
@@ -165,9 +740,9 @@ services:
     networks:
       - bibliomania_network
 
-  # Umami's own Postgres — deliberately separate from `mysql` above, which is
-  # the application's database. Different engine, different creds, different
-  # volume: never point umami at the app's MySQL instance.
+  # Umami's own Postgres — deliberately separate from the application's
+  # `postgres` above. Different creds, different volume: never point umami
+  # at an application database.
   umami-postgres:
     image: postgres:16-alpine
     container_name: bibliomania-umami-postgres
@@ -195,21 +770,46 @@ services:
       context: ../nginx
     restart: unless-stopped
     depends_on:
-      - app
+      - gateway
       - web-app
       - web-main
       - admin-web
       - admin
       - umami
+      - grafana
     networks:
       - bibliomania_network
 
 volumes:
-  mysql_data:
+  seaweedfs_data:
+    driver: local
+  clamav_data:
+    driver: local
+  auth_mysql_data:
+    driver: local
+  postgres_data:
+    driver: local
+  mongo_data:
     driver: local
   redis_data:
     driver: local
+  rabbitmq_data:
+    driver: local
+  kafka_data:
+    driver: local
+  nats_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  loki_data:
+    driver: local
+  tempo_data:
+    driver: local
+  grafana_data:
+    driver: local
   go_modules:
+    driver: local
+  go_build_cache:
     driver: local
   umami_postgres_data:
     driver: local

@@ -1,0 +1,11 @@
+# `make proto` — regenerates gen/ from proto/. Uses locally installed
+# protoc-gen-go / protoc-gen-go-grpc (see Server/app/docs/project_setup.md),
+# not buf's remote plugins, so it works offline.
+version: v2
+plugins:
+  - local: protoc-gen-go
+    out: gen
+    opt: paths=source_relative
+  - local: protoc-gen-go-grpc
+    out: gen
+    opt: paths=source_relative
