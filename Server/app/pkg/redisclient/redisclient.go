@@ -3,28 +3,26 @@ package redisclient
 import (
 	"context"
 	"fmt"
-	"log"
-
-	"github.com/dprince-03/Bibliomania/internal/config"
+	"log/slog"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func Connect(cfg *config.Config) (*redis.Client, error) {
+// Connect opens and pings a Redis client. Takes plain values rather than
+// *config.Config so pkg/ stays independent of internal/.
+func Connect(addr, password string, db int) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:         fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
-		Password:     cfg.RedisPassword,
-		DB:           cfg.RedisDB,
+		Addr:         addr,
+		Password:     password,
+		DB:           db,
 		PoolSize:     10,
 		MinIdleConns: 3,
 	})
 
-	ctx := context.Background()
-	_, err := client.Ping(ctx).Result()
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to redis: %m", err)
+	if _, err := client.Ping(context.Background()).Result(); err != nil {
+		return nil, fmt.Errorf("failed to connect to redis: %w", err)
 	}
 
-	log.Printf("Redis connected successfully !!!")
+	slog.Info("redis connected", "addr", addr)
 	return client, nil
 }

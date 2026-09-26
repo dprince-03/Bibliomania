@@ -1,65 +1,78 @@
 // cmd/seed inserts a small set of sample data for local development
-// (`make seed`). It is deliberately not fully idempotent per-row — it skips
-// entirely if data already looks present (an admin user by a fixed email,
-// or any author at all), rather than trying to upsert every field. Intended
-// for a fresh dev database, not for repeated runs against one already in use.
+// (`make seed`), against a running stack. It skips each part if data
+// already looks present (the admin email, or any author at all) rather
+// than upserting field by field — meant for a fresh dev stack.
+//
+// Since the microservices split it no longer writes straight into one
+// shared database:
+//   - the admin account is inserted into auth-service's database together
+//     with its auth.user_registered outbox event (registration via the API
+//     always yields a member), so user-service learns about it the normal
+//     way;
+//   - the catalog is created through the gateway's REST API as that admin,
+//     so it goes through catalog-service's validation, cache invalidation
+//     and events exactly like real data.
+//
+// Env: SEED_AUTH_DATABASE_URL (auth's MySQL DSN, reachable from where this
+// runs) and SEED_GATEWAY_URL (default http://localhost:9081 — the dev
+// stack's published gateway port).
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"time"
 
-	"github.com/dprince-03/Bibliomania/internal/config"
-	"github.com/dprince-03/Bibliomania/internal/modules/catalog"
-	"github.com/dprince-03/Bibliomania/internal/modules/user"
+	"github.com/dprince-03/Bibliomania/internal/database"
+	"github.com/dprince-03/Bibliomania/internal/services/auth"
 	"github.com/dprince-03/Bibliomania/internal/utils"
 	"github.com/dprince-03/Bibliomania/pkg/mysqlclient"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const seedAdminEmail = "admin@bibliomania.local"
 const seedAdminPassword = "ChangeMe123!"
 
 func main() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("config error: %v", err)
-	}
-
-	db, err := mysqlclient.ConnectMySqlClient(cfg)
-	if err != nil {
-		log.Fatalf("database error: %v", err)
-	}
-	defer db.Close()
-
 	ctx := context.Background()
 
-	userRepo := user.NewRepository(db)
-	profileRepo := user.NewProfileRepository(db)
-	authorRepo := catalog.NewAuthorRepository(db)
-	bookRepo := catalog.NewBookRepository(db)
-	bookAuthorRepo := catalog.NewBookAuthorRepository(db)
-
-	seedAdmin(ctx, userRepo, profileRepo)
-	seededCatalog := seedCatalog(ctx, authorRepo, bookRepo, bookAuthorRepo)
-
-	// InnoDB FULLTEXT indexes cache newly-inserted rows in memory
-	// (innodb_ft_cache_size) and only merge them into the on-disk index on
-	// a size threshold or an explicit OPTIMIZE TABLE — not immediately on
-	// insert. Without this, GET /api/v1/search finds nothing for the books
-	// just seeded above until something else happens to trigger a flush.
-	// Found by testing search against a freshly-seeded local database.
-	if seededCatalog {
-		if _, err := db.ExecContext(ctx, "OPTIMIZE TABLE books"); err != nil {
-			log.Printf("warning: failed to optimize books table's fulltext index: %v", err)
-		}
+	authDSN := os.Getenv("SEED_AUTH_DATABASE_URL")
+	if authDSN == "" {
+		log.Fatal("SEED_AUTH_DATABASE_URL is required (auth-service's MySQL DSN)")
 	}
+	gatewayURL := os.Getenv("SEED_GATEWAY_URL")
+	if gatewayURL == "" {
+		gatewayURL = "http://localhost:9081"
+	}
+
+	db, err := mysqlclient.Connect(ctx, authDSN)
+	if err != nil {
+		log.Fatalf("auth database error: %v", err)
+	}
+	defer db.Close()
+	if err := database.Migrate(db, database.DriverMySQL, auth.Migrations); err != nil {
+		log.Fatalf("auth migration error: %v", err)
+	}
+
+	seedAdmin(ctx, db)
+
+	api := &client{base: gatewayURL + "/api/v1", http: &http.Client{Timeout: 10 * time.Second}}
+	if err := api.login(seedAdminEmail, seedAdminPassword); err != nil {
+		log.Fatalf("logging in as the seed admin via %s: %v", gatewayURL, err)
+	}
+	seedCatalog(api)
 
 	log.Println("seed complete")
 }
 
-func seedAdmin(ctx context.Context, userRepo user.Repository, profileRepo user.ProfileRepository) {
-	if _, err := userRepo.GetByEmail(ctx, seedAdminEmail); err == nil {
+func seedAdmin(ctx context.Context, db *sqlx.DB) {
+	if _, err := auth.NewAccountRepository(db).GetByEmail(ctx, seedAdminEmail); err == nil {
 		log.Printf("admin user %s already exists, skipping", seedAdminEmail)
 		return
 	}
@@ -69,7 +82,7 @@ func seedAdmin(ctx context.Context, userRepo user.Repository, profileRepo user.P
 		log.Fatalf("failed to hash seed admin password: %v", err)
 	}
 
-	admin := &user.User{
+	admin := &auth.Account{
 		FirstName: "Admin",
 		LastName:  "User",
 		Email:     seedAdminEmail,
@@ -77,91 +90,120 @@ func seedAdmin(ctx context.Context, userRepo user.Repository, profileRepo user.P
 		Role:      "admin",
 		IsActive:  true,
 	}
-
-	id, err := userRepo.Create(ctx, admin)
-	if err != nil {
+	if err := auth.CreateAccount(ctx, db, admin); err != nil {
 		log.Fatalf("failed to create seed admin: %v", err)
 	}
-
-	if err := profileRepo.Create(ctx, &user.UserProfile{UserID: id}); err != nil {
-		log.Fatalf("failed to create seed admin's profile: %v", err)
-	}
-
 	log.Printf("seeded admin user: %s / %s (change this password)", seedAdminEmail, seedAdminPassword)
 }
 
-// seedCatalog returns whether it actually inserted new books, so the
-// caller knows whether the fulltext index needs an OPTIMIZE TABLE pass.
-func seedCatalog(ctx context.Context, authorRepo catalog.AuthorRepository, bookRepo catalog.BookRepository, bookAuthorRepo catalog.BookAuthorRepository) bool {
-	_, total, err := authorRepo.GetAll(ctx, 1, 0)
-	if err != nil {
+func seedCatalog(api *client) {
+	var authors struct {
+		TotalCount int `json:"total_count"`
+	}
+	if err := api.do(http.MethodGet, "/authors?limit=1", nil, &authors); err != nil {
 		log.Fatalf("failed to check existing authors: %v", err)
 	}
-	if total > 0 {
+	if authors.TotalCount > 0 {
 		log.Println("catalog already has authors, skipping author/book seed")
-		return false
-	}
-
-	dob := func(s string) *time.Time {
-		t, err := time.Parse("2006-01-02", s)
-		if err != nil {
-			log.Fatalf("bad seed date %q: %v", s, err)
-		}
-		return &t
+		return
 	}
 
 	type seedBook struct {
 		title, isbn, genre, description string
 		year, copies                    int
 	}
-
 	seeds := []struct {
-		author catalog.Author
-		book   seedBook
+		first, last, dob string
+		book             seedBook
 	}{
-		{
-			author: catalog.Author{FirstName: "J.R.R.", LastName: "Tolkien", DateOfBirth: dob("1892-01-03")},
-			book:   seedBook{"The Hobbit", "9780547928227", "Fantasy", "Bilbo Baggins is swept into an epic quest.", 1937, 3},
-		},
-		{
-			author: catalog.Author{FirstName: "J.K.", LastName: "Rowling", DateOfBirth: dob("1965-07-31")},
-			book:   seedBook{"Harry Potter and the Philosopher's Stone", "9780747532699", "Fantasy", "A young wizard begins his magical education.", 1997, 4},
-		},
-		{
-			author: catalog.Author{FirstName: "Frank", LastName: "Herbert", DateOfBirth: dob("1920-10-08")},
-			book:   seedBook{"Dune", "9780441013593", "Science Fiction", "A desert planet, a prophecy, and a fight for survival.", 1965, 2},
-		},
+		{"J.R.R.", "Tolkien", "1892-01-03", seedBook{"The Hobbit", "9780547928227", "Fantasy", "Bilbo Baggins is swept into an epic quest.", 1937, 3}},
+		{"J.K.", "Rowling", "1965-07-31", seedBook{"Harry Potter and the Philosopher's Stone", "9780747532699", "Fantasy", "A young wizard begins his magical education.", 1997, 4}},
+		{"Frank", "Herbert", "1920-10-08", seedBook{"Dune", "9780441013593", "Science Fiction", "A desert planet, a prophecy, and a fight for survival.", 1965, 2}},
 	}
 
 	for _, s := range seeds {
-		authorID, err := authorRepo.Create(ctx, &s.author)
-		if err != nil {
-			log.Fatalf("failed to create seed author %s %s: %v", s.author.FirstName, s.author.LastName, err)
+		var author struct {
+			ID uint64 `json:"id"`
+		}
+		if err := api.do(http.MethodPost, "/authors", map[string]any{
+			"first_name": s.first, "last_name": s.last, "date_of_birth": s.dob,
+		}, &author); err != nil {
+			log.Fatalf("failed to create seed author %s %s: %v", s.first, s.last, err)
 		}
 
-		year := s.book.year
-		book := &catalog.Book{
-			Title:           s.book.title,
-			ISBN:            s.book.isbn,
-			Genre:           s.book.genre,
-			Description:     &s.book.description,
-			PublishedYear:   &year,
-			TotalCopies:     s.book.copies,
-			AvailableCopies: s.book.copies,
-		}
-		bookID, err := bookRepo.Create(ctx, book)
-		if err != nil {
+		if err := api.do(http.MethodPost, "/books", map[string]any{
+			"title": s.book.title, "isbn": s.book.isbn, "genre": s.book.genre,
+			"description": s.book.description, "published_year": s.book.year,
+			"total_copies": s.book.copies, "author_ids": []uint64{author.ID},
+		}, nil); err != nil {
 			log.Fatalf("failed to create seed book %q: %v", s.book.title, err)
 		}
+		log.Printf("seeded book: %q by %s %s", s.book.title, s.first, s.last)
+	}
+}
 
-		if err := bookAuthorRepo.AssignAuthor(ctx, &catalog.BookAuthor{
-			BookID: bookID, AuthorID: authorID, Role: "primary",
-		}); err != nil {
-			log.Fatalf("failed to assign seed author to %q: %v", s.book.title, err)
+// ── Tiny REST client ──────────────────────────────────────
+
+type client struct {
+	base  string
+	token string
+	http  *http.Client
+}
+
+func (c *client) login(email, password string) error {
+	// A freshly inserted account can take a moment to be visible; retry
+	// briefly (also covers the stack still starting up).
+	var err error
+	for attempt := 0; attempt < 10; attempt++ {
+		var resp struct {
+			Token struct {
+				AccessToken string `json:"access_token"`
+			} `json:"token"`
 		}
+		if err = c.do(http.MethodPost, "/auth/login", map[string]string{"email": email, "password": password}, &resp); err == nil {
+			c.token = resp.Token.AccessToken
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+	return err
+}
 
-		log.Printf("seeded book: %q by %s %s", s.book.title, s.author.FirstName, s.author.LastName)
+func (c *client) do(method, path string, body, out any) error {
+	var reader *bytes.Reader
+	if body != nil {
+		b, _ := json.Marshal(body)
+		reader = bytes.NewReader(b)
+	} else {
+		reader = bytes.NewReader(nil)
+	}
+	req, err := http.NewRequest(method, c.base+path, reader)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
 
-	return true
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var envelope struct {
+		Data  json.RawMessage `json:"data"`
+		Error string          `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
+		return fmt.Errorf("%s %s: HTTP %d, unreadable body", method, path, resp.StatusCode)
+	}
+	if resp.StatusCode/100 != 2 {
+		return fmt.Errorf("%s %s: HTTP %d: %s", method, path, resp.StatusCode, envelope.Error)
+	}
+	if out != nil && len(envelope.Data) > 0 {
+		return json.Unmarshal(envelope.Data, out)
+	}
+	return nil
 }

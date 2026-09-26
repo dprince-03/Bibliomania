@@ -1,0 +1,125 @@
+# Nightly database backups (Step 45) → the cluster's own SeaweedFS object
+# store (bucket bibliomania-backups), keeping the newest 7. No cloud account
+# is involved: "S3" below is only the name of the storage protocol SeaweedFS
+# speaks, so any S3-compatible store could stand in for it later.
+#
+# Each engine dumps with its own official image in an init container into a
+# shared emptyDir (so no image needs every client), then rclone uploads the
+# set, verifies it, and prunes old ones. Same formats as the Compose script
+# (infra/backup/backup.sh), so infra/backup/README.md's restore steps apply.
+#
+# Run one now: kubectl -n bibliomania create job --from=cronjob/db-backup db-backup-manual
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup
+  labels: { app.kubernetes.io/name: db-backup, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: backup }
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: db-backup, app.kubernetes.io/part-of: bibliomania }
+        spec:
+          restartPolicy: OnFailure
+          # Each container runs as its own image's user (below); the shared
+          # fsGroup makes /out writable for all of them.
+          securityContext:
+            runAsNonRoot: true
+            fsGroup: 1000
+            seccompProfile: { type: RuntimeDefault }
+          volumes:
+            - name: out
+              emptyDir: {}
+            - name: tmp
+              emptyDir: {}
+          initContainers:
+            - name: postgres
+              image: postgres:16-alpine
+              securityContext:
+                runAsUser: 70
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              env:
+                - name: PGPASSWORD
+                  valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: POSTGRES_PASSWORD } }
+              command:
+                - sh
+                - -ec
+                - |
+                  for db in catalog borrow user payment; do
+                    pg_dump -h postgres -U postgres -Fc "bibliomania_$db" > "/out/postgres-$db.dump"
+                  done
+              volumeMounts: [{ name: out, mountPath: /out }]
+            - name: mysql
+              image: mysql:8.4
+              securityContext:
+                runAsUser: 999
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              env:
+                - name: MYSQL_PWD
+                  valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: AUTH_DB_ROOT_PASSWORD } }
+              command:
+                - sh
+                - -ec
+                - mysqldump -h mysql -uroot --single-transaction --routines --triggers --set-gtid-purged=OFF bibliomania_auth | gzip > /out/mysql-auth.sql.gz
+              volumeMounts: [{ name: out, mountPath: /out }]
+            - name: mongo
+              image: mongo:7
+              securityContext:
+                runAsUser: 999
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              command:
+                - sh
+                - -ec
+                - mongodump --quiet --uri "$MONGO_URL" --db bibliomania_reading --archive=/out/mongo-reading.archive.gz --gzip
+              env:
+                - name: MONGO_URL
+                  valueFrom: { configMapKeyRef: { name: bibliomania-common, key: MONGO_URL } }
+              volumeMounts: [{ name: out, mountPath: /out }]
+          containers:
+            - name: upload
+              # rclone: a vendor-neutral sync tool; configured entirely by env
+              # (remote "store" = SeaweedFS's S3-protocol endpoint).
+              image: rclone/rclone:1.71
+              securityContext:
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              env:
+                - { name: HOME, value: /tmp } # rclone's cache/config dir
+                - { name: RCLONE_CONFIG_STORE_TYPE, value: s3 }
+                - { name: RCLONE_CONFIG_STORE_PROVIDER, value: SeaweedFS }
+                - { name: RCLONE_CONFIG_STORE_ENDPOINT, value: "http://seaweedfs:8333" }
+                - name: RCLONE_CONFIG_STORE_ACCESS_KEY_ID
+                  valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: S3_ACCESS_KEY } }
+                - name: RCLONE_CONFIG_STORE_SECRET_ACCESS_KEY
+                  valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: S3_SECRET_KEY } }
+                - { name: BUCKET, value: bibliomania-backups }
+                - { name: KEEP, value: "7" }
+              command:
+                - sh
+                - -ec
+                - |
+                  cd /out && sha256sum -- * > SHA256SUMS
+                  ts=$(date -u +%Y%m%dT%H%M%SZ)
+                  rclone mkdir "store:$BUCKET"
+                  rclone copy /out "store:$BUCKET/$ts"
+                  # Verify every file landed intact before pruning anything.
+                  rclone check --one-way /out "store:$BUCKET/$ts"
+                  rclone lsf --dirs-only "store:$BUCKET" | sort | head -n -"$KEEP" | while read -r old; do
+                    rclone purge "store:$BUCKET/$old"
+                  done
+                  echo "backup $ts complete"
+              volumeMounts: [{ name: out, mountPath: /out }, { name: tmp, mountPath: /tmp }]

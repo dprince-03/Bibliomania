@@ -1,0 +1,80 @@
+// reading-service's internal gRPC contract — called only by the GraphQL
+// gateway. Identity comes from the forwarded JWT (see borrow.proto).
+
+syntax = "proto3";
+
+package bibliomania.reading.v1;
+
+option go_package = "github.com/dprince-03/Bibliomania/gen/reading/v1;readingv1";
+
+import "google/protobuf/timestamp.proto";
+
+service ReadingService {
+  // The gateway's `myHistory` — reading-service owns this data outright,
+  // including the book title snapshotted at session creation.
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  rpc UpdateProgress(UpdateProgressRequest) returns (ReadingSession);
+  rpc ListBookmarks(ListBookmarksRequest) returns (ListBookmarksResponse);
+  rpc CreateBookmark(CreateBookmarkRequest) returns (Bookmark);
+  rpc DeleteBookmark(DeleteBookmarkRequest) returns (DeleteBookmarkResponse);
+}
+
+message GetHistoryRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message GetHistoryResponse {
+  repeated ReadingSession sessions = 1;
+  int32 total_count = 2;
+}
+
+message UpdateProgressRequest {
+  uint64 book_id = 1;
+  uint32 current_page = 2;
+  uint32 total_pages = 3;
+  optional string current_chapter = 4;
+}
+
+message ReadingSession {
+  uint64 book_id = 1;
+  string book_title = 2;
+  uint32 current_page = 3;
+  uint32 total_pages = 4;
+  double progress_pct = 5;
+  optional string current_chapter = 6;
+  bool is_completed = 7;
+  google.protobuf.Timestamp last_read_at = 8;
+}
+
+message ListBookmarksRequest {
+  uint64 book_id = 1;
+}
+
+message ListBookmarksResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+message CreateBookmarkRequest {
+  uint64 book_id = 1;
+  uint32 page = 2;
+  optional string note = 3;
+  optional string highlight = 4;
+  string color = 5;
+}
+
+message DeleteBookmarkRequest {
+  uint64 book_id = 1;
+  uint64 bookmark_id = 2;
+}
+
+message DeleteBookmarkResponse {}
+
+message Bookmark {
+  uint64 id = 1;
+  uint64 book_id = 2;
+  uint32 page = 3;
+  optional string note = 4;
+  optional string highlight = 5;
+  string color = 6;
+}

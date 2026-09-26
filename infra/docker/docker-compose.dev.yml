@@ -1,25 +1,65 @@
-services:
-  app:
-    build:
-      # dockerfile: is resolved relative to build.context (../../Server/app,
-      # from the base compose file), NOT to this file's own directory — it
-      # needs to walk back out to infra/docker/ where Dockerfiles actually
-      # live (see .claude/CLAUDE.md's "Docker images" note).
-      dockerfile: ../../infra/docker/app/Dockerfile.dev
-    command: air
-    ports:
-      # Host side is deliberately its own var (SERVER_HOST_PORT), separate
-      # from SERVER_PORT (the container's internal listen port, also used
-      # by nginx's proxy_pass) — this machine already runs several other
-      # projects' stacks with their own port claims, so the host side needs
-      # to be freely reassignable without touching internal config. Checked
-      # against `docker ps` at the time these were picked; if you're back
-      # here after a conflict, just override in your local .env.
-      - "${SERVER_HOST_PORT:-9081}:${SERVER_PORT:-8080}"
-    volumes:
-      - ../../Server/app:/app
-      - go_modules:/root/go/pkg/mod
+# ── Go services: hot reload with air ───────────────────────────────────
+# Every service bind-mounts the same Server/app source and runs air with
+# its own build target, binary and tmp dir, so one edit rebuilds only what
+# it touches per service (go's build cache is shared via go_build_cache_nonroot).
+#
+# dockerfile: is resolved relative to build.context (../../Server/app,
+# from the base compose file), NOT to this file's own directory — it needs
+# to walk back out to infra/docker/ where Dockerfiles actually live (see
+# .claude/CLAUDE.md's "Docker images" note).
+x-go-dev: &go-dev
+  build:
+    context: ../../Server/app
+    dockerfile: ../../infra/docker/app/Dockerfile.dev
+  volumes:
+    - ../../Server/app:/app
+    - go_modules_nonroot:/go/pkg/mod
+    - go_build_cache_nonroot:/go/build-cache # GOCACHE, see app/Dockerfile.dev
 
+services:
+  gateway:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/gateway/service ./cmd/gateway", "--build.bin", "./tmp/gateway/service", "--tmp_dir", "tmp/gateway"]
+    ports:
+      # The gateway takes over SERVER_HOST_PORT from the old monolith
+      # `app` service — same host port, same /api/v1 paths. Host side is
+      # its own var, separate from the container's internal 8080, so it
+      # can be reassigned freely (see docs/PORTS.md).
+      - "${SERVER_HOST_PORT:-9081}:8080"
+
+  auth:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/auth/service ./cmd/auth", "--build.bin", "./tmp/auth/service", "--tmp_dir", "tmp/auth"]
+
+  catalog:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/catalog/service ./cmd/catalog", "--build.bin", "./tmp/catalog/service", "--tmp_dir", "tmp/catalog"]
+
+  borrow:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/borrow/service ./cmd/borrow", "--build.bin", "./tmp/borrow/service", "--tmp_dir", "tmp/borrow"]
+
+  reading:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/reading/service ./cmd/reading", "--build.bin", "./tmp/reading/service", "--tmp_dir", "tmp/reading"]
+
+  user:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/user/service ./cmd/user", "--build.bin", "./tmp/user/service", "--tmp_dir", "tmp/user"]
+
+  notification:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/notification/service ./cmd/notification", "--build.bin", "./tmp/notification/service", "--tmp_dir", "tmp/notification"]
+    environment:
+      # Dev mail goes to Mailpit (web UI on MAILPIT_WEB_PORT).
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+
+  payment:
+    <<: *go-dev
+    command: ["air", "-c", ".air.toml", "--build.cmd", "go build -o ./tmp/payment/service ./cmd/payment", "--build.bin", "./tmp/payment/service", "--tmp_dir", "tmp/payment"]
+
+  # ── Clients ───────────────────────────────────────────────
   web-app:
     build:
       dockerfile: ../../../infra/docker/web-app/Dockerfile.dev
@@ -27,7 +67,7 @@ services:
       - "${WEB_APP_HOST_PORT:-9083}:3000"
     volumes:
       - ../../Client/web/app:/app
-      - web_app_node_modules:/app/node_modules
+      - web_app_node_modules_nonroot:/app/node_modules
 
   web-main:
     build:
@@ -36,7 +76,7 @@ services:
       - "${WEB_MAIN_HOST_PORT:-9082}:3000"
     volumes:
       - ../../Client/web/main:/app
-      - web_main_node_modules:/app/node_modules
+      - web_main_node_modules_nonroot:/app/node_modules
 
   admin-web:
     build:
@@ -45,7 +85,7 @@ services:
       - "${ADMIN_WEB_HOST_PORT:-9084}:3000"
     volumes:
       - ../../Client/admin:/app
-      - admin_web_node_modules:/app/node_modules
+      - admin_web_node_modules_nonroot:/app/node_modules
 
   admin:
     build:
@@ -54,8 +94,12 @@ services:
       - "${ADMIN_API_HOST_PORT:-9085}:4000"
     volumes:
       - ../../Server/admin:/app
-      - admin_api_node_modules:/app/node_modules
+      - admin_api_node_modules_nonroot:/app/node_modules
 
+  # ── Data stores / brokers / observability: host ports for dev tools ──
+  # (All checked against docs/PORTS.md — override in infra/docker/.env on
+  # a conflict. Service containers themselves publish nothing but the
+  # gateway: everything else is reached through it.)
   mysql:
     ports:
       - "${DB_PORT:-9086}:3306"
@@ -64,11 +108,45 @@ services:
     ports:
       - "${REDIS_PORT:-9087}:6379"
 
+  postgres:
+    ports:
+      - "${POSTGRES_HOST_PORT:-9091}:5432"
+
+  mongo:
+    ports:
+      # Connect from the host with ?directConnection=true (the replica
+      # set's member is named mongo:27017, only resolvable in the network).
+      - "${MONGO_HOST_PORT:-9092}:27017"
+
+  rabbitmq:
+    ports:
+      - "${RABBITMQ_UI_HOST_PORT:-9093}:15672" # management UI
+
+  nats:
+    ports:
+      - "${NATS_MONITOR_HOST_PORT:-9094}:8222" # monitoring endpoint
+
+  grafana:
+    ports:
+      - "${GRAFANA_HOST_PORT:-9095}:3000"
+
+  prometheus:
+    ports:
+      - "${PROMETHEUS_HOST_PORT:-9096}:9090"
+
+  alertmanager:
+    ports:
+      - "${ALERTMANAGER_HOST_PORT:-9101}:9093"
+
+  seaweedfs:
+    ports:
+      - "${S3_HOST_PORT:-9099}:8333" # SeaweedFS S3-protocol API (any S3 client, e.g. rclone)
+
   nginx:
     build:
       dockerfile: Dockerfile.dev
     ports:
-      - "${NGINX_HOST_PORT:-9080}:80"
+      - "${NGINX_HOST_PORT:-9080}:8080"
 
   # ── Dev-only tooling ──────────────────────────────────────
   adminer:
@@ -76,7 +154,7 @@ services:
     container_name: bibliomania-adminer
     restart: unless-stopped
     environment:
-      ADMINER_DEFAULT_SERVER: mysql
+      ADMINER_DEFAULT_SERVER: postgres
     ports:
       - "${ADMINER_HOST_PORT:-9088}:8080"
     networks:

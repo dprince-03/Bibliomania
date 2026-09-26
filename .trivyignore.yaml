@@ -1,0 +1,10 @@
+# Trivy suppressions — each one scoped to a path and justified. CI passes this
+# file to every Trivy scan (app-ci.yml / app-cd.yml, `trivyignores`).
+misconfigurations:
+  - id: KSV-0109
+    paths:
+      - "infra/k8s/base/config.yaml"
+    statement: >-
+      False positive: flagged only because the key names contain "TOKEN"
+      (JWT_ACCESS_TOKEN_TTL, JWT_REFRESH_TOKEN_TTL). Their values are
+      durations, not secrets; real secrets live in bibliomania-secrets.

@@ -10,7 +10,7 @@
 import { getAccessToken } from "@/lib/session";
 import { refreshSession } from "@/lib/api";
 
-const API_INTERNAL_URL = process.env.API_INTERNAL_URL || "http://localhost:8080";
+const API_INTERNAL_URL = process.env.API_INTERNAL_URL || "http://localhost:9081";
 
 async function fetchFile(id, accessToken) {
   return fetch(`${API_INTERNAL_URL}/api/v1/books/${id}/download`, {

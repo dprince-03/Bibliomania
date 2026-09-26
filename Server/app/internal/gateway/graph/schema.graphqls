@@ -1,0 +1,178 @@
+# GraphQL gateway schema — what `web/app` talks to (POST /graphql).
+# Promoted from the draft in docs/interfaces/gateway.graphql.
+#
+# Display aggregation lives here: resolving Book.myBorrowStatus,
+# Book.myLibraryStatus, LibraryEntry.book etc. fans out to the owning
+# services over gRPC. No service calls another purely to enrich a response.
+#
+# Versioning: unlike REST (/api/v1, /api/v2 …), this schema is NOT
+# versioned by URL. It evolves additively; a field or argument being
+# replaced is marked @deprecated(reason: "...") and kept until clients
+# have moved off it, then removed. See Server/app/docs/API.md.
+
+type Book {
+  id: ID!
+  title: String!
+  isbn: String!
+  genre: String!
+  description: String
+  coverImage: String
+  publishedYear: Int
+  isDigital: Boolean!
+  fileFormat: String
+  authors: [Author!]!
+  totalCopies: Int!
+  availableCopies: Int!
+  # Null = not for sale (payment-service).
+  priceCents: Int
+  currency: String
+
+  # borrow-service: the caller's open (active/overdue) borrow of this book,
+  # null if none or not logged in.
+  myBorrowStatus: BorrowRecord
+  # user-service: this book's status on the caller's shelf, null if it
+  # isn't there or not logged in.
+  myLibraryStatus: LibraryStatus
+}
+
+type Author {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  biography: String
+}
+
+type BorrowRecord {
+  id: ID!
+  # Public, non-guessable UUIDv7 for this record.
+  publicId: ID!
+  bookId: ID!
+  # Snapshotted when the book was borrowed — a historical record.
+  bookTitle: String!
+  # The book as it is now (catalog-service). Null if it has since been
+  # removed from the catalog; bookTitle still says what was borrowed.
+  book: Book
+  borrowedAt: String!
+  dueAt: String!
+  returnedAt: String
+  status: BorrowStatus!
+}
+
+enum BorrowStatus {
+  ACTIVE
+  OVERDUE
+  RETURNED
+}
+
+type LibraryEntry {
+  bookId: ID!
+  # Resolved live — a wishlist shows the book's current title. Null if the
+  # book was removed from the catalog.
+  book: Book
+  status: LibraryStatus!
+  addedAt: String!
+  updatedAt: String!
+}
+
+enum LibraryStatus {
+  WISHLIST
+  TO_READ
+  READING
+  COMPLETED
+  DROPPED
+}
+
+type ReadingHistoryEntry {
+  bookId: ID!
+  # Snapshotted when the reading session started (reading-service).
+  bookTitle: String!
+  book: Book
+  currentPage: Int!
+  totalPages: Int!
+  progressPct: Float!
+  isCompleted: Boolean!
+  lastReadAt: String!
+}
+
+type Bookmark {
+  id: ID!
+  bookId: ID!
+  page: Int!
+  note: String
+  highlight: String
+  color: String!
+}
+
+type UserProfile {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  role: String!
+  phoneNumber: String
+  bio: String
+  # Eventually-consistent copies of reading-service's counters.
+  totalBooksRead: Int!
+  totalPagesRead: Int!
+}
+
+type PageInfo {
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+type BookConnection {
+  items: [Book!]!
+  pageInfo: PageInfo!
+}
+
+type LibraryConnection {
+  items: [LibraryEntry!]!
+  pageInfo: PageInfo!
+}
+
+type BorrowConnection {
+  items: [BorrowRecord!]!
+  pageInfo: PageInfo!
+}
+
+type HistoryConnection {
+  items: [ReadingHistoryEntry!]!
+  pageInfo: PageInfo!
+}
+
+enum BookFormat {
+  DIGITAL
+  PHYSICAL
+}
+
+type Query {
+  books(q: String, genre: String, format: BookFormat, authorId: ID, year: Int, page: Int, limit: Int): BookConnection!
+  book(id: ID!): Book
+
+  # Require authentication.
+  me: UserProfile
+  myLibrary(status: LibraryStatus, page: Int, limit: Int): LibraryConnection!
+  myHistory(page: Int, limit: Int): HistoryConnection!
+  myBorrows(page: Int, limit: Int): BorrowConnection!
+  myBookmarks(bookId: ID!): [Bookmark!]!
+}
+
+type Mutation {
+  # borrow-service runs the Saga (reserve on catalog, create, compensate on
+  # failure). Pass the same idempotencyKey when retrying a request whose
+  # outcome you didn't see, and you'll get the original borrow back instead
+  # of a second one.
+  borrowBook(bookId: ID!, idempotencyKey: String): BorrowRecord!
+  returnBook(borrowId: ID!): BorrowRecord!
+
+  updateLibraryStatus(bookId: ID!, status: LibraryStatus!): LibraryEntry!
+
+  updateReadingProgress(bookId: ID!, currentPage: Int!, totalPages: Int!, currentChapter: String): ReadingHistoryEntry!
+  createBookmark(bookId: ID!, page: Int!, note: String, highlight: String, color: String): Bookmark!
+  deleteBookmark(bookId: ID!, bookmarkId: ID!): Boolean!
+}

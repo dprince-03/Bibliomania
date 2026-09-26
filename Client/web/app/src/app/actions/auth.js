@@ -6,7 +6,7 @@ import { setSession, clearSession, getRefreshToken } from "@/lib/session";
 // Deliberately not routed through lib/api.js: these endpoints don't take
 // (or don't yet have) an access token to attach, and a 401 here is a real
 // "wrong credentials" answer, not a signal to refresh-and-retry.
-const API_INTERNAL_URL = process.env.API_INTERNAL_URL || "http://localhost:8080";
+const API_INTERNAL_URL = process.env.API_INTERNAL_URL || "http://localhost:9081";
 
 async function callAuthEndpoint(path, body) {
   const res = await fetch(`${API_INTERNAL_URL}${path}`, {

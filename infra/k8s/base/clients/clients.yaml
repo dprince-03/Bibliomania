@@ -1,0 +1,186 @@
+# Client apps + the admin backend. Same prod images Compose builds
+# (infra/docker/<app>/Dockerfile.prod). Server-side code reaches the API at
+# the gateway's in-cluster address.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+  labels: { app.kubernetes.io/name: web-app, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: web-app } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: web-app, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: web-app
+          image: bibliomania-web-app
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports: [{ name: http, containerPort: 3000 }]
+          env:
+            - { name: API_INTERNAL_URL, value: "http://gateway:8080" }
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom: { configMapKeyRef: { name: bibliomania-common, key: PUBLIC_API_URL } }
+          readinessProbe:
+            httpGet: { path: /, port: http }
+          resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: next-cache, mountPath: /app/.next/cache }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: web-app }
+spec:
+  selector: { app.kubernetes.io/name: web-app }
+  ports: [{ name: http, port: 3000, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-main
+  labels: { app.kubernetes.io/name: web-main, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: web-main } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: web-main, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        # Static export served by nginx; its API/app URLs are baked in at
+        # image build time (NEXT_PUBLIC_* build args).
+        - name: web-main
+          image: bibliomania-web-main
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports: [{ name: http, containerPort: 8080 }] # nginx-unprivileged
+          readinessProbe:
+            httpGet: { path: /, port: http }
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: web-main }
+spec:
+  selector: { app.kubernetes.io/name: web-main }
+  ports: [{ name: http, port: 80, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-web
+  labels: { app.kubernetes.io/name: admin-web, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: admin-web } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: admin-web, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: admin-web
+          image: bibliomania-admin-web
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports: [{ name: http, containerPort: 3000 }]
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom: { configMapKeyRef: { name: bibliomania-common, key: PUBLIC_ADMIN_API_URL } }
+          readinessProbe:
+            httpGet: { path: /, port: http }
+          resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: next-cache, mountPath: /app/.next/cache }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: admin-web }
+spec:
+  selector: { app.kubernetes.io/name: admin-web }
+  ports: [{ name: http, port: 3000, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+  labels: { app.kubernetes.io/name: admin, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/name: admin } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: admin, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: admin
+          image: bibliomania-admin
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports: [{ name: http, containerPort: 4000 }]
+          env:
+            - { name: GATEWAY_URL, value: "http://gateway:8080" }
+            - { name: HOME, value: /tmp } # npm's cache and logs
+          resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: admin }
+spec:
+  selector: { app.kubernetes.io/name: admin }
+  ports: [{ name: http, port: 4000, targetPort: http }]

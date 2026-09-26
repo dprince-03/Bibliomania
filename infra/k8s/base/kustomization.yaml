@@ -1,0 +1,89 @@
+# Bibliomania on Kubernetes — base. Use an overlay, not this directly:
+#   overlays/local  (kind; `make -C infra/k8s up`)
+#   overlays/prod
+#
+# Several configMapGenerator files live outside this directory
+# (infra/docker/*/init/*.sql, infra/observability/*) so Compose and
+# Kubernetes share one copy of each. That needs kustomize's load
+# restrictor off:
+#   kubectl kustomize --load-restrictor LoadRestrictionsNone infra/k8s/overlays/local
+# (the Makefile and Terraform do this for you).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: bibliomania
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: bibliomania
+    includeSelectors: false
+
+resources:
+  - namespace.yaml
+  - config.yaml
+  # Go services (gateway + 7)
+  - services/gateway.yaml
+  - services/auth.yaml
+  - services/catalog.yaml
+  - services/borrow.yaml
+  - services/reading.yaml
+  - services/user.yaml
+  - services/notification.yaml
+  - services/payment.yaml
+  # Data stores
+  - data/mysql.yaml
+  - data/postgres.yaml
+  - data/mongo.yaml
+  - data/redis.yaml
+  - data/seaweedfs.yaml
+  - data/backup.yaml
+  # Brokers
+  - brokers/rabbitmq.yaml
+  - brokers/kafka.yaml
+  - brokers/nats.yaml
+  # Observability
+  - observability/observability.yaml
+  - observability/exporters.yaml
+  # Clients, analytics, edge
+  - clients/clients.yaml
+  - clients/umami.yaml
+  - edge/ingress.yaml
+
+configMapGenerator:
+  # Same init SQL Compose mounts.
+  - name: postgres-init
+    files:
+      - ../../docker/postgres/init/01-roles-and-databases.sql
+      - ../../docker/postgres/init/02-extensions.sql
+  - name: mysql-init
+    files:
+      - ../../docker/mysql/init/01-server-settings.sql
+  - name: rabbitmq-plugins
+    files:
+      - ../../docker/rabbitmq/enabled_plugins
+  # Observability configs — shared with Compose where the file works as-is.
+  - name: prometheus-config
+    files:
+      - prometheus.yml=observability/prometheus.yml
+      - alerts.yml=../../observability/prometheus/alerts.yml
+  - name: alertmanager-config
+    files:
+      - alertmanager.yml=../../observability/alertmanager/alertmanager.yml
+  - name: alloy-config
+    files:
+      - config.alloy=observability/alloy.alloy
+  - name: loki-config
+    files:
+      - config.yaml=../../observability/loki/config.yaml
+  - name: tempo-config
+    files:
+      - config.yaml=../../observability/tempo/config.yaml
+  - name: grafana-datasources
+    files:
+      - ../../observability/grafana/provisioning/datasources/datasources.yaml
+  - name: grafana-dashboard-providers
+    files:
+      - ../../observability/grafana/provisioning/dashboards/dashboards.yaml
+  - name: grafana-dashboards
+    files:
+      - ../../observability/grafana/dashboards/services.json

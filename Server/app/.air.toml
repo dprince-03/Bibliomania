@@ -2,15 +2,19 @@
 
 root = "."
 testdata_dir = "testdata"
-tmp_dir = "tmp"
+tmp_dir = "tmp/gateway"
 
 [build]
   args_bin = []
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ./cmd/api"
+  # Default target is the gateway; docker-compose.dev.yml overrides
+  # build.cmd/build.bin/tmp_dir per service container, e.g.
+  #   air -c .air.toml --build.cmd "go build -o ./tmp/auth/service ./cmd/auth" \
+  #       --build.bin ./tmp/auth/service --tmp_dir tmp/auth
+  bin = "./tmp/gateway/service"
+  cmd = "go build -o ./tmp/gateway/service ./cmd/gateway"
   delay = 1000
 
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "storage", "docs", "proto"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false

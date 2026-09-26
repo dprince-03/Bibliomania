@@ -1,0 +1,129 @@
+# Alert rules — shared by Compose (mounted) and Kubernetes (configMapGenerator
+# in infra/k8s/base). Every alert carries `severity` (critical = page someone,
+# warning = look during working hours) and a `summary` Alertmanager puts in the
+# notification. Metric sources: internal/telemetry, internal/resilience,
+# internal/services/user/reconcile.go, plus the exporters.
+#
+# Validate: promtool check rules infra/observability/prometheus/alerts.yml
+groups:
+  - name: availability
+    rules:
+      - alert: ServiceDown
+        expr: up{job="services"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }} is not answering /metrics ({{ $labels.instance }})"
+
+      - alert: DependencyExporterDown
+        expr: up{job=~"mysql|postgres|mongodb|redis|kafka|nats|rabbitmq"} == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Can't scrape {{ $labels.job }} — the datastore/broker or its exporter is down"
+
+      - alert: DatabaseDown
+        expr: mysql_up == 0 or pg_up == 0 or mongodb_up == 0 or redis_up == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.job }} reports the database itself is unreachable"
+
+  - name: http
+    rules:
+      - alert: HighHTTPErrorRate
+        expr: |
+          sum by (service) (rate(http_requests_total{status=~"5.."}[5m]))
+            / sum by (service) (rate(http_requests_total[5m])) > 0.05
+          and sum by (service) (rate(http_requests_total[5m])) > 0.1
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }}: {{ $value | humanizePercentage }} of requests are 5xx"
+
+      - alert: HighHTTPLatency
+        expr: |
+          histogram_quantile(0.95, sum by (service, le) (rate(http_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.service }}: p95 latency {{ $value | humanizeDuration }}"
+
+  - name: grpc
+    rules:
+      - alert: HighGRPCErrorRate
+        expr: |
+          sum by (service) (rate(grpc_server_handled_total{code=~"Unavailable|Internal|Unknown|DeadlineExceeded|ResourceExhausted"}[5m]))
+            / sum by (service) (rate(grpc_server_handled_total[5m])) > 0.05
+          and sum by (service) (rate(grpc_server_handled_total[5m])) > 0.1
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }}: {{ $value | humanizePercentage }} of gRPC calls fail with infrastructure errors"
+
+  - name: resilience
+    rules:
+      # 2 = open: calls to that dependency are being refused (degraded mode).
+      - alert: CircuitBreakerOpen
+        expr: max by (service, dependency) (breaker_state) == 2
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }} has stopped calling {{ $labels.dependency }} (breaker open)"
+
+      - alert: BulkheadRejecting
+        expr: sum by (service, dependency) (rate(bulkhead_rejected_total[5m])) > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.service }} is shedding load to {{ $labels.dependency }} — it's saturated"
+
+  - name: events
+    rules:
+      - alert: EventsDeadLettered
+        expr: sum by (service, topic) (increase(events_handled_total{outcome="dead_letter"}[15m])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.service }} dead-lettered {{ $value }} {{ $labels.topic }} event(s) — inspect the DLQ"
+
+      - alert: OutboxPublishFailing
+        expr: sum by (service) (rate(events_published_total{outcome="error"}[5m])) > 0
+          unless sum by (service) (rate(events_published_total{outcome="ok"}[5m])) > 0
+        for: 10m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }} can't publish events — the outbox is backing up"
+
+      - alert: KafkaConsumerLag
+        expr: sum by (consumergroup, topic) (kafka_consumergroup_lag) > 1000
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Consumer group {{ $labels.consumergroup }} is {{ $value }} messages behind on {{ $labels.topic }}"
+
+      - alert: RabbitMQBacklog
+        expr: sum(rabbitmq_queue_messages_ready) > 1000
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $value }} RabbitMQ messages waiting — consumers aren't keeping up"
+
+  - name: consistency
+    rules:
+      - alert: ReconcilerFoundDrift
+        expr: sum by (kind) (increase(reconcile_repairs_total{kind!="orphan"}[2h])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Reconciler repaired {{ $value }} {{ $labels.kind }} case(s) — events are being lost somewhere"
+
+      - alert: ReconcilerFoundOrphans
+        expr: increase(reconcile_repairs_total{kind="orphan"}[2h]) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "Users exist without an auth account — needs manual review (see user-service logs)"
+
+      - alert: ReconcilerFailing
+        expr: increase(reconcile_runs_total{outcome="error"}[3h]) >= 3
+        labels: { severity: warning }
+        annotations:
+          summary: "The auth↔user reconciler keeps failing"

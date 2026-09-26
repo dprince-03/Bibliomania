@@ -1,51 +1,75 @@
 # Run from Server/app/ (matches every other command documented in CLAUDE.md).
 #
-# migrate-up/migrate-down source Server/app/.env at the shell level (not via
-# Make's `include`) — Make's own comment character is '#', and this repo's
-# DB_PASSWORD/REDIS_PASSWORD values contain a literal '#' (e.g.
-# "@Dev_prince#2003"). `include .env` would silently truncate that value at
-# the '#'; sourcing it as a shell script does not, since shell only treats
-# '#' as a comment starter at the beginning of a word, not mid-token.
+# Server/app is one Go module with eight binaries (cmd/<service>): seven
+# services + the gateway. See docs/plan.md → "Microservices split".
+#
+# .env files are loaded as data by infra/backup/load-env.sh — not via
+# Make's `include` (Make's comment character is '#', and password values
+# can contain one) and not by sourcing them as shell (values like
+# MAIL_FROM=Name <addr> are shell redirects).
 
-.PHONY: run build vet fmt migrate-up migrate-down docker-up docker-down swagger seed
+# load-env.sh (used by `seed`) needs bash, not the /bin/sh default.
+SHELL := /bin/bash
 
+SERVICES := gateway auth catalog borrow reading user notification payment
+SERVICE ?= gateway
+COMPOSE := docker compose --env-file ../../infra/docker/.env -f ../../infra/docker/docker-compose.yml -f ../../infra/docker/docker-compose.dev.yml
+
+.PHONY: run build vet fmt test proto graphql swagger generate seed docker-up docker-down docker-logs
+
+# Run one service locally, outside Docker: `make run SERVICE=catalog`.
+# It still needs its database/broker — easiest with the stack's infra up.
 run:
-	go run ./cmd/api
+	go run ./cmd/$(SERVICE)
 
 build:
-	go build -o bin/bibliomania ./cmd/api
+	@for s in $(SERVICES); do echo "build $$s"; go build -o bin/$$s ./cmd/$$s || exit 1; done
 
 vet:
 	go vet ./...
 
 fmt:
-	gofmt -l .
+	gofmt -l $$(find . -name '*.go' -not -path './gen/*' -not -name 'generated.go' -not -name 'models_gen.go')
 
-migrate-up:
-	@set -a; . ./.env; set +a; \
-	migrate -path ./migrations -database "mysql://$$DB_USER:$$DB_PASSWORD@tcp($$DB_HOST:$$DB_PORT)/$$DB_NAME" up
+test:
+	go test ./...
 
-migrate-down:
-	@set -a; . ./.env; set +a; \
-	migrate -path ./migrations -database "mysql://$$DB_USER:$$DB_PASSWORD@tcp($$DB_HOST:$$DB_PORT)/$$DB_NAME" down 1
+# Regenerate gRPC code in gen/ from proto/ (needs buf, protoc-gen-go,
+# protoc-gen-go-grpc — see docs/project_setup.md).
+proto:
+	buf lint
+	buf generate
 
-# Whole dev stack (server, all clients, nginx, MySQL, Redis, Umami, dev
-# tooling) — see infra/README.md for what's in it and the prod equivalent
-# (docker-compose.prod.yml; not wrapped here since it's a deploy-host
-# concern, not a local dev convenience).
+# Regenerate the GraphQL gateway after editing
+# internal/gateway/graph/schema.graphqls.
+graphql:
+	go tool gqlgen generate
+
+# Regenerate internal/swaggerdocs/ after changing any handler's swaggo
+# comments — covers every service (the gateway serves the combined spec).
+swagger:
+	swag init -g cmd/gateway/main.go --output internal/swaggerdocs --parseInternal --parseDependency
+	swag fmt -g cmd/gateway/main.go
+
+generate: proto graphql swagger
+
+# Dev-only sample data, against the running dev stack (`make docker-up`
+# first) — see cmd/seed/main.go.
+seed:
+	@. ../../infra/backup/load-env.sh; \
+	env_file=../../infra/docker/.env; [ -f $$env_file ] || env_file=../../infra/docker/.env.example; \
+	load_env $$env_file; \
+	SEED_AUTH_DATABASE_URL="$${AUTH_DB_USER:-auth}:$${AUTH_DB_PASSWORD:-changeme}@tcp(localhost:$${DB_PORT:-9086})/$${AUTH_DB_NAME:-bibliomania_auth}" \
+	SEED_GATEWAY_URL="http://localhost:$${SERVER_HOST_PORT:-9081}" \
+	go run ./cmd/seed
+
+# Whole dev stack (services, clients, databases, brokers, observability,
+# nginx, dev tooling) — see infra/README.md.
 docker-up:
-	docker compose --env-file ../../.env -f ../../infra/docker/docker-compose.yml -f ../../infra/docker/docker-compose.dev.yml up --build -d
+	$(COMPOSE) up --build -d
 
 docker-down:
-	docker compose --env-file ../../.env -f ../../infra/docker/docker-compose.yml -f ../../infra/docker/docker-compose.dev.yml down
+	$(COMPOSE) down
 
-# Regenerate internal/swaggerdocs/ after changing a handler's swaggo
-# comments (Step 18) — see Server/app/docs/API.md.
-swagger:
-	swag init -g cmd/api/main.go --output internal/swaggerdocs --parseInternal --parseDependency
-	swag fmt -g cmd/api/main.go
-
-# Dev-only sample data — see cmd/seed/main.go for exactly what it inserts
-# and how it avoids duplicating data on repeat runs.
-seed:
-	go run ./cmd/seed
+docker-logs:
+	$(COMPOSE) logs -f $(SERVICES)

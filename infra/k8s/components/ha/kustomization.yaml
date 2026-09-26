@@ -1,0 +1,289 @@
+# High availability: replication for every stateful piece. Enable from an
+# overlay (overlays/prod does; overlays/local-ha tests it on kind):
+#   components:
+#     - ../../components/ha
+#
+#   Postgres  → 3-instance CloudNativePG cluster, automatic failover,
+#               read replicas for catalog (pg-ro)
+#   MySQL     → GTID primary + async read-only replica (manual failover)
+#   MongoDB   → 3-member replica set (automatic failover)
+#   Kafka     → 3 KRaft brokers, replication factor 3, min.insync 2
+#   NATS      → 3-server JetStream cluster, stream replicas 3
+#   RabbitMQ  → 3-node cluster (Cluster Operator), quorum queues
+#   Redis     → not replicated: cache + idempotency/rate-limit state that
+#               fails open (see Server/app/docs/plan.md)
+#
+# Needs two operators installed first: CloudNativePG and the RabbitMQ
+# Cluster Operator (`make -C infra/k8s operators`), and extra Secrets —
+# pg-superuser, pg-catalog, pg-borrow, pg-users, pg-payment (basic-auth)
+# and MYSQL_REPLICATION_PASSWORD in bibliomania-secrets (overlays/local-ha
+# generates them; for prod create them out-of-band).
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - postgres-cnpg.yaml
+  - mysql-replica.yaml
+  - rabbitmq-cluster.yaml
+  - nats-cluster.yaml
+
+configMapGenerator:
+  # Primary gets the replication user alongside base's settings SQL.
+  - name: mysql-init
+    behavior: merge
+    files:
+      - 02-replication-user.sh
+  - name: mysql-replica-init
+    namespace: bibliomania
+    files:
+      - ../../../docker/mysql/init/01-server-settings.sql
+      - 01-start-replica.sh
+
+patches:
+  # ── Shared config: point every service at the replicated brokers ──
+  - target: { kind: ConfigMap, name: bibliomania-common }
+    patch: |-
+      - op: replace
+        path: /data/KAFKA_BROKERS
+        value: kafka-0.kafka:9092,kafka-1.kafka:9092,kafka-2.kafka:9092
+      - op: add
+        path: /data/KAFKA_REPLICATION_FACTOR
+        value: "3"
+      - op: add
+        path: /data/NATS_STREAM_REPLICAS
+        value: "3"
+      - op: add
+        path: /data/RABBITMQ_QUEUE_TYPE
+        value: quorum
+      - op: replace
+        path: /data/MONGO_URL
+        value: mongodb://mongo-0.mongo:27017,mongo-1.mongo:27017,mongo-2.mongo:27017/?replicaSet=rs0
+
+  # ── Postgres: drop base's single instance; re-point "postgres" at the
+  # CNPG primary (headless → DNS follows failover) ──────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: postgres
+      $patch: delete
+  - target: { kind: Service, name: postgres }
+    patch: |-
+      - op: replace
+        path: /spec/selector
+        value:
+          cnpg.io/cluster: pg
+          cnpg.io/instanceRole: primary
+  # catalog: public reads from the replicas. A JSON-patch append, not a
+  # strategic merge: $(CATALOG_DB_PASSWORD) only expands if that variable is
+  # defined EARLIER in the env list, and a strategic merge inserts new
+  # entries at the front — the literal "$(CATALOG_DB_PASSWORD)" then went out
+  # as the password (SASL auth failure against pg-ro).
+  - target: { kind: Deployment, name: catalog }
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: READ_DATABASE_URL
+          value: postgres://catalog:$(CATALOG_DB_PASSWORD)@pg-ro:5432/bibliomania_catalog?sslmode=disable
+
+  # ── MySQL: base instance becomes a GTID primary ─────────────────────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: mysql
+      spec:
+        template:
+          spec:
+            containers:
+              - name: mysql
+                args: ["--server-id=1", "--gtid-mode=ON", "--enforce-gtid-consistency=ON", "--binlog-format=ROW"]
+                env:
+                  - name: MYSQL_REPLICATION_PASSWORD
+                    valueFrom:
+                      secretKeyRef: { name: bibliomania-secrets, key: MYSQL_REPLICATION_PASSWORD }
+
+  # ── MongoDB: 3-member replica set ───────────────────────────────────
+  - target: { kind: StatefulSet, name: mongo }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      # Start all members at once. With the default OrderedReady, member 0
+      # waits to be Ready before 1 is created — but a quorum system can't be
+      # Ready alone, so the set deadlocks at one pod.
+      - op: add
+        path: /spec/podManagementPolicy
+        value: Parallel
+  - target: { kind: Job, name: mongo-rs-init }
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/command
+        value:
+          - mongosh
+          - --host
+          - mongo-0.mongo:27017
+          - --quiet
+          - --eval
+          - |
+            try { rs.status().ok }
+            catch (e) { rs.initiate({ _id: 'rs0', members: [
+              { _id: 0, host: 'mongo-0.mongo:27017' },
+              { _id: 1, host: 'mongo-1.mongo:27017' },
+              { _id: 2, host: 'mongo-2.mongo:27017' } ] }).ok }
+
+  # ── Kafka: 3 KRaft brokers (each also a controller) ─────────────────
+  # Node ID and advertised address come from the pod's ordinal/hostname.
+  - target: { kind: StatefulSet, name: kafka }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      # Start all members at once. With the default OrderedReady, member 0
+      # waits to be Ready before 1 is created — but a quorum system can't be
+      # Ready alone, so the set deadlocks at one pod.
+      - op: add
+        path: /spec/podManagementPolicy
+        value: Parallel
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: kafka
+      spec:
+        template:
+          spec:
+            containers:
+              - name: kafka
+                command: ["sh", "-c"]
+                args:
+                  - export KAFKA_NODE_ID=$(( ${HOSTNAME##*-} + 1 ));
+                    export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${HOSTNAME}.kafka:9092;
+                    exec /etc/kafka/docker/run
+                env:
+                  - { name: CLUSTER_ID, value: "bibliomania-kafka-ha-01" }
+                  - { name: KAFKA_CONTROLLER_QUORUM_VOTERS, value: "1@kafka-0.kafka:9093,2@kafka-1.kafka:9093,3@kafka-2.kafka:9093" }
+                  - { name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR, value: "3" }
+                  - { name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR, value: "3" }
+                  - { name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR, value: "2" }
+                  - { name: KAFKA_DEFAULT_REPLICATION_FACTOR, value: "3" }
+                  - { name: KAFKA_MIN_INSYNC_REPLICAS, value: "2" }
+                  - { name: KAFKA_HEAP_OPTS, value: "-Xms384m -Xmx384m" }
+
+  # ── NATS: 3-server JetStream cluster ────────────────────────────────
+  - target: { kind: StatefulSet, name: nats }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      # Start all members at once. With the default OrderedReady, member 0
+      # waits to be Ready before 1 is created — but a quorum system can't be
+      # Ready alone, so the set deadlocks at one pod.
+      - op: add
+        path: /spec/podManagementPolicy
+        value: Parallel
+      - op: replace
+        path: /spec/serviceName
+        value: nats-cluster
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: nats
+      spec:
+        template:
+          spec:
+            containers:
+              - name: nats
+                args:
+                  - -js
+                  - -sd
+                  - /data
+                  - -m
+                  - "8222"
+                  - --server_name=$(POD_NAME)
+                  - --cluster_name=bibliomania
+                  - --cluster=nats://0.0.0.0:6222
+                  - --routes=nats://nats-0.nats-cluster:6222,nats://nats-1.nats-cluster:6222,nats://nats-2.nats-cluster:6222
+                ports:
+                  - { name: cluster, containerPort: 6222 }
+                env:
+                  - name: POD_NAME
+                    valueFrom: { fieldRef: { fieldPath: metadata.name } }
+
+  # ── RabbitMQ: the operator's cluster replaces base's single node ─────
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: rabbitmq
+      $patch: delete
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: rabbitmq
+      $patch: delete
+  # Services read the operator-generated credentials (its default-user
+  # Secret carries a ready-made AMQP connection_string).
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: auth
+      spec:
+        template:
+          spec:
+            containers:
+              - name: auth
+                env:
+                  - name: RABBITMQ_URL
+                    value: null
+                    valueFrom:
+                      secretKeyRef: { name: rabbitmq-default-user, key: connection_string }
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: catalog
+      spec:
+        template:
+          spec:
+            containers:
+              - name: catalog
+                env:
+                  - name: RABBITMQ_URL
+                    value: null
+                    valueFrom:
+                      secretKeyRef: { name: rabbitmq-default-user, key: connection_string }
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: user
+      spec:
+        template:
+          spec:
+            containers:
+              - name: user
+                env:
+                  - name: RABBITMQ_URL
+                    value: null
+                    valueFrom:
+                      secretKeyRef: { name: rabbitmq-default-user, key: connection_string }
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: notification
+      spec:
+        template:
+          spec:
+            containers:
+              - name: notification
+                env:
+                  - name: RABBITMQ_URL
+                    value: null
+                    valueFrom:
+                      secretKeyRef: { name: rabbitmq-default-user, key: connection_string }

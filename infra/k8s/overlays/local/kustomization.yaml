@@ -1,0 +1,51 @@
+# Local Kubernetes (kind) — `make -C infra/k8s up`. Images are built on the
+# host and loaded into the kind node (tag :dev, never pulled).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Repeated from base on purpose: base's namespace only applies to base's
+# own resources, so anything this overlay adds (the Secret, extra
+# resources) would otherwise land in "default".
+namespace: bibliomania
+
+resources:
+  - ../../base
+  - mailpit.yaml
+
+# Secrets from a git-ignored env file — `make -C infra/k8s secrets` creates
+# it from secrets.env.example with a random JWT_SECRET.
+# Fixed name (no content-hash suffix): every Deployment in base refers to
+# "bibliomania-secrets" by name, and prod creates the Secret out-of-band
+# under that name too. After editing secrets.env, re-apply and
+# `kubectl -n bibliomania rollout restart deployment,statefulset`.
+secretGenerator:
+  - name: bibliomania-secrets
+    envs:
+      - secrets.env
+    options:
+      disableNameSuffixHash: true
+
+patches:
+  # Dev mail goes to Mailpit.
+  - target: { kind: ConfigMap, name: bibliomania-common }
+    patch: |-
+      - op: add
+        path: /data/SMTP_HOST
+        value: mailpit
+      - op: add
+        path: /data/SMTP_PORT
+        value: "1025"
+
+images:
+  - { name: bibliomania-gateway, newTag: dev }
+  - { name: bibliomania-auth, newTag: dev }
+  - { name: bibliomania-catalog, newTag: dev }
+  - { name: bibliomania-borrow, newTag: dev }
+  - { name: bibliomania-reading, newTag: dev }
+  - { name: bibliomania-user, newTag: dev }
+  - { name: bibliomania-notification, newTag: dev }
+  - { name: bibliomania-payment, newTag: dev }
+  - { name: bibliomania-web-app, newTag: dev }
+  - { name: bibliomania-web-main, newTag: dev }
+  - { name: bibliomania-admin-web, newTag: dev }
+  - { name: bibliomania-admin, newTag: dev }

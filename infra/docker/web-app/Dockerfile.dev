@@ -1,11 +1,15 @@
 FROM node:20-alpine
 
+# Non-root: node images ship a `node` user (uid 1000, the usual host UID),
+# so files the dev server writes into the bind-mounted source stay yours.
 WORKDIR /app
+RUN chown node:node /app
+USER node
 
-COPY package.json package-lock.json ./
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 
 EXPOSE 3000
 

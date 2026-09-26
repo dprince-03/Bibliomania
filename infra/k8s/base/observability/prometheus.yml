@@ -1,0 +1,71 @@
+# Kubernetes variant of infra/observability/prometheus/prometheus.yml.
+# Go services are found through the Kubernetes API (every pod annotated
+# prometheus.io/scrape=true), so each replica is scraped — a static target
+# would hit one pod behind a Service at random. Infrastructure exporters
+# keep static targets (same Service names as Compose).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Same rules as Compose (infra/observability/prometheus/alerts.yml, mounted
+# into this ConfigMap by the base kustomization).
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+scrape_configs:
+  - job_name: services
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [bibliomania]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      # Same `service` label values as Compose ("catalog-service", ...), so
+      # the Grafana dashboard works unchanged.
+      - source_labels: [__meta_kubernetes_pod_label_bibliomania_dev_service]
+        target_label: service
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+
+  - job_name: mysql
+    static_configs:
+      - { targets: ["mysqld-exporter:9104"], labels: { database: auth } }
+  - job_name: postgres
+    static_configs:
+      - { targets: ["postgres-exporter:9187"] }
+  - job_name: mongodb
+    static_configs:
+      - { targets: ["mongodb-exporter:9216"], labels: { database: reading } }
+  - job_name: redis
+    static_configs:
+      - { targets: ["redis-exporter:9121"] }
+  - job_name: rabbitmq
+    static_configs:
+      - { targets: ["rabbitmq:15692"] }
+  - job_name: kafka
+    static_configs:
+      - { targets: ["kafka-exporter:9308"] }
+  - job_name: nats
+    static_configs:
+      - { targets: ["nats-exporter:7777"] }
+  - job_name: prometheus
+    static_configs:
+      - { targets: ["localhost:9090"] }
+  - job_name: tempo
+    static_configs:
+      - { targets: ["tempo:3200"] }
+  - job_name: loki
+    static_configs:
+      - { targets: ["loki:3100"] }

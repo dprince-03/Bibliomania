@@ -1,0 +1,220 @@
+# Prometheus exporters for every database and broker (RabbitMQ needs none —
+# its rabbitmq_prometheus plugin serves :15692 itself). Service names and
+# ports match Compose, so the scrape config's static targets are shared.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysqld-exporter
+  labels: { app.kubernetes.io/name: mysqld-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: mysqld-exporter } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: mysqld-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: exporter
+          image: prom/mysqld-exporter:v0.17.2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          args: ["--mysqld.address=mysql:3306", "--mysqld.username=root"]
+          env:
+            - name: MYSQLD_EXPORTER_PASSWORD
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: AUTH_DB_ROOT_PASSWORD } }
+          ports: [{ name: metrics, containerPort: 9104 }]
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mysqld-exporter }
+spec:
+  selector: { app.kubernetes.io/name: mysqld-exporter }
+  ports: [{ name: metrics, port: 9104, targetPort: metrics }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-exporter
+  labels: { app.kubernetes.io/name: postgres-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: postgres-exporter } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: postgres-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: exporter
+          image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          env:
+            - { name: DATA_SOURCE_URI, value: "postgres:5432/postgres?sslmode=disable" }
+            - { name: DATA_SOURCE_USER, value: postgres }
+            - name: DATA_SOURCE_PASS
+              valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: POSTGRES_PASSWORD } }
+          ports: [{ name: metrics, containerPort: 9187 }]
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: postgres-exporter }
+spec:
+  selector: { app.kubernetes.io/name: postgres-exporter }
+  ports: [{ name: metrics, port: 9187, targetPort: metrics }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-exporter
+  labels: { app.kubernetes.io/name: mongodb-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: mongodb-exporter } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: mongodb-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65535
+        runAsGroup: 65535
+        fsGroup: 65535
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: exporter
+          image: percona/mongodb_exporter:0.44
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          args: ["--mongodb.uri=mongodb://mongo-0.mongo:27017/?directConnection=true", "--collect-all", "--compatible-mode"]
+          ports: [{ name: metrics, containerPort: 9216 }]
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mongodb-exporter }
+spec:
+  selector: { app.kubernetes.io/name: mongodb-exporter }
+  ports: [{ name: metrics, port: 9216, targetPort: metrics }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  labels: { app.kubernetes.io/name: redis-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: redis-exporter } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: redis-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 59000
+        runAsGroup: 59000
+        fsGroup: 59000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: exporter
+          image: oliver006/redis_exporter:v1.74.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          env:
+            - { name: REDIS_ADDR, value: "redis://redis:6379" }
+          ports: [{ name: metrics, containerPort: 9121 }]
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis-exporter }
+spec:
+  selector: { app.kubernetes.io/name: redis-exporter }
+  ports: [{ name: metrics, port: 9121, targetPort: metrics }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-exporter
+  labels: { app.kubernetes.io/name: kafka-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: kafka-exporter } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: kafka-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: exporter
+          image: danielqsj/kafka-exporter:v1.9.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          args: ["--kafka.server=kafka-0.kafka:9092"]
+          ports: [{ name: metrics, containerPort: 9308 }]
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: kafka-exporter }
+spec:
+  selector: { app.kubernetes.io/name: kafka-exporter }
+  ports: [{ name: metrics, port: 9308, targetPort: metrics }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-exporter
+  labels: { app.kubernetes.io/name: nats-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: nats-exporter } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: nats-exporter, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: exporter
+          image: natsio/prometheus-nats-exporter:0.17.3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          args: ["-varz", "-connz", "-jsz=all", "http://nats:8222"]
+          ports: [{ name: metrics, containerPort: 7777 }]
+          resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: nats-exporter }
+spec:
+  selector: { app.kubernetes.io/name: nats-exporter }
+  ports: [{ name: metrics, port: 7777, targetPort: metrics }]

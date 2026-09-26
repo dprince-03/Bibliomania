@@ -1,0 +1,13 @@
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+  except:
+    # proto/<svc>/v1 layout mirrors gen/<svc>/v1, not the package path.
+    - PACKAGE_DIRECTORY_MATCH
+    # Shared entity messages (Book, BorrowRecord, ...) are returned from
+    # several RPCs on purpose, rather than one wrapper message per RPC.
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - RPC_RESPONSE_STANDARD_NAME

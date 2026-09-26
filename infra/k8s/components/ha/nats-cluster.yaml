@@ -1,0 +1,14 @@
+# Headless Service the 3 NATS servers find each other through (routes on
+# :6222) and that gives each pod a stable DNS name (nats-N.nats-cluster).
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-cluster
+  namespace: bibliomania
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector: { app.kubernetes.io/name: nats }
+  ports:
+    - { name: cluster, port: 6222 }
+    - { name: client, port: 4222 }

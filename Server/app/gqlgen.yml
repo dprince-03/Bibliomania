@@ -1,0 +1,29 @@
+# gqlgen config for the GraphQL gateway — regenerate with `make graphql`
+# after editing internal/gateway/graph/schema.graphqls.
+schema:
+  - internal/gateway/graph/schema.graphqls
+
+exec:
+  filename: internal/gateway/graph/generated.go
+  package: graph
+
+model:
+  filename: internal/gateway/graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: internal/gateway/graph
+  package: graph
+  filename_template: "{name}.resolvers.go"
+
+autobind:
+  - "github.com/dprince-03/Bibliomania/internal/gateway/graph/model"
+
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int

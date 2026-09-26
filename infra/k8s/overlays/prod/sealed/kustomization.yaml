@@ -1,0 +1,8 @@
+# SealedSecrets for production — written by `make -C infra/k8s seal`, which
+# encrypts overlays/prod/secrets/*.env (git-ignored plaintext) against the
+# production cluster's Sealed Secrets public key. Only that cluster's
+# controller can decrypt them, so these files are safe to commit; Argo CD
+# applies them like any other manifest. Regenerated wholesale by `make seal`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: []

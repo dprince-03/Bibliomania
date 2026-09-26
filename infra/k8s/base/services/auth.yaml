@@ -1,0 +1,114 @@
+# auth-service — generated alongside the other Go services; each is the
+# same shape: one Deployment running the bibliomania-auth image
+# (infra/docker/app/Dockerfile.prod, SERVICE=auth), config from the
+# bibliomania-common ConfigMap, secrets from bibliomania-secrets.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  labels:
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/part-of: bibliomania
+    app.kubernetes.io/component: service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth
+        app.kubernetes.io/part-of: bibliomania
+        app.kubernetes.io/component: service
+        bibliomania.dev/service: auth-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      securityContext:
+        fsGroup: 10001
+      containers:
+        - name: auth
+          image: bibliomania-auth
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: bibliomania-common
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: JWT_SECRET
+            - name: INTERNAL_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: INTERNAL_API_TOKEN
+            - name: AUTH_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: AUTH_DB_PASSWORD
+            - name: DATABASE_URL
+              value: "auth:$(AUTH_DB_PASSWORD)@tcp(mysql:3306)/bibliomania_auth"
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bibliomania-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: RABBITMQ_URL
+              value: "amqp://bibliomania:$(RABBITMQ_PASSWORD)@rabbitmq:5672/"
+          # Readiness = /health (checks this service's database/brokers):
+          # traffic stops while a dependency is down. Liveness = /livez (the
+          # process answers) — a database blip must not restart pods.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # Writable /tmp on a read-only root filesystem.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  labels:
+    app.kubernetes.io/name: auth
+    app.kubernetes.io/part-of: bibliomania
+spec:
+  selector:
+    app.kubernetes.io/name: auth
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

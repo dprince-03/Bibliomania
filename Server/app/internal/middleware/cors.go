@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -33,11 +34,13 @@ func contains(slice []string, item string) bool {
 func DefaultCORSConfig() CORSConfig {
 	return CORSConfig{
 		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{
 			"Content-Type",
 			"Authorization",
 			"X-Request-With",
+			"Idempotency-Key",
+			"API-Version",
 		},
 		MaxAge: 86400,
 	}
@@ -57,7 +60,7 @@ func CORS(config CORSConfig) func(http.Handler) http.Handler {
 
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(config.AllowedMethods, ", "))
 			w.Header().Set("Access-Control-Allow-Headers", strings.Join(config.AllowedHeaders, ", "))
-			w.Header().Set("Access-Control-Max-Age", http.TimeFormat)
+			w.Header().Set("Access-Control-Max-Age", strconv.Itoa(config.MaxAge))
 			w.Header().Set("Vary", "Origin")
 
 			// Handle preflight request

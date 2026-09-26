@@ -1,41 +1,37 @@
+// Package mysqlclient connects auth-service to its MySQL database.
 package mysqlclient
 
 import (
-	"fmt"
-	"log"
-	"time"
+	"context"
+	"strings"
 
-	"github.com/dprince-03/Bibliomania/internal/config"
+	"github.com/dprince-03/Bibliomania/pkg/sqlretry"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // registers the "mysql" driver
 	"github.com/jmoiron/sqlx"
 )
 
-func ConnectMySqlClient(cfg *config.Config) (*sqlx.DB, error) {
-	dataSourceName := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
-		cfg.DBUser,
-		cfg.DBPassword,
-		cfg.DBHost,
-		cfg.DBPort,
-		cfg.DBName,
-	)
+const DriverName = "mysql"
 
-	db, err := sqlx.Connect("mysql", dataSourceName)
-	if err != nil {
-		return nil, fmt.Errorf("Error connecting to Database : %v", err)
+// Connect opens a pool from a go-sql-driver DSN, e.g.
+// auth:pw@tcp(mysql:3306)/bibliomania_auth. parseTime (scan DATETIME into
+// time.Time) and multiStatements (a migration file may hold several
+// statements) are added if the DSN doesn't set them.
+func Connect(ctx context.Context, dsn string) (*sqlx.DB, error) {
+	return sqlretry.Connect(ctx, DriverName, withDefaults(dsn))
+}
+
+func withDefaults(dsn string) string {
+	for _, param := range []string{"parseTime=true", "multiStatements=true"} {
+		name, _, _ := strings.Cut(param, "=")
+		if strings.Contains(dsn, name+"=") {
+			continue
+		}
+		sep := "?"
+		if strings.Contains(dsn, "?") {
+			sep = "&"
+		}
+		dsn += sep + param
 	}
-
-	db.SetMaxOpenConns(25)                 // max open connections to DB
-	db.SetMaxIdleConns(10)                 // max idle connections kept in pool
-	db.SetConnMaxLifetime(5 * time.Minute) // recycle connections every 5 min
-	db.SetConnMaxIdleTime(2 * time.Minute) // close idle connections after 2 min
-
-	err = db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("Error pinging database: %v", err)
-	}
-
-	log.Println("Database connected successfully !!!")
-	return db, nil
+	return dsn
 }

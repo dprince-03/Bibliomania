@@ -1,0 +1,115 @@
+// catalog-service's internal gRPC contract. Promoted from the draft in
+// docs/interfaces/catalog.proto — same RPCs, plus the list/search reads the
+// GraphQL gateway needs and the author list embedded in Book.
+//
+// Callers: borrow-service (GetBook + ReserveCopy/ReleaseCopy — the borrow
+// Saga), reading-service and user-service (GetBook, once, at creation time),
+// the gateway (display reads). Nothing here is client-facing.
+
+syntax = "proto3";
+
+package bibliomania.catalog.v1;
+
+option go_package = "github.com/dprince-03/Bibliomania/gen/catalog/v1;catalogv1";
+
+import "google/protobuf/timestamp.proto";
+
+service CatalogService {
+  rpc GetBook(GetBookRequest) returns (Book);
+
+  // Batch form of GetBook — one round trip for a whole list (e.g. "My
+  // Library"). Unknown IDs are silently omitted, not an error.
+  rpc GetBooksByIds(GetBooksByIdsRequest) returns (GetBooksByIdsResponse);
+
+  // Paginated list/search — the gateway's `books` query. Empty filters
+  // mean "list everything".
+  rpc SearchBooks(SearchBooksRequest) returns (SearchBooksResponse);
+
+  // Write-time half of the borrow Saga. Atomic on catalog's side
+  // (`available_copies > 0` guard). Idempotent per idempotency_key: a
+  // retried call with the same key returns the original outcome instead of
+  // reserving a second copy. FAILED_PRECONDITION when no copy is available,
+  // NOT_FOUND when the book doesn't exist.
+  rpc ReserveCopy(ReserveCopyRequest) returns (ReserveCopyResponse);
+
+  // Compensating half (and the normal "book came back" path). Idempotent:
+  // releasing an unknown or already-released key is a successful no-op.
+  rpc ReleaseCopy(ReleaseCopyRequest) returns (ReleaseCopyResponse);
+}
+
+message GetBookRequest {
+  uint64 book_id = 1;
+}
+
+message GetBooksByIdsRequest {
+  repeated uint64 book_ids = 1;
+}
+
+message GetBooksByIdsResponse {
+  repeated Book books = 1;
+}
+
+message SearchBooksRequest {
+  string query = 1;
+  string genre = 2;
+  // "", "digital" or "physical".
+  string format = 3;
+  uint64 author_id = 4;
+  int32 year = 5;
+  int32 page = 6;
+  int32 limit = 7;
+}
+
+message SearchBooksResponse {
+  repeated Book books = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message ReserveCopyRequest {
+  uint64 book_id = 1;
+  string idempotency_key = 2;
+}
+
+message ReserveCopyResponse {
+  bool reserved = 1;
+}
+
+message ReleaseCopyRequest {
+  // Only the key identifies the reservation; book_id is carried for
+  // logging/tracing, not trusted for lookup.
+  uint64 book_id = 1;
+  string idempotency_key = 2;
+}
+
+message ReleaseCopyResponse {
+  // False when the key was unknown or already released (still a success).
+  bool released = 1;
+}
+
+message Author {
+  uint64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  optional string biography = 4;
+}
+
+message Book {
+  uint64 id = 1;
+  string title = 2;
+  string isbn = 3;
+  string genre = 4;
+  optional string description = 5;
+  optional string cover_image = 6;
+  optional int32 published_year = 7;
+  int32 total_copies = 8;
+  int32 available_copies = 9;
+  bool is_digital = 10;
+  optional string file_format = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  repeated Author authors = 13;
+  // Null = not for sale. Consumed by payment-service.
+  optional int64 price_cents = 14;
+  optional string currency = 15;
+}

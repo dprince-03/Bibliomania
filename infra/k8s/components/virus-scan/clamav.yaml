@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clamav
+  # Explicit: resources a component adds aren't covered by the including
+  # overlay's `namespace:`.
+  namespace: bibliomania
+  labels: { app.kubernetes.io/name: clamav, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: security }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: clamav }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: clamav, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: security }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: clamav
+          image: clamav/clamav:1.4
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports:
+            - { name: clamd, containerPort: 3310 }
+          readinessProbe:
+            exec: { command: ["clamdcheck.sh"] }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 100m, memory: 1Gi }
+            limits: { memory: 2Gi }
+          volumeMounts:
+            - { name: run, mountPath: /run }
+            - { name: log, mountPath: /var/log/clamav }
+            - { name: tmp, mountPath: /tmp }
+            - { name: signatures, mountPath: /var/lib/clamav }
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: log
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: signatures
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clamav
+  namespace: bibliomania
+spec:
+  selector: { app.kubernetes.io/name: clamav }
+  ports:
+    - { name: clamd, port: 3310, targetPort: clamd }
