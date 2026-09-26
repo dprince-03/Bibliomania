@@ -16,9 +16,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: seaweedfs, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: storage }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: seaweedfs
           image: chrislusf/seaweedfs:4.47
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["server", "-s3", "-dir=/data", "-volume.max=0"]
           ports:
             - { name: s3, containerPort: 8333 }
@@ -37,7 +47,11 @@ spec:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 1Gi }
           volumeMounts:
+            - { name: tmp, mountPath: /tmp }
             - { name: data, mountPath: /data }
+      volumes:
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata: { name: data }
       spec:

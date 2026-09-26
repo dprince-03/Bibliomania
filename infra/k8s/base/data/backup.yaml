@@ -27,12 +27,25 @@ spec:
           labels: { app.kubernetes.io/name: db-backup, app.kubernetes.io/part-of: bibliomania }
         spec:
           restartPolicy: OnFailure
+          # Each container runs as its own image's user (below); the shared
+          # fsGroup makes /out writable for all of them.
+          securityContext:
+            runAsNonRoot: true
+            fsGroup: 1000
+            seccompProfile: { type: RuntimeDefault }
           volumes:
             - name: out
+              emptyDir: {}
+            - name: tmp
               emptyDir: {}
           initContainers:
             - name: postgres
               image: postgres:16-alpine
+              securityContext:
+                runAsUser: 70
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
               env:
                 - name: PGPASSWORD
                   valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: POSTGRES_PASSWORD } }
@@ -46,6 +59,11 @@ spec:
               volumeMounts: [{ name: out, mountPath: /out }]
             - name: mysql
               image: mysql:8.4
+              securityContext:
+                runAsUser: 999
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
               env:
                 - name: MYSQL_PWD
                   valueFrom: { secretKeyRef: { name: bibliomania-secrets, key: AUTH_DB_ROOT_PASSWORD } }
@@ -56,6 +74,11 @@ spec:
               volumeMounts: [{ name: out, mountPath: /out }]
             - name: mongo
               image: mongo:7
+              securityContext:
+                runAsUser: 999
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
               command:
                 - sh
                 - -ec
@@ -69,7 +92,13 @@ spec:
               # rclone: a vendor-neutral sync tool; configured entirely by env
               # (remote "store" = SeaweedFS's S3-protocol endpoint).
               image: rclone/rclone:1.71
+              securityContext:
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
               env:
+                - { name: HOME, value: /tmp } # rclone's cache/config dir
                 - { name: RCLONE_CONFIG_STORE_TYPE, value: s3 }
                 - { name: RCLONE_CONFIG_STORE_PROVIDER, value: SeaweedFS }
                 - { name: RCLONE_CONFIG_STORE_ENDPOINT, value: "http://seaweedfs:8333" }
@@ -93,4 +122,4 @@ spec:
                     rclone purge "store:$BUCKET/$old"
                   done
                   echo "backup $ts complete"
-              volumeMounts: [{ name: out, mountPath: /out }]
+              volumeMounts: [{ name: out, mountPath: /out }, { name: tmp, mountPath: /tmp }]

@@ -13,9 +13,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: nats, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: broker }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: nats
           image: nats:2.11-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["-js", "-sd", "/data", "-m", "8222"]
           ports:
             - { name: client, containerPort: 4222 }

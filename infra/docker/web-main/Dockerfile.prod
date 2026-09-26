@@ -20,11 +20,18 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 RUN npm run build
 
 # Stage 2: Serve the static output — no Node runtime needed
-FROM nginx:alpine AS final
+# nginx-unprivileged (official, from NGINX Inc.): runs as uid 101 instead of
+# root, so it listens on 8080 (non-root can't bind ports below 1024) and keeps
+# its pid/temp files in /tmp — works with a read-only root filesystem.
+FROM nginxinc/nginx-unprivileged:alpine AS final
 
 COPY --from=builder /app/out /usr/share/nginx/html
 
-EXPOSE 80
+# The base image already runs as 101 (nginx); stated explicitly, and
+# numerically so Kubernetes' runAsNonRoot can verify it.
+USER 101
+
+EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:80/ || exit 1
+    CMD wget -qO- http://localhost:8080/ || exit 1

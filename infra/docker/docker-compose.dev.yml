@@ -1,7 +1,7 @@
 # ── Go services: hot reload with air ───────────────────────────────────
 # Every service bind-mounts the same Server/app source and runs air with
 # its own build target, binary and tmp dir, so one edit rebuilds only what
-# it touches per service (go's build cache is shared via go_build_cache).
+# it touches per service (go's build cache is shared via go_build_cache_nonroot).
 #
 # dockerfile: is resolved relative to build.context (../../Server/app,
 # from the base compose file), NOT to this file's own directory — it needs
@@ -13,8 +13,8 @@ x-go-dev: &go-dev
     dockerfile: ../../infra/docker/app/Dockerfile.dev
   volumes:
     - ../../Server/app:/app
-    - go_modules:/go/pkg/mod
-    - go_build_cache:/root/.cache/go-build
+    - go_modules_nonroot:/go/pkg/mod
+    - go_build_cache_nonroot:/go/build-cache # GOCACHE, see app/Dockerfile.dev
 
 services:
   gateway:
@@ -67,7 +67,7 @@ services:
       - "${WEB_APP_HOST_PORT:-9083}:3000"
     volumes:
       - ../../Client/web/app:/app
-      - web_app_node_modules:/app/node_modules
+      - web_app_node_modules_nonroot:/app/node_modules
 
   web-main:
     build:
@@ -76,7 +76,7 @@ services:
       - "${WEB_MAIN_HOST_PORT:-9082}:3000"
     volumes:
       - ../../Client/web/main:/app
-      - web_main_node_modules:/app/node_modules
+      - web_main_node_modules_nonroot:/app/node_modules
 
   admin-web:
     build:
@@ -85,7 +85,7 @@ services:
       - "${ADMIN_WEB_HOST_PORT:-9084}:3000"
     volumes:
       - ../../Client/admin:/app
-      - admin_web_node_modules:/app/node_modules
+      - admin_web_node_modules_nonroot:/app/node_modules
 
   admin:
     build:
@@ -94,7 +94,7 @@ services:
       - "${ADMIN_API_HOST_PORT:-9085}:4000"
     volumes:
       - ../../Server/admin:/app
-      - admin_api_node_modules:/app/node_modules
+      - admin_api_node_modules_nonroot:/app/node_modules
 
   # ── Data stores / brokers / observability: host ports for dev tools ──
   # (All checked against docs/PORTS.md — override in infra/docker/.env on
@@ -146,7 +146,7 @@ services:
     build:
       dockerfile: Dockerfile.dev
     ports:
-      - "${NGINX_HOST_PORT:-9080}:80"
+      - "${NGINX_HOST_PORT:-9080}:8080"
 
   # ── Dev-only tooling ──────────────────────────────────────
   adminer:

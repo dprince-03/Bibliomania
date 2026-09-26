@@ -807,19 +807,22 @@ volumes:
     driver: local
   grafana_data:
     driver: local
-  go_modules:
+  # Dev caches (docker-compose.dev.yml). Renamed with _nonroot when the dev
+  # images stopped running as root: the old volumes held root-owned files the
+  # new users can't write. The old ones are unused — `docker volume rm` them.
+  go_modules_nonroot:
     driver: local
-  go_build_cache:
+  go_build_cache_nonroot:
     driver: local
   umami_postgres_data:
     driver: local
-  web_app_node_modules:
+  web_app_node_modules_nonroot:
     driver: local
-  web_main_node_modules:
+  web_main_node_modules_nonroot:
     driver: local
-  admin_web_node_modules:
+  admin_web_node_modules_nonroot:
     driver: local
-  admin_api_node_modules:
+  admin_api_node_modules_nonroot:
     driver: local
 
 networks:

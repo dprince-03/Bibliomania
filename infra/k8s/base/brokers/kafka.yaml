@@ -17,10 +17,32 @@ spec:
       labels: { app.kubernetes.io/name: kafka, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: broker }
     spec:
       securityContext:
-        fsGroup: 1000 # the image's appuser, so it can write the volume
+        runAsNonRoot: true
+        runAsUser: 1000 # the image's appuser
+        runAsGroup: 1000
+        fsGroup: 1000 # so it can write the volume
+        seccompProfile: { type: RuntimeDefault }
+      # The image's entrypoint (re)writes /opt/kafka/config at startup, which a
+      # read-only root filesystem forbids — so the stock config is copied into
+      # a writable volume first and mounted over it.
+      initContainers:
+        - name: config
+          image: apache/kafka:3.9.1
+          # -R, not -a: a non-root user may not set timestamps on the mount point.
+          command: ["sh", "-c", "cp -R /opt/kafka/config/. /config/"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: config, mountPath: /config }
       containers:
         - name: kafka
           image: apache/kafka:3.9.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports:
             - { name: kafka, containerPort: 9092 }
             - { name: controller, containerPort: 9093 }
@@ -46,6 +68,16 @@ spec:
             limits: { memory: 1536Mi }
           volumeMounts:
             - { name: data, mountPath: /var/lib/kafka/data }
+            - { name: config, mountPath: /opt/kafka/config }
+            - { name: logs, mountPath: /opt/kafka/logs }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata: { name: data }
       spec:

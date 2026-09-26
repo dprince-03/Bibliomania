@@ -15,9 +15,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: rabbitmq, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: broker }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: rabbitmq
           image: rabbitmq:4.2-management-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports:
             - { name: amqp, containerPort: 5672 }
             - { name: management, containerPort: 15672 }
@@ -34,9 +44,12 @@ spec:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { memory: 768Mi }
           volumeMounts:
+            - { name: tmp, mountPath: /tmp }
             - { name: data, mountPath: /var/lib/rabbitmq }
             - { name: plugins, mountPath: /etc/rabbitmq/enabled_plugins, subPath: enabled_plugins }
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: plugins
           configMap: { name: rabbitmq-plugins }
   volumeClaimTemplates:

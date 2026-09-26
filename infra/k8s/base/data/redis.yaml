@@ -13,9 +13,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: redis, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: cache }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: redis
           image: redis:7-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
           ports:
             - { name: redis, containerPort: 6379 }
@@ -25,6 +35,11 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 64Mi }
             limits: { memory: 320Mi }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+      volumes:
+        - name: data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

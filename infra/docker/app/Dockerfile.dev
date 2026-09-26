@@ -12,13 +12,23 @@ RUN apk add --no-cache git curl make gcc musl-dev
 # on Go 1.25, so this line keeps working if the image is ever pinned back.
 RUN go install github.com/air-verse/air@v1.66.1
 
+# Non-root dev user, uid/gid 1000 by default (the usual host UID) so what air
+# writes into the bind-mounted Server/app (tmp/, bin/) is owned by you, not
+# root. Override with --build-arg UID=$(id -u) GID=$(id -g) if yours differs.
+ARG UID=1000
+ARG GID=1000
+RUN addgroup -g "$GID" dev && adduser -D -u "$UID" -G dev dev \
+ && mkdir -p /go/build-cache /app && chown -R dev:dev /go /app
+ENV GOCACHE=/go/build-cache
+USER dev
+
 WORKDIR /app
 
 # Module download as its own layer (cached until go.mod/go.sum change).
-COPY go.mod go.sum ./
+COPY --chown=dev:dev go.mod go.sum ./
 RUN go mod download
 
-COPY . .
+COPY --chown=dev:dev . .
 
 EXPOSE 8080 9090
 

@@ -187,6 +187,23 @@ back. Argo CD runs kustomize with `--load-restrictor LoadRestrictionsNone`
 dry run only; a real sync needs this branch on `main` and a production
 cluster.
 
+## Pod security
+
+Every workload runs non-root, with a read-only root filesystem, no
+privilege escalation, all capabilities dropped and the RuntimeDefault
+seccomp profile; writable paths are emptyDirs. CI's Trivy scan fails on
+any new HIGH finding. To add a workload, find its writable paths by
+running the image with `docker run --read-only --user <uid> --cap-drop ALL`
+first.
+
+On an **existing** cluster from before 2026-09-26, volumes written by
+containers that used to run as root (NATS, SeaweedFS) need a one-time
+`chown -R 1000:1000`, since kind's local-path storage ignores `fsGroup`.
+Completed Jobs (`mongo-rs-init`) must be deleted before re-applying. Also
+raise the host's inotify limit (`sudo sysctl fs.inotify.max_user_instances=512`)
+if kind runs alongside Compose — at 128, kube-proxy fails with "too many
+open files".
+
 ## Production
 
 `overlays/prod` is a starting point. No production cluster exists yet.

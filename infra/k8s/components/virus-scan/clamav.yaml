@@ -14,9 +14,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: clamav, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: security }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: clamav
           image: clamav/clamav:1.4
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports:
             - { name: clamd, containerPort: 3310 }
           readinessProbe:
@@ -27,8 +37,17 @@ spec:
             requests: { cpu: 100m, memory: 1Gi }
             limits: { memory: 2Gi }
           volumeMounts:
+            - { name: run, mountPath: /run }
+            - { name: log, mountPath: /var/log/clamav }
+            - { name: tmp, mountPath: /tmp }
             - { name: signatures, mountPath: /var/lib/clamav }
       volumes:
+        - name: run
+          emptyDir: {}
+        - name: log
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         - name: signatures
           emptyDir: {}
 ---

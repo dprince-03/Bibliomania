@@ -16,9 +16,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: mongo, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: database }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: mongo
           image: mongo:7
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["--replSet", "rs0", "--bind_ip_all"]
           ports:
             - { name: mongo, containerPort: 27017 }
@@ -30,7 +40,14 @@ spec:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { memory: 1Gi }
           volumeMounts:
+            - { name: configdb, mountPath: /data/configdb }
+            - { name: tmp, mountPath: /tmp }
             - { name: data, mountPath: /data/db }
+      volumes:
+        - name: configdb
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata: { name: data }
       spec:
@@ -64,9 +81,21 @@ spec:
       labels: { app.kubernetes.io/name: mongo-rs-init, app.kubernetes.io/part-of: bibliomania }
     spec:
       restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: rs-init
           image: mongo:7
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          env:
+            - { name: HOME, value: /tmp } # mongosh keeps state in ~/.mongodb
           command:
             - mongosh
             - --host
@@ -76,3 +105,8 @@ spec:
             - |
               try { rs.status().ok }
               catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo-0.mongo:27017' }] }).ok }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}

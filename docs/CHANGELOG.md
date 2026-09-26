@@ -6,6 +6,69 @@ including the small ones that don't warrant their own entry in
 `Steps.md` roadmap file (structured feature work). If it happened, it gets
 a line here. Newest at the top.
 
+## 2026-09-26 (evening) — CI security job fixed; everything hardened
+
+The `security` job on PR #95 failed at setup: `aquasecurity/trivy-action@0.33.1`
+doesn't exist, because the tags are `v`-prefixed. Fixing that exposed what
+the scan would fail on next. The user chose "fix everything now".
+
+- **Trivy action**: pinned to the commit of v0.36.0 (a tag can be moved to
+  different code; a SHA can't). `trivyignores: .trivyignore.yaml` holds the
+  one suppression, KSV-0109, a false positive: `JWT_*_TOKEN_TTL` are
+  durations. Its path and reason are in that file.
+- **Go**: `moby/go-archive` 0.3.0 (pulled in by the test library) and
+  `golang.org/x/mod` 0.40.0 (pulled in by code-generation tools).
+  go.mod stays `go 1.25.5`.
+- **npm**:
+  - sharp 0.35.4 (web/app, web/main, admin);
+  - `@xmldom/xmldom` 0.8.15 via `overrides` in web/app — epubjs 0.3.93 is
+    its latest release and still requires 0.7;
+  - NestJS 11.2.6 in Server/admin, which brings multer 2.4.0.
+  All four apps lint, build and boot.
+- **Kubernetes**: every workload is non-root, with a read-only root
+  filesystem, `allowPrivilegeEscalation: false`, all capabilities dropped
+  and the RuntimeDefault seccomp profile. Writable paths are emptyDirs,
+  each one found by running the image hardened in Docker first:
+  - Kafka: an init container copies `/opt/kafka/config` into a writable
+    volume, because the entrypoint rewrites it;
+  - ClamAV needs a writable `/run`; Grafana needs `/var/lib/grafana` and
+    `/var/log/grafana`; mongosh and npm get `HOME=/tmp`;
+  - the backup CronJob runs each container as its own image's user, with a
+    shared `fsGroup`.
+- **Dockerfiles**: nginx and web-main's production image moved to
+  `nginxinc/nginx-unprivileged` (uid 101, **port 8080**; host mappings
+  updated). Dev images run as non-root: the `node` user, and a `dev` user
+  (uid 1000) for Go. Air's output in `Server/app/tmp` is now yours, not
+  root's. The dev cache and node_modules volumes were renamed `…_nonroot`;
+  the old volumes are unused.
+- **Tempo** memory limit 768Mi → 1536Mi: it was OOM-killed flushing a large
+  WAL block.
+
+**Upgrading an existing cluster or checkout** (one-off, done on the local
+cluster):
+- volumes written by the old root NATS and SeaweedFS containers need
+  `chown -R 1000:1000`, because kind's local-path storage ignores
+  `fsGroup`;
+- a completed `mongo-rs-init` Job must be deleted before re-applying;
+- root-owned `Server/app/tmp/*` from the old root dev containers needs a
+  chown.
+
+**Found along the way:**
+- The host's inotify limit (`fs.inotify.max_user_instances=128`) is too
+  low to run kind and Compose together. kube-proxy failed with "too many
+  open files", then DNS, then every controller; the Mongo members came up
+  `REMOVED` and needed a restart. kind recommends 512 (`sudo sysctl`).
+- This shell exports `NODE_ENV=production`, so plain `npm install/update`
+  silently drops dev dependencies. Use `npm ci --include=dev`.
+
+**Verified:**
+- A Trivy scan of exactly the committable files, with CI's settings: exit 0.
+- The hardened HA kind cluster: all 48 pods ready, every container
+  non-root with a read-only root filesystem, 55/55 smoke checks, and a
+  backup job that verified 7 files.
+- Compose dev: every container non-root, air rebuilding as uid 1000,
+  55/55 smoke checks. The prod nginx config passes `nginx -t`.
+
 ## 2026-09-26
 
 Hardening pass on the microservices build, still on

@@ -13,9 +13,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: web-app, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: web-app
           image: bibliomania-web-app
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports: [{ name: http, containerPort: 3000 }]
           env:
             - { name: API_INTERNAL_URL, value: "http://gateway:8080" }
@@ -24,6 +34,14 @@ spec:
           readinessProbe:
             httpGet: { path: /, port: http }
           resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: next-cache, mountPath: /app/.next/cache }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -44,15 +62,30 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: web-main, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
       containers:
         # Static export served by nginx; its API/app URLs are baked in at
         # image build time (NEXT_PUBLIC_* build args).
         - name: web-main
           image: bibliomania-web-main
-          ports: [{ name: http, containerPort: 80 }]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports: [{ name: http, containerPort: 8080 }] # nginx-unprivileged
           readinessProbe:
             httpGet: { path: /, port: http }
           resources: { requests: { cpu: 10m, memory: 32Mi }, limits: { memory: 128Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -73,9 +106,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: admin-web, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: admin-web
           image: bibliomania-admin-web
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports: [{ name: http, containerPort: 3000 }]
           env:
             - name: NEXT_PUBLIC_API_URL
@@ -83,6 +126,14 @@ spec:
           readinessProbe:
             httpGet: { path: /, port: http }
           resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: next-cache, mountPath: /app/.next/cache }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -103,13 +154,29 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: admin, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: client }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: admin
           image: bibliomania-admin
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports: [{ name: http, containerPort: 4000 }]
           env:
             - { name: GATEWAY_URL, value: "http://gateway:8080" }
+            - { name: HOME, value: /tmp } # npm's cache and logs
           resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { memory: 512Mi } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

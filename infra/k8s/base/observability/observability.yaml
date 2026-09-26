@@ -42,10 +42,19 @@ spec:
       labels: { app.kubernetes.io/name: prometheus, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
     spec:
       serviceAccountName: prometheus
-      securityContext: { fsGroup: 65534 }
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: prometheus
           image: prom/prometheus:v3.5.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
@@ -96,9 +105,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: alertmanager, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: alertmanager
           image: prom/alertmanager:v0.28.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args:
             - --config.file=/etc/alertmanager/alertmanager.yml
             - --storage.path=/alertmanager
@@ -142,10 +161,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: loki, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
     spec:
-      securityContext: { fsGroup: 10001 }
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: loki
           image: grafana/loki:3.5.3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["-config.file=/etc/loki/config.yaml"]
           ports:
             - { name: http, containerPort: 3100 }
@@ -156,9 +184,12 @@ spec:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 512Mi }
           volumeMounts:
+            - { name: tmp, mountPath: /tmp }
             - { name: config, mountPath: /etc/loki }
             - { name: data, mountPath: /loki }
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: config
           configMap: { name: loki-config }
   volumeClaimTemplates:
@@ -191,10 +222,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: tempo, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
     spec:
-      securityContext: { fsGroup: 10001 }
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: tempo
           image: grafana/tempo:2.8.2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["-config.file=/etc/tempo/config.yaml"]
           ports:
             - { name: http, containerPort: 3200 }
@@ -202,11 +242,14 @@ spec:
             - { name: otlp-http, containerPort: 4318 }
           resources:
             requests: { cpu: 50m, memory: 128Mi }
-            limits: { memory: 768Mi }
+            limits: { memory: 1536Mi }  # 768Mi OOM-killed it while flushing a large WAL block (2026-09-26)
           volumeMounts:
+            - { name: tmp, mountPath: /tmp }
             - { name: config, mountPath: /etc/tempo }
             - { name: data, mountPath: /var/tempo }
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: config
           configMap: { name: tempo-config }
   volumeClaimTemplates:
@@ -264,17 +307,30 @@ spec:
       labels: { app.kubernetes.io/name: alloy, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
     spec:
       serviceAccountName: alloy
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 473
+        runAsGroup: 473
+        fsGroup: 473
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: alloy
           image: grafana/alloy:v1.10.2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           args: ["run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data"]
           resources:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 512Mi }
           volumeMounts:
+            - { name: tmp, mountPath: /tmp }
             - { name: config, mountPath: /etc/alloy }
             - { name: data, mountPath: /var/lib/alloy/data }
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: config
           configMap: { name: alloy-config }
         - name: data
@@ -294,9 +350,19 @@ spec:
     metadata:
       labels: { app.kubernetes.io/name: grafana, app.kubernetes.io/part-of: bibliomania, app.kubernetes.io/component: observability }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: grafana
           image: grafana/grafana:12.1.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
           ports:
             - { name: http, containerPort: 3000 }
           env:
@@ -310,10 +376,19 @@ spec:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 512Mi }
           volumeMounts:
+            - { name: lib, mountPath: /var/lib/grafana }
+            - { name: log, mountPath: /var/log/grafana }
+            - { name: tmp, mountPath: /tmp }
             - { name: datasources, mountPath: /etc/grafana/provisioning/datasources }
             - { name: dashboard-providers, mountPath: /etc/grafana/provisioning/dashboards }
             - { name: dashboards, mountPath: /var/lib/grafana/dashboards }
       volumes:
+        - name: lib
+          emptyDir: {}
+        - name: log
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         - name: datasources
           configMap: { name: grafana-datasources }
         - name: dashboard-providers

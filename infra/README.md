@@ -212,6 +212,13 @@ versa.
 
 ## Known caveats
 
+- **nginx listens on 8080** (the unprivileged image, uid 101); host ports
+  map to it. Dev images run non-root (uid 1000). After pulling this change,
+  old root-owned `Server/app/tmp/*` needs a chown, and the old dev cache
+  volumes (`go_modules`, `*_node_modules` without `_nonroot`) can be removed.
+- If your shell exports `NODE_ENV=production`, `npm install` skips dev
+  dependencies; use `npm ci --include=dev`.
+
 - **No auth on MongoDB, Kafka or NATS.** Fine while only nginx is exposed
   in prod; must be closed before a real deployment (MongoDB needs a
   replica-set keyfile to enable auth). mTLS between services exists on
