@@ -106,7 +106,7 @@ jobs:
           gosec -exclude-generated -exclude-dir=gen -exclude-dir=cmd/key -exclude-dir=cmd/seed \
             -exclude=G115,G104 -fmt=sarif -out=gosec.sarif -stdout -verbose=text ./...
       - if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: Server/app/gosec.sarif
           category: gosec
