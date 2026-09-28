@@ -52,7 +52,7 @@ jobs:
           cache-dependency-path: Server/app/go.sum
       # Config: Server/app/.golangci.yml (standard linters + gosec,
       # bodyclose, misspell, gofmt).
-      - uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: v2.14.0
           working-directory: Server/app
