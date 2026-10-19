@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:26-alpine
 
 # Non-root: node images ship a `node` user (uid 1000, the usual host UID),
 # so files the dev server writes into the bind-mounted source stay yours.
